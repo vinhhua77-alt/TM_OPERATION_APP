@@ -41,9 +41,10 @@ router.get('/data', async (req, res) => {
 
         // 2. Transform Stores
         const storesData = stores.map(s => ({
-            id: s.store_code, // Fontend expects store_code as ID for selection logic
-            name: s.store_name,
-            store_code: s.store_code
+            id: s.id,
+            store_code: s.store_code,
+            store_name: s.store_name,
+            name: s.store_name // Alias for compatibility
         }));
 
         // 3. Transform Shifts

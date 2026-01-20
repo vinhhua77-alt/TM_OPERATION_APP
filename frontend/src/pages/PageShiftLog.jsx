@@ -128,8 +128,8 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         <div style={{ position: 'relative' }}>
             <div className="header">
                 <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-                <h2 className="brand-title">NHẬT KÝ CA LÀM VIỆC V7.3</h2>
-                <p className="sub-title-dev">{user?.name} - {user?.role}</p>
+                <h2 className="brand-title">NHẬT KÝ CA LÀM VIỆC</h2>
+                <p className="sub-title-dev">{user?.name}</p>
             </div>
 
             {/* STORE & LEAD */}
@@ -155,9 +155,6 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                                 {user?.name || '...'}
                             </div>
                         )}
-                        <div style={{ border: '1px solid #004AAD', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', color: '#004AAD' }}>
-                            {user?.role || 'OPS'}
-                        </div>
                     </div>
                 </div>
             </div>
