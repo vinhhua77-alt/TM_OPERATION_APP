@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* CSS RESET - THÁI MẬU GROUP v7.0 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #F7F7F7;
+  /* MÀU NỀN CHUẨN */
+  color: #2B2B2B;
+  /* MÀU CHỮ CHUẨN */
+  line-height: 1.4;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+}
+
+.card {
+  background: #FFFFFF;
+  width: 100%;
+  padding: 15px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 90vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.logo-img {
+  width: 60px;
+  height: auto;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.brand-title {
+  color: #004AAD;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sub-title-dev {
+  color: #8E8E8E;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* FORM ELEMENTS */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.input-login {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #DDDDDD;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2B2B2B;
+  background-color: #F8FAFC;
+  outline: none;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background-color: #004AAD;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-outline {
+  background: #FFF;
+  border: 1.5px solid #004AAD;
+  color: #004AAD;
+}
+
+.grid-2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.grid-2>* {
+  flex: 1;
+  min-width: 0;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #004AAD;
+  border-left: 3px solid #004AAD;
+  padding-left: 6px;
+  margin-top: 10px;
+}
+
+.checklist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.active-green {
+  background-color: #10B981 !important;
+  color: #FFF !important;
+  border-color: #10B981 !important;
+}
+
+.active-red {
+  background-color: #EF4444 !important;
+  color: #FFF !important;
+  border-color: #EF4444 !important;
+}
+
+.bg-red-soft {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.bg-green-soft {
+  background-color: #F0FDF4;
+  border: 1px solid #86EFAC;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* CSS BỔ SUNG CHO CAMERA v7.1 */
+.photo-container {
+  width: 100%;
+  border: 2px dashed #DDDDDD;
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+  background: #F8FAFC;
+}
+
+.photo-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.btn-camera {
+  background-color: #2B2B2B;
+  color: #FFFFFF;
+  font-size: 11px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mandatory-text {
+  color: #EF4444;
+  font-size: 9px;
+  font-weight: 800;
+}

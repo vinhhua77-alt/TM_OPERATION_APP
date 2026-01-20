@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('ui/Styles'); ?>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Lệnh include nạp nội dung JS thuần túy vào đây
+    <?!= include('ui/Components'); ?>
+    <?!= include('ui/Page_Login'); ?>
+    <?!= include('ui/Page_Register'); ?>
+    <?!= include('ui/Page_Dashboard'); ?>
+    <?!= include('ui/Page_ShiftLog'); ?>
+    <?!= include('ui/Page_StaffManagement'); ?>
+
+    function App() {
+      const [currentPage, setCurrentPage] = useState('LOGIN');
+      const [user, setUser] = useState(null);
+
+      const renderPage = () => {
+        switch (currentPage) {
+          case 'REGISTER': return <PageRegister onNavigate={setCurrentPage} />;
+          case 'HOME': return <DashboardPage user={user} onNavigate={setCurrentPage} />;
+          default: return <PageLogin onLogin={(u) => { setUser(u); setCurrentPage('HOME'); }} onGoToRegister={() => setCurrentPage('REGISTER')} />;
+        }
+      };
+
+      return (
+        <div className="max-w-md mx-auto min-h-screen bg-gray-50 shadow-xl">
+          {renderPage()}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

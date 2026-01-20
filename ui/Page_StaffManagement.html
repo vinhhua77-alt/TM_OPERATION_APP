@@ -1,0 +1,15 @@
+<script type="text/babel">
+  const StaffManagement = ({ user, onNavigate }) => {
+    return (
+      <div className="p-4 space-y-4 fade-in">
+        <div className="flex items-center justify-between">
+          <button onClick={() => onNavigate('HOME')} className="text-xs font-bold text-blue-600">← QUAY LẠI</button>
+          <h2 className="text-sm font-black">QUẢN LÝ NHÂN SỰ</h2>
+        </div>
+        <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400 text-xs">
+          Module danh sách nhân viên đang được kết nối với UserRepo...
+        </div>
+      </div>
+    );
+  };
+</script>

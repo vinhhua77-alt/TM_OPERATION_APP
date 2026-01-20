@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/database/
+
+# Google Service Account Credentials
+backend/credentials/
+*.json
+!package.json
+!package-lock.json
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Google Apps Script (giữ lại cho reference)
+.clasp.json
+
+# Temporary scripts
+scripts/test-*.js
+scripts/check-staff.js
+scripts/check-schema.js
+scripts/run-migration.js
+

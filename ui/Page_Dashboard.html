@@ -1,0 +1,66 @@
+<script type="text/babel">
+  const DashboardPage = ({ user, onNavigate }) => {
+    const reportData = {
+      totalLogs: 15,
+      totalIncidents: 2,
+      moodSummary: { "Rất ổn": 10, "Hơi căng": 4, "Quá tải": 1 },
+      moodIcons: { "Rất ổn": "🟢", "Hơi căng": "🟡", "Quá tải": "🔴" }
+    };
+
+    return (
+      <div className="p-4 space-y-6 fade-in pb-24">
+        <div className="flex justify-between items-start pt-2">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">
+              Xin chào, <br /> {user?.name || "Thành viên"}
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full status-dot shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+              <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">
+                {user?.storeCode || "N/A"} • {user?.role || "STAFF"}
+              </span>
+            </div>
+          </div>
+          <div className="bg-white p-2.5 rounded-2xl shadow-sm border border-gray-100 text-gray-400">
+            <i data-lucide="bell" size={20}></i>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="Lượt trực" value={reportData.totalLogs} icon={lucide.icons.Users} color="bg-blue-50 text-blue-600" />
+          <StatCard label="Sự cố" value={reportData.totalIncidents} icon={lucide.icons.AlertCircle} color="bg-red-50 text-red-600" />
+        </div>
+
+        <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100">
+          <h3 className="font-black text-gray-800 uppercase text-[11px] tracking-widest italic mb-5 text-center">Nhịp độ vận hành</h3>
+          <div className="flex justify-between items-center px-2">
+            {Object.entries(reportData.moodSummary).map(([key, val]) => (
+              <div key={key} className="flex flex-col items-center gap-2">
+                <span className="text-2xl">{reportData.moodIcons[key]}</span>
+                <span className="text-lg font-black text-gray-700 leading-none">{val}</span>
+                <span className="text-[9px] text-gray-400 font-bold uppercase">{key}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button onClick={() => onNavigate('SHIFT_LOG')} className="w-full flex items-center gap-4 p-5 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[2rem] text-white">
+            <div className="bg-white/20 p-2.5 rounded-xl"><i data-lucide="plus-circle" size={20}></i></div>
+            <div className="text-left">
+              <p className="font-black text-sm uppercase">Báo cáo Ca trực</p>
+              <p className="text-[10px] opacity-80 italic">Nhân viên gửi Log ca</p>
+            </div>
+          </button>
+
+          {user?.role?.toUpperCase() === "ADMIN" && (
+            <button onClick={() => onNavigate('SETTING_STAFF')} className="w-full flex items-center gap-4 p-5 bg-white rounded-[2rem] border border-gray-100">
+              <div className="bg-orange-100 text-orange-600 p-2.5 rounded-xl"><i data-lucide="users" size={20}></i></div>
+              <p className="font-black text-sm text-gray-800 uppercase">Quản lý nhân sự</p>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+</script>
