@@ -42,6 +42,16 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         loadMasterData();
     }, []);
 
+    // Auto-select user's store after master data loads
+    useEffect(() => {
+        if (master.stores?.length > 0 && user?.storeCode && !form.storeId) {
+            const userStore = master.stores.find(s => s.store_code === user.storeCode);
+            if (userStore) {
+                setForm(prev => ({ ...prev, storeId: user.storeCode }));
+            }
+        }
+    }, [master.stores, user?.storeCode]);
+
     const loadMasterData = async () => {
         try {
             const response = await masterAPI.getMasterData();
