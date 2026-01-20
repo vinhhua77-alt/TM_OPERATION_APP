@@ -21,13 +21,7 @@ const TopMenu = ({ user, onNavigate, onLogout }) => {
                                     <div onClick={() => { setShowMenu(false); onNavigate('SHIFT_LOG'); }} style={{ padding: '12px 15px', fontSize: '11px', fontWeight: '700', borderTop: '1px solid #EEE', cursor: 'pointer' }}>📝 NHẬT KÝ CA TRỰC</div>
 
                                     {user.role !== 'STAFF' && (
-                                        <>
-                                            <div onClick={() => { setShowMenu(false); onNavigate('LEADER_REPORT'); }} style={{ padding: '12px 15px', fontSize: '11px', fontWeight: '700', borderTop: '1px solid #EEE', cursor: 'pointer' }}>📈 LEADER REPORT</div>
-                                        </>
-                                    )}
-
-                                    {['ADMIN', 'MANAGER'].includes(user.role) && (
-                                        <div onClick={() => { setShowMenu(false); onNavigate('SETTING'); }} style={{ padding: '12px 15px', fontSize: '11px', fontWeight: '700', borderTop: '1px solid #EEE', color: '#004AAD', cursor: 'pointer' }}>⚙️ CẤU HÌNH HỆ THỐNG</div>
+                                        <div onClick={() => { setShowMenu(false); onNavigate('LEADER_REPORT'); }} style={{ padding: '12px 15px', fontSize: '11px', fontWeight: '700', borderTop: '1px solid #EEE', cursor: 'pointer' }}>📈 LEADER REPORT</div>
                                     )}
 
                                     <div onClick={() => { setShowMenu(false); onLogout(); }} style={{ padding: '12px 15px', fontSize: '11px', fontWeight: '700', borderTop: '1px solid #EEE', color: '#EF4444', cursor: 'pointer' }}>🚪 ĐĂNG XUẤT</div>

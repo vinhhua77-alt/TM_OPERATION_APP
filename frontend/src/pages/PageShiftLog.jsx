@@ -12,11 +12,11 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
     const [error, setError] = useState('');
 
     const FEELINGS = [
-        { id: 'OK', label: 'RẤT ỔN - CÒN CHILL', icon: '🟢', color: '#10B981' },
-        { id: 'BUSY', label: 'HƠI CĂNG TÍ', icon: '🟡', color: '#EAB308' },
-        { id: 'FIXED', label: 'CÓ VẤN ĐỀ (ĐÃ XỬ LÝ)', icon: '🟠', color: '#F97316' },
-        { id: 'OPEN', label: 'CÓ VẤN ĐỀ (CHƯA XONG)', icon: '🔴', color: '#EF4444' },
-        { id: 'OVER', label: 'QUÁ TẢI/ NGOÀI TẦM', icon: '⚫', color: '#333' }
+        { id: 'OK', label: '🔥 CHÁY HẾT MÌNH - NĂNG LƯỢNG FULL', icon: '🟢', color: '#10B981' },
+        { id: 'BUSY', label: '💪 HƠI RUSH NHƯNG VẪN CHIẾN', icon: '🟡', color: '#EAB308' },
+        { id: 'FIXED', label: '⚡ CÓ DRAMA NHƯNG ĐÃ XONG', icon: '🟠', color: '#F97316' },
+        { id: 'OPEN', label: '😰 CÓ VẤN ĐỀ - CẦN SUPPORT', icon: '🔴', color: '#EF4444' },
+        { id: 'OVER', label: '🆘 QUÁ TẢI - KHÔNG HANDLE NỔI', icon: '⚫', color: '#333' }
     ];
     const REASONS = ["NHÂN SỰ", "KHÁCH HÀNG", "THIẾT BỊ", "QUY TRÌNH", "DỊCH VỤ", "KHÁC"];
 
@@ -138,7 +138,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                     <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px' }}>NHÀ HÀNG</label>
                     <select className="input-login" style={{ marginBottom: 0 }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
                         <option value="">-- CHỌN --</option>
-                        {master.stores?.map(s => <option key={s.id} value={s.id}>{s.name || s.store_name}</option>)}
+                        {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.store_name || s.name}</option>)}
                     </select>
                 </div>
                 <div>
@@ -222,7 +222,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                         <span style={{ fontSize: '11px', fontWeight: '600', color: '#334155' }}>{item.text}</span>
                         <div style={{ display: 'flex', gap: '4px' }}>
                             <button className={`btn-login`}
-                                style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'yes' ? 'white' : 'white', color: '#004AAD', border: '1px solid #004AAD' }}
+                                style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'yes' ? '#004AAD' : 'white', color: form.checks[item.id] === 'yes' ? 'white' : '#004AAD', border: '1px solid #004AAD' }}
                                 onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'yes' } })}>CÓ</button>
                             <button className={`btn-login`}
                                 style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'no' ? '#EF4444' : 'white', color: form.checks[item.id] === 'no' ? 'white' : '#EF4444', border: '1px solid #EF4444' }}
