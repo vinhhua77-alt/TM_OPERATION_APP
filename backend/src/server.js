@@ -33,7 +33,7 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: true, // Allow all origins (Reflect request origin)
   credentials: true
 }));
 
