@@ -5,11 +5,11 @@ import { shiftAPI } from '../api/shift';
 
 const PageShiftLog = ({ user, onNavigate, onLogout }) => {
     const [master, setMaster] = useState({ stores: [], layouts: {}, leaders: [], shifts: [] });
-    const [showMenu, setShowMenu] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // Non-blocking
     const [photo, setPhoto] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
+    const [showSuccess, setShowSuccess] = useState(false); // New success state
 
     const FEELINGS = [
         { id: 'OK', label: '🔥 CHÁY HẾT MÌNH - NĂNG LƯỢNG FULL', icon: '🟢', color: '#10B981' },
@@ -123,8 +123,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
 
             setLoading(false); setIsUploading(false);
             if (res.success) {
-                alert("✅ THÀNH CÔNG");
-                onNavigate('HOME');
+                setShowSuccess(true); // Show success popup
             } else {
                 setError("❌ LỖI: " + (res.message || "Unknown error"));
             }
@@ -134,12 +133,36 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         }
     };
 
+    // --- SUCCESS MODAL ---
+    if (showSuccess) {
+        return (
+            <div className="fade-in" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: 'white', width: '90%', maxWidth: '350px', padding: '20px', borderRadius: '15px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+                    <div style={{ fontSize: '50px', marginBottom: '10px' }}>🎉</div>
+                    <h2 style={{ color: '#004AAD', margin: '0 0 10px 0', fontSize: '20px', fontWeight: '900' }}>CẬP NHẬT THÀNH CÔNG!</h2>
+                    <p style={{ color: '#475569', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>
+                        Cảm ơn bạn đã vất vả cả ca!<br />
+                        Chúc bạn xuống ca vui vẻ, nạp lại năng lượng nhé! 🚀💖
+                    </p>
+                    <button
+                        onClick={() => onNavigate('HOME')}
+                        className="btn-login"
+                        style={{ background: '#004AAD', width: '100%', height: '45px', fontSize: '14px', borderRadius: '10px' }}
+                    >
+                        VỀ TRANG CHỦ
+                    </button>
+                    <div style={{ marginTop: '15px', fontSize: '11px', color: '#94A3B8' }}>Thái Mậu Group Operation App</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} className="fade-in">
             <div className="header">
                 <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
                 <h2 className="brand-title">NHẬT KÝ CA LÀM VIỆC</h2>
-                <p className="sub-title-dev">{user?.name}</p>
+                <div className="sub-title-dev">{user?.name}</div>
             </div>
 
             {/* STORE & LEAD */}
@@ -200,6 +223,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 </div>
             )}
 
+            {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
             <div className="section-title">| KHU VỰC & VỊ TRÍ PHỤ</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                 {Object.keys(master.layouts || {}).map(key => (
@@ -211,6 +235,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 ))}
             </div>
 
+            {/* SUB-POSITIONS - VISIBLE IF LAYOUT SELECTED */}
             {form.layout && master.layouts[form.layout]?.subPositions?.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginTop: '4px' }}>
                     {master.layouts[form.layout].subPositions.map(sp => (
@@ -223,28 +248,31 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 </div>
             )}
 
-            <div style={{ marginTop: '10px' }}>
-                {form.layout && master.layouts[form.layout]?.checklist?.map(item => (
-                    <div key={item.id} className="checklist-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', padding: '8px 0' }}>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#334155' }}>{item.text}</span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                            <button className={`btn-login`}
-                                style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'yes' ? '#004AAD' : 'white', color: form.checks[item.id] === 'yes' ? 'white' : '#004AAD', border: '1px solid #004AAD' }}
-                                onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'yes' } })}>CÓ</button>
-                            <button className={`btn-login`}
-                                style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'no' ? '#EF4444' : 'white', color: form.checks[item.id] === 'no' ? 'white' : '#EF4444', border: '1px solid #EF4444' }}
-                                onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'no' } })}>KHÔNG</button>
+            {/* CHECKLIST - VISIBLE IF LAYOUT SELECTED */}
+            {form.layout && (
+                <div style={{ marginTop: '10px' }}>
+                    {master.layouts[form.layout]?.checklist?.map(item => (
+                        <div key={item.id} className="checklist-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', padding: '8px 0' }}>
+                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#334155' }}>{item.text}</span>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button className={`btn-login`}
+                                    style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'yes' ? '#004AAD' : 'white', color: form.checks[item.id] === 'yes' ? 'white' : '#004AAD', border: '1px solid #004AAD' }}
+                                    onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'yes' } })}>CÓ</button>
+                                <button className={`btn-login`}
+                                    style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'no' ? '#EF4444' : 'white', color: form.checks[item.id] === 'no' ? 'white' : '#EF4444', border: '1px solid #EF4444' }}
+                                    onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'no' } })}>KHÔNG</button>
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
-            {/* ERROR HANDLING / INCIDENTS */}
+            {/* ERROR HANDLING / INCIDENTS - HIDDEN until 'NO' checked */}
             {hasNoCheck && (
-                <div style={{ marginTop: '8px' }}>
-                    <label style={{ color: '#B91C1C', fontWeight: '800', fontSize: '9px', display: 'block', marginBottom: '4px' }}>PHÂN LOẠI SỰ CỐ</label>
-                    <select className="input-login" style={{ borderColor: '#FCA5A5', fontSize: '11px' }} value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
-                        <option value="">-- BẮT BUỘC CHỌN --</option>
+                <div style={{ marginTop: '8px', background: '#FFF1F2', padding: '10px', borderRadius: '8px', border: '1px solid #FECACA' }}>
+                    <label style={{ color: '#B91C1C', fontWeight: '800', fontSize: '10px', display: 'block', marginBottom: '6px' }}>PHÂN LOẠI SỰ CỐ (BẮT BUỘC)</label>
+                    <select className="input-login" style={{ borderColor: '#FCA5A5', fontSize: '11px', marginBottom: '6px' }} value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
+                        <option value="">-- CHỌN LOẠI SỰ CỐ --</option>
                         {master.layouts[form.layout]?.incidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
                     </select>
                     <textarea className="input-login" style={{ height: '60px', borderColor: '#FCA5A5', fontSize: '11px', marginBottom: 0 }} placeholder="Chi tiết lý do checklist chưa đạt..." value={form.incidentNote} onChange={e => setForm({ ...form, incidentNote: e.target.value })} />
@@ -271,20 +299,21 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 {FEELINGS.map(f => (
                     <button key={f.id} className="btn-login"
                         style={{
-                            padding: '10px 15px',
+                            padding: '12px 15px',
                             fontSize: '11px',
-                            textAlign: 'left',
+                            textAlign: 'left', // LEFT ALIGNMENT
                             background: form.rating === f.id ? '#004AAD' : 'white',
                             color: form.rating === f.id ? 'white' : '#004AAD',
                             border: '1px solid #004AAD',
-                            borderRadius: '25px', // Rounded pill style
+                            borderRadius: '10px', // Matches standardized rounded corners
                             display: 'flex',
                             alignItems: 'center',
                             gap: '10px',
-                            fontWeight: '700'
+                            fontWeight: '700',
+                            justifyContent: 'flex-start' // Ensure start alignment
                         }}
                         onClick={() => setForm({ ...form, rating: f.id })}>
-                        <span style={{ fontSize: '12px' }}>{f.icon}</span> {f.label}
+                        <span style={{ fontSize: '14px' }}>{f.icon}</span> {f.label}
                     </button>
                 ))}
             </div>
@@ -301,15 +330,15 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 </div>
             )}
 
-            <div className="mt-5" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0' }}>
-                <input type="checkbox" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} style={{ width: '16px', height: '16px' }} />
-                <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748B' }}>TÔI CAM KẾT THÔNG TIN BÁO CÁO LÀ CHÍNH XÁC.</span>
+            <div className="mt-5" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', paddingLeft: '10px' }}>
+                <input type="checkbox" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} style={{ width: '18px', height: '18px' }} />
+                <span style={{ fontSize: '10px', fontWeight: '800', color: '#004AAD' }}>TÔI CAM KẾT THÔNG TIN BÁO CÁO LÀ CHÍNH XÁC.</span>
             </div>
 
             {error && <p style={{ color: '#EF4444', fontSize: '10px', fontWeight: '800', textAlign: 'center', margin: '8px 0' }}>{error}</p>}
 
-            <button className="btn-login mt-2" style={{ height: '50px', background: '#004AAD' }} onClick={handleCheckBeforeSubmit} disabled={loading}>
-                {isUploading ? '📤 ĐANG TẢI ẢNH...' : (loading ? '⌛ ĐANG XỬ LÝ...' : 'XÁC NHẬN GỬI BÁO CÁO')}
+            <button className="btn-login mt-5" style={{ height: '50px', background: '#004AAD', marginBottom: '20px' }} onClick={handleCheckBeforeSubmit} disabled={loading}>
+                {isUploading ? '📤 ĐANG TẢI ẢNH...' : (loading ? '⌛ ĐANG GỬI...' : 'XÁC NHẬN GỬI BÁO CÁO')}
             </button>
         </div>
     );

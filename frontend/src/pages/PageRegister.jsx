@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authAPI } from '../api/auth';
-import { supabase } from '../lib/supabase';
+import { masterAPI } from '../api/master';
 import Notification from '../components/Notification';
 
 const PageRegister = ({ onNavigate }) => {
@@ -20,10 +20,14 @@ const PageRegister = ({ onNavigate }) => {
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const { data, error } = await supabase.from('store_list').select('store_code, store_name').order('store_name');
-        if (error) throw error;
-        setStores(data || []);
+        const response = await masterAPI.getStores();
+        if (response.data.success) {
+          setStores(response.data.data || []);
+        } else {
+          throw new Error(response.data.message);
+        }
       } catch (error) {
+        console.error('Error loading stores:', error);
         setMsg({ text: 'Không thể tải danh sách cửa hàng', type: 'error' });
       } finally {
         setLoadingStores(false);

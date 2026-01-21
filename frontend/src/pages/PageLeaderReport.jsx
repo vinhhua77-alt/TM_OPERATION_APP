@@ -34,7 +34,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         confirm_shift: false
     });
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false); // OPTIMIZED: Non-blocking (was true)
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -61,11 +61,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                 (response.data.leaderChecklist || []).forEach(item => initialChecklist[item] = null);
                 setFormData(prev => ({ ...prev, checklist: initialChecklist }));
             }
-            setLoading(false);
         } catch (error) {
             console.error('Error loading master data:', error);
             setError('Không thể tải dữ liệu hệ thống');
-            setLoading(false);
         }
     };
 
@@ -149,10 +147,11 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         }
     };
 
-    if (loading) return <div className="p-4 text-center">Đang tải dữ liệu...</div>;
+    // REMOVED BLOCKING LOADING SCREEN
+    // if (loading) return <div className="p-4 text-center">Đang tải dữ liệu...</div>;
 
     return (
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} className="fade-in">
             {/* Header matches PageShiftLog */}
             <div className="header">
                 <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
@@ -170,7 +169,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             <div className="grid-2 mt-10">
                 <select className="input-login" value={formData.store_id} onChange={(e) => handleInputChange('store_id', e.target.value)}>
                     <option value="">-- CHI NHÁNH --</option>
-                    {master.stores?.map(s => <option key={s.id} value={s.id}>{s.name || s.store_name}</option>)}
+                    {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.name || s.store_name}</option>)}
                 </select>
                 <select className="input-login" value={formData.area_code} onChange={(e) => handleInputChange('area_code', e.target.value)}>
                     <option value="">-- KHU VỰC --</option>

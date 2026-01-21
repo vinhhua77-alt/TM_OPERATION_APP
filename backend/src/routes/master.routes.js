@@ -4,7 +4,41 @@ import { supabase } from '../infra/supabase.client.js';
 
 const router = express.Router();
 
-// Tất cả routes cần authentication
+/**
+ * GET /api/master/stores
+ * Public endpoint - Get store list for registration page
+ * NO AUTHENTICATION REQUIRED
+ */
+router.get('/stores', async (req, res) => {
+    try {
+        const { data: stores, error } = await supabase
+            .from('store_list')
+            .select('store_code, store_name')
+            .eq('active', true)
+            .order('store_name');
+
+        if (error) {
+            console.error('Error fetching stores:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Không thể tải danh sách cửa hàng'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: stores || []
+        });
+    } catch (error) {
+        console.error('Unexpected error fetching stores:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi hệ thống'
+        });
+    }
+});
+
+// Tất cả routes sau đây cần authentication
 router.use(async (req, res, next) => {
     await authenticateToken(req, res, next);
 });
