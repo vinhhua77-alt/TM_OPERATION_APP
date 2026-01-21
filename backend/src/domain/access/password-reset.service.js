@@ -40,15 +40,23 @@ export class PasswordResetService {
     // Ideally user provides this in env.
     const resetLink = `${APP_URL}/?token=${token}&staffId=${user.staff_id}`;
 
-    // 4. Send Email (MOCK)
-    // In real app: await EmailService.send(user.email, resetLink);
+    // 4. Send Email via Nodemailer
+    // Dynamic import to avoid potential circular dependency or just for clean separation
+    const { EmailService } = await import('../../infra/email.service.js');
+    const emailSent = await EmailService.sendResetEmail(user.email, resetLink);
 
-    console.log(`[MOCK EMAIL] Reset Link for ${staffId}: ${resetLink}`);
-
-    return {
-      success: true,
-      message: `Đã gửi link reset (GIẢ LẬP). Vui lòng copy link này để test: ${resetLink}`
-    };
+    if (emailSent) {
+      return {
+        success: true,
+        message: `Đã gửi email reset đến ${user.email}. Vui lòng kiểm tra hộp thư (đôi khi nằm trong Spam).`
+      };
+    } else {
+      console.log(`[FALLBACK] Reset Link for ${staffId}: ${resetLink}`);
+      return {
+        success: true,
+        message: `Không thể gửi email (Lỗi hệ thống). Link reset tạm thời của bạn là: ${resetLink}`
+      };
+    }
   }
 
   /**
