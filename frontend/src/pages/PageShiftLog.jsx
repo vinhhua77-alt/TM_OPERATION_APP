@@ -19,14 +19,24 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         { id: 'OVER', label: '🆘 QUÁ TẢI - KHÔNG HANDLE NỔI', icon: '⚫', color: '#333' }
     ];
     const REASONS = ["NHÂN SỰ", "KHÁCH HÀNG", "THIẾT BỊ", "QUY TRÌNH", "DỊCH VỤ", "KHÁC"];
+    const SHIFT_ERROR_REASONS = [
+        "ĐỔI CA",
+        "ĐI TRỄ",
+        "VỀ SỚM",
+        "TĂNG CA",
+        "CA GÃY",
+        "KHẨN CẤP",
+        "HỖ TRỢ CHI NHÁNH",
+        "ĐIỀU CHỈNH LỊCH"
+    ];
 
     const [form, setForm] = useState({
         storeId: user?.storeCode || '',
-        lead: user?.name || '', // Default to current user name if available
+        lead: '', // Default empty to force selection or confirmation
         startH: '',
         startM: '00',
         endH: new Date().getHours().toString().padStart(2, '0'),
-        endM: new Date().getMinutes() < 30 ? '00' : '30',
+        endM: '00', // Enforce hourly
         layout: '',
         subPos: '',
         checks: {},
@@ -35,7 +45,9 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         rating: '',
         selectedReasons: [],
         isCommitted: false,
-        confirmShiftError: false
+        shiftErrorReason: '',
+        confirmWrongShift: false, // New confirm for unknown shift
+        confirmOvernightShift: false
     });
 
     useEffect(() => {
@@ -47,6 +59,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         if (master.stores?.length > 0 && user?.storeCode && !form.storeId) {
             const userStore = master.stores.find(s => s.store_code === user.storeCode);
             if (userStore) {
+                // Keep lead empty when auto-selecting store
                 setForm(prev => ({ ...prev, storeId: user.storeCode }));
             }
         }
@@ -73,29 +86,60 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
     }, [form.storeId, master.leaders]);
 
     const shiftInfo = useMemo(() => {
-        if (!form.startH) return null;
+        if (!form.startH || !form.endH) return null;
         const sApp = `${form.startH}:${form.startM}`;
         const eApp = `${form.endH}:${form.endM}`;
-        const duration = (parseInt(form.endH) + parseInt(form.endM) / 60) - (parseInt(form.startH) + parseInt(form.startM) / 60);
-        const finalDuration = duration <= 0 ? duration + 24 : duration;
+
+        const startTotal = parseInt(form.startH) * 60 + parseInt(form.startM);
+        const endTotal = parseInt(form.endH) * 60 + parseInt(form.endM);
+
+        let duration = (endTotal - startTotal) / 60;
+
+        if (duration <= 0) {
+            return { match: null, duration: 0, isCorrect: false, error: 'GIỜ RA PHẢI LỚN HƠN GIỜ VÀO' };
+        }
+
         const match = master.shifts?.find(s => s.start === sApp && s.end === eApp);
-        return { match, duration: finalDuration.toFixed(1), isCorrect: !!match };
+
+        return {
+            match,
+            duration: duration.toFixed(1),
+            isCorrect: !!match,
+            showConfirm: !match, // Show confirmation controls if no match
+        };
     }, [form.startH, form.startM, form.endH, form.endM, master.shifts]);
 
     const hasNoCheck = Object.values(form.checks).includes('no');
 
-    const handleCheckBeforeSubmit = () => {
-        if (!form.storeId || !form.layout || !form.rating || !form.startH || !form.lead || (!hasNoCheck && form.rating !== 'OK' && form.selectedReasons.length === 0) || !form.isCommitted) {
-            setError("BẮT BUỘC: ĐIỀN ĐỦ THÔNG TIN VÀ CAM KẾT!"); return;
-        }
+    const isReadyToSubmit = useMemo(() => {
+        // Core fields (Lead is now MANDATORY)
+        if (!form.storeId || !form.layout || !form.rating || !form.startH || !form.isCommitted || !form.lead) return false;
+
+        // Reason logic: If rating is NOT OK and NO checklist failure, must select reason
+        if (!hasNoCheck && form.rating !== 'OK' && form.selectedReasons.length === 0) return false;
+
+        // Incident logic: If checklist has 'no', must have incident type & note
         if (hasNoCheck) {
-            if (!form.incidentType || !form.incidentNote || form.incidentNote.trim().length < 5) {
-                setError("BẮT BUỘC TRUY VẾT: CHỌN SỰ CỐ VÀ MÔ TẢ > 5 KÝ TỰ!"); return;
+            if (!form.incidentType || !form.incidentNote || form.incidentNote.trim().length < 5) return false;
+        }
+
+        // Shift logic: Must not have time error (Start > End)
+        // If "Unknown Shift" (!isCorrect), MUST confirm wrong shift AND select reason.
+        if (shiftInfo) {
+            if (shiftInfo.error) return false;
+            if (!shiftInfo.isCorrect) {
+                // Unknown shift: must confirm AND provide reason
+                if (!form.confirmWrongShift || !form.shiftErrorReason) return false;
             }
         }
-        if (shiftInfo && !shiftInfo.isCorrect && !form.confirmShiftError) {
-            setError("PHẢI XÁC NHẬN KHI SAI CA!"); return;
-        }
+
+        return true;
+    }, [form, hasNoCheck, shiftInfo]);
+
+    const leadSelectRef = React.useRef(null);
+
+    const handleCheckBeforeSubmit = () => {
+        // Validation handled by isReadyToSubmit (button disabled if invalid)
         executeSubmit();
     };
 
@@ -166,29 +210,19 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             </div>
 
             {/* STORE & LEAD */}
-            <div className="grid-2 mt-10" style={{ alignItems: 'end' }}>
-                <div>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px' }}>NHÀ HÀNG</label>
-                    <select className="input-login" style={{ marginBottom: 0 }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
-                        <option value="">-- CHỌN --</option>
-                        {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.store_name || s.name}</option>)}
+            <div className="grid-2 mt-10">
+                <select className="input-login" style={{ marginBottom: 0 }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                    <option value="">-- NHÀ HÀNG --</option>
+                    {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.store_name || s.name}</option>)}
+                </select>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '4px' }}>
+                    {/* Simplified Leader selection/display */}
+                    <select ref={leadSelectRef} className="input-login" style={{ marginBottom: 0, padding: '0 5px', color: form.lead === 'KHÔNG CÓ LEAD CA' ? '#EF4444' : 'inherit', fontWeight: form.lead === 'KHÔNG CÓ LEAD CA' ? '800' : 'normal' }} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
+                        <option value="">-- LEAD CA --</option>
+                        <option value="KHÔNG CÓ LEAD CA" style={{ color: '#EF4444', fontWeight: '800' }}>⚠️ KHÔNG CÓ LEAD CA</option>
+                        {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
                     </select>
-                </div>
-                <div>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px' }}>LEAD CA</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: '4px' }}>
-                        {/* Simplified Leader selection/display */}
-                        {filteredLeaders.length > 0 ? (
-                            <select className="input-login" style={{ marginBottom: 0, padding: '0 5px' }} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
-                                <option value="">-- LEAD --</option>
-                                {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
-                            </select>
-                        ) : (
-                            <div className="input-login" style={{ marginBottom: 0, background: '#F1F5F9', display: 'flex', alignItems: 'center', padding: '0 8px', color: '#004AAD', fontWeight: '700' }}>
-                                {user?.name || '...'}
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
 
@@ -201,7 +235,9 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                             <option value="">H</option>
                             {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
-                        <select className="input-login" style={{ marginBottom: 0 }} value={form.startM} onChange={e => setForm({ ...form, startM: e.target.value })}><option value="00">00</option><option value="30">30</option></select>
+                        <select className="input-login" style={{ marginBottom: 0, background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                            <option value="00">00</option>
+                        </select>
                     </div>
                 </div>
                 <div>
@@ -211,15 +247,42 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                             <option value="">H</option>
                             {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
                         </select>
-                        <select className="input-login" style={{ marginBottom: 0 }} value={form.endM} onChange={e => setForm({ ...form, endM: e.target.value })}><option value="00">00</option><option value="30">30</option></select>
+                        <select className="input-login" style={{ marginBottom: 0, background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                            <option value="00">00</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             {shiftInfo && (
-                <div style={{ padding: '6px', borderRadius: '6px', marginTop: '5px', fontSize: '10px', textAlign: 'center', background: shiftInfo.isCorrect ? '#F0FDF4' : '#FEF2F2', border: shiftInfo.isCorrect ? '1px solid #86EFAC' : '1px solid #FCA5A5' }}>
-                    <b>{shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ SAI CA (${shiftInfo.duration}h)`}</b>
-                    {!shiftInfo.isCorrect && <input type="checkbox" style={{ marginLeft: '5px' }} checked={form.confirmShiftError} onChange={e => setForm({ ...form, confirmShiftError: e.target.checked })} />}
+                <div style={{ padding: '8px', borderRadius: '6px', marginTop: '5px', fontSize: '10px', background: shiftInfo.error ? '#FEF2F2' : (shiftInfo.isCorrect ? '#F0FDF4' : '#FFFBEB'), border: shiftInfo.error ? '1px solid #FCA5A5' : (shiftInfo.isCorrect ? '1px solid #86EFAC' : '1px solid #FCD34D') }}>
+                    <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+                        <b>{shiftInfo.error ? `⚠️ ${shiftInfo.error}` : (shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${shiftInfo.duration}h)`)}</b>
+                    </div>
+
+                    {!shiftInfo.isCorrect && !shiftInfo.error && (
+                        <div style={{ marginTop: '4px', textAlign: 'center' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', marginBottom: '4px', fontSize: '9px' }}>
+                                <input type="checkbox" checked={form.confirmWrongShift} onChange={e => setForm({ ...form, confirmWrongShift: e.target.checked })} />
+                                <span style={{ fontWeight: '700', color: '#B45309' }}>XÁC NHẬN ĐÂY LÀ GIỜ THỰC TẾ</span>
+                            </label>
+
+                            {/* Show Dropdown ONLY after confirming */}
+                            {form.confirmWrongShift && (
+                                <select
+                                    className="input-login"
+                                    style={{ marginBottom: 0, fontSize: '10px', padding: '4px', borderColor: '#FCA5A5', color: form.shiftErrorReason ? '#B91C1C' : '#999', fontWeight: form.shiftErrorReason ? '700' : 'normal' }}
+                                    value={form.shiftErrorReason}
+                                    onChange={e => setForm({ ...form, shiftErrorReason: e.target.value })}
+                                >
+                                    <option value="">-- CHỌN LÝ DO SAI CA --</option>
+                                    {SHIFT_ERROR_REASONS.map(reason => (
+                                        <option key={reason} value={reason}>{reason}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -337,7 +400,16 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
 
             {error && <p style={{ color: '#EF4444', fontSize: '10px', fontWeight: '800', textAlign: 'center', margin: '8px 0' }}>{error}</p>}
 
-            <button className="btn-login mt-5" style={{ height: '50px', background: '#004AAD', marginBottom: '20px' }} onClick={handleCheckBeforeSubmit} disabled={loading}>
+            <button
+                className="btn-login mt-5"
+                style={{
+                    height: '50px',
+                    background: !isReadyToSubmit ? '#CBD5E1' : (loading ? '#CCC' : '#004AAD'),
+                    cursor: isReadyToSubmit && !loading ? 'pointer' : 'not-allowed'
+                }}
+                onClick={handleCheckBeforeSubmit}
+                disabled={!isReadyToSubmit || loading}
+            >
                 {isUploading ? '📤 ĐANG TẢI ẢNH...' : (loading ? '⌛ ĐANG GỬI...' : 'XÁC NHẬN GỬI BÁO CÁO')}
             </button>
         </div>

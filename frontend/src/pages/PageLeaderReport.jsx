@@ -21,17 +21,19 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         has_out_of_stock: false,
         has_customer_issue: false,
         checklist: {},
-        mood: 3,
+        mood: 0,
         observed_issue_code: '',
         observed_note: '',
         khen_emp: '',
         khen_topic: '',
         nhac_emp: '',
         nhac_topic: '',
-        next_shift_risk: 'NONE',
+        next_shift_risk: '',
         next_shift_note: '',
         confirm_all: false,
-        confirm_shift: false
+        shiftErrorReason: '',
+        confirmWrongShift: false, // New confirm for unknown shift
+        isOvernightShift: false
     });
 
     const [loading, setLoading] = useState(false); // OPTIMIZED: Non-blocking (was true)
@@ -44,7 +46,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         setFormData(prev => ({
             ...prev,
             endH: now.getHours().toString().padStart(2, '0'),
-            endM: now.getMinutes() < 30 ? "00" : "30"
+            endM: '00' // Enforce hourly
         }));
 
         loadMasterData();
@@ -82,13 +84,18 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
     const shiftStatus = useMemo(() => {
         if (!master.shifts) return { type: 'loading', text: '...' };
+        if (!formData.endH) return { type: 'loading', text: '...' };
+
         const startTotal = parseInt(formData.startH) * 60 + parseInt(formData.startM);
         const endTotal = parseInt(formData.endH) * 60 + parseInt(formData.endM);
 
-        if (endTotal === startTotal) return { type: 'error', text: '⚠️ GIỜ RA PHẢI KHÁC GIỜ VÀO' };
+        if (endTotal === startTotal) return { type: 'error', text: '⚠️ GIờ RA PHẢI KHÁC GIờ VÀO' };
 
         let duration = (endTotal - startTotal) / 60;
-        if (duration < 0) duration += 24;
+
+        if (duration <= 0) {
+            return { type: 'error', text: '⚠️ GIỜ RA PHẢI LỚN HƠN GIỜ VÀO' };
+        }
 
         const sApp = `${formData.startH}:${formData.startM}`;
         const eApp = `${formData.endH}:${formData.endM}`;
@@ -96,13 +103,16 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         const match = master.shifts.find(s => s.start === sApp && s.end === eApp);
 
         if (match) return { type: 'ok', text: `✔️ KHỚP CA: ${match.name}` };
-        return { type: 'warning', text: `⚠️ SAI CA (${duration.toFixed(1)}H)`, showConfirm: true };
+
+        // Unknown shift but valid times
+        return { type: 'warning', text: `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${duration.toFixed(1)}H).`, showConfirm: true };
     }, [formData.startH, formData.startM, formData.endH, formData.endM, master.shifts]);
 
     const hasIncidentTrigger = useMemo(() => {
-        return formData.has_peak || formData.has_out_of_stock || formData.has_customer_issue ||
-            Object.values(formData.checklist).includes(false);
-    }, [formData]);
+        // LOGIC CHANGE: Top buttons (peak/stock/customer) do NOT trigger incident form automatically
+        // Only trigger if a checklist item is marked "false" (Không)
+        return Object.values(formData.checklist).includes(false);
+    }, [formData.checklist]);
 
     const isReadyToSubmit = useMemo(() => {
         const coreOk = formData.store_id && formData.area_code && formData.confirm_all;
@@ -110,10 +120,17 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         const checklistDone = master.leaderChecklist?.length > 0 &&
             master.leaderChecklist.every(item => formData.checklist[item] !== null && formData.checklist[item] !== undefined);
 
-        const shiftOk = shiftStatus.type === 'ok' || (shiftStatus.showConfirm && formData.confirm_shift);
+        let shiftOk = false;
+        if (shiftStatus.type === 'ok') shiftOk = true;
+        if (shiftStatus.type === 'warning') {
+            // Require confirmation and reason
+            if (formData.confirmWrongShift && formData.shiftErrorReason) shiftOk = true;
+        }
         const incidentOk = !hasIncidentTrigger || (formData.observed_issue_code && formData.observed_note && formData.observed_note.trim().length >= 5);
+        const moodOk = formData.mood > 0; // Require mood selection
+        const riskOk = formData.next_shift_risk !== ''; // Require risk selection
 
-        return coreOk && checklistDone && shiftOk && incidentOk;
+        return coreOk && checklistDone && shiftOk && incidentOk && moodOk && riskOk;
     }, [formData, shiftStatus, hasIncidentTrigger, master.leaderChecklist]);
 
     const handleInputChange = (field, value) => {
@@ -164,7 +181,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             <div className="header">
                 <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
                 <h2 className="brand-title">BÁO CÁO LEAD CA</h2>
-                <div className="sub-title-dev">{user?.name} - {user?.role}</div>
+                <div className="sub-title-dev">{user?.name || user?.username || 'User'} - {user?.role || 'Staff'}</div>
             </div>
 
             {master.announcement && (
@@ -189,29 +206,61 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             <div className="grid-2 mt-5">
                 <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
                     <span style={{ fontSize: '10px', fontWeight: 900, color: '#94A3B8' }}>VÀO</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px' }} value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center' }} value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px' }} value={formData.startM} onChange={(e) => handleInputChange('startM', e.target.value)}>
-                        <option value="00">00</option><option value="30">30</option>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                        <option value="00">00</option>
                     </select>
                 </div>
                 <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
                     <span style={{ fontSize: '10px', fontWeight: 900, color: '#94A3B8' }}>RA</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px' }} value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center' }} value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px' }} value={formData.endM} onChange={(e) => handleInputChange('endM', e.target.value)}>
-                        <option value="00">00</option><option value="30">30</option>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                        <option value="00">00</option>
                     </select>
                 </div>
             </div>
 
-            <div style={{ padding: '5px', fontSize: '10px', borderRadius: '6px', margin: '6px 0', textAlign: 'center', border: '1px solid', borderColor: shiftStatus.type === 'ok' ? '#86EFAC' : '#FCA5A5', background: shiftStatus.type === 'ok' ? '#F0FDF4' : '#FEF2F2', color: shiftStatus.type === 'ok' ? '#166534' : '#B91C1C' }}>
-                {shiftStatus.text}
-                {shiftStatus.showConfirm && <input type="checkbox" style={{ marginLeft: '5px' }} checked={formData.confirm_shift} onChange={(e) => handleInputChange('confirm_shift', e.target.checked)} />}
+            {/* STATUS BOX */}
+            <div style={{ padding: '8px', fontSize: '10px', borderRadius: '6px', margin: '6px 0', border: '1px solid', borderColor: shiftStatus.type === 'ok' ? '#86EFAC' : (shiftStatus.type === 'error' ? '#FCA5A5' : '#FCD34D'), background: shiftStatus.type === 'ok' ? '#F0FDF4' : (shiftStatus.type === 'error' ? '#FEF2F2' : '#FFFBEB'), color: shiftStatus.type === 'ok' ? '#166534' : (shiftStatus.type === 'error' ? '#B91C1C' : '#B45309') }}>
+                <div style={{ textAlign: 'center' }}>
+                    <b>{shiftStatus.text}</b>
+                </div>
+
+                {/* Show Confirm & Dropdown ONLY if Warning (Unknown Shift) */}
+                {shiftStatus.type === 'warning' && (
+                    <div style={{ marginTop: '4px', textAlign: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', marginBottom: '4px', fontSize: '9px' }}>
+                            <input type="checkbox" checked={formData.confirmWrongShift} onChange={(e) => handleInputChange('confirmWrongShift', e.target.checked)} />
+                            <span style={{ fontWeight: '700', color: '#B45309' }}>XÁC NHẬN ĐÂY LÀ GIỜ THỰC TẾ</span>
+                        </label>
+
+                        {/* Show Dropdown ONLY after confirming */}
+                        {formData.confirmWrongShift && (
+                            <select
+                                className="input-login"
+                                style={{ marginBottom: 0, fontSize: '10px', padding: '4px', borderColor: '#FCA5A5', color: formData.shiftErrorReason ? '#B91C1C' : '#999', fontWeight: formData.shiftErrorReason ? '700' : 'normal' }}
+                                value={formData.shiftErrorReason}
+                                onChange={(e) => handleInputChange('shiftErrorReason', e.target.value)}
+                            >
+                                <option value="">-- CHỌN LÝ DO --</option>
+                                <option value="ĐỔI CA">ĐỔI CA</option>
+                                <option value="ĐI TRỄ">ĐI TRỄ</option>
+                                <option value="VỀ SỚM">VỀ SỚM</option>
+                                <option value="TĂNG CA">TĂNG CA</option>
+                                <option value="CA GÃY">CA GÃY</option>
+                                <option value="KHẨN CẤP">KHẨN CẤP</option>
+                                <option value="HỖ TRỢ CHI NHÁNH">HỖ TRỢ CHI NHÁNH</option>
+                                <option value="ĐIỀU CHỈNH LỊCH">ĐIỀU CHỈNH LỊCH</option>
+                            </select>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* TRẠNG THÁI VẬN HÀNH */}
@@ -232,10 +281,10 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                         <div style={{ display: 'flex', gap: '4px' }}>
                             <button className={`btn-login ${formData.checklist[item] === true ? '' : 'btn-outline'}`}
                                 style={{ padding: '4px 10px', fontSize: '10px', width: 'auto', background: formData.checklist[item] === true ? '#10B981' : '' }}
-                                onClick={() => toggleChecklist(item, true)}>OK</button>
+                                onClick={() => toggleChecklist(item, true)}>CÓ</button>
                             <button className={`btn-login ${formData.checklist[item] === false ? '' : 'btn-outline'}`}
                                 style={{ padding: '4px 10px', fontSize: '10px', width: 'auto', background: formData.checklist[item] === false ? '#EF4444' : '' }}
-                                onClick={() => toggleChecklist(item, false)}>KO</button>
+                                onClick={() => toggleChecklist(item, false)}>KHÔNG</button>
                         </div>
                     </div>
                 ))}
@@ -254,9 +303,10 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             )}
 
             {/* CẢM NHẬN NHÂN SỰ */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: '10px', marginTop: '8px', border: '1px solid #E2E8F0' }}>
+            <div className="section-title" style={{ marginTop: '10px' }}>CA LÀM VIỆC HÔM NAY THẾ NÀO?</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: '10px', marginBottom: '8px', border: '1px solid #E2E8F0' }}>
                 {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
-                    <span key={i} style={{ fontSize: '24px', cursor: 'pointer', opacity: formData.mood === (i + 1) ? 1 : 0.3, transition: '0.2s' }} onClick={() => handleInputChange('mood', i + 1)}>{m}</span>
+                    <span key={i} style={{ fontSize: '24px', cursor: 'pointer', opacity: formData.mood === (i + 1) ? 1 : 0.3, transform: formData.mood === (i + 1) ? 'scale(1.2)' : 'scale(1)', transition: '0.2s' }} onClick={() => handleInputChange('mood', i + 1)}>{m}</span>
                 ))}
             </div>
 
@@ -287,8 +337,8 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
             {/* BÀN GIAO & RỦI RO */}
             <div className="grid-2 mt-5">
-                <select className="input-login" style={{ fontWeight: 800, color: '#004AAD', fontSize: '10px' }} value={formData.next_shift_risk} onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}>
-                    <option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
+                <select className="input-login" style={{ fontWeight: 800, color: formData.next_shift_risk ? '#004AAD' : '#999', fontSize: '10px' }} value={formData.next_shift_risk} onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}>
+                    <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
                 </select>
                 <textarea className="input-login" style={{ height: '38px', marginBottom: 0, fontSize: '10px' }} placeholder="Dặn dò ca sau..." value={formData.next_shift_note} onChange={(e) => handleInputChange('next_shift_note', e.target.value)}></textarea>
             </div>
