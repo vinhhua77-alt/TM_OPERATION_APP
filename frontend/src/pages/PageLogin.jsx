@@ -6,10 +6,7 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
   const [staffId, setStaffId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordStaffId, setForgotPasswordStaffId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
 
   const handleLogin = async () => {
@@ -36,74 +33,6 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
       setLoading(false);
     }
   };
-
-  const handleForgotPassword = async () => {
-    if (!forgotPasswordStaffId) {
-      setMsg({ text: 'VUI LÒNG NHẬP MÃ NHÂN VIÊN!', type: 'error' });
-      return;
-    }
-
-    setForgotPasswordLoading(true);
-    try {
-      const res = await passwordResetAPI.requestReset(forgotPasswordStaffId.trim().toUpperCase());
-      setMsg({ text: res.message, type: res.success ? 'success' : 'error' });
-      if (res.success) {
-        setTimeout(() => {
-          setShowForgotPassword(false);
-          setForgotPasswordStaffId('');
-        }, 3000);
-      }
-    } catch (error) {
-      setMsg({ text: error.message || 'Có lỗi xảy ra', type: 'error' });
-    } finally {
-      setForgotPasswordLoading(false);
-    }
-  };
-
-  if (showForgotPassword) {
-    return (
-      <div className="fade-in">
-        <Notification message={msg.text} type={msg.type} onClose={() => setMsg({ text: '', type: '' })} />
-        <div className="header">
-          <h2 className="brand-title">QUÊN MẬT KHẨU</h2>
-          <p className="sub-title-dev">Nhập mã nhân viên để reset</p>
-        </div>
-
-        <div className="mt-10 form-group">
-          <input
-            className="input-login text-center uppercase"
-            placeholder="MÃ NHÂN VIÊN"
-            value={forgotPasswordStaffId}
-            onChange={(e) => setForgotPasswordStaffId(e.target.value.toUpperCase())}
-            onKeyUp={(e) => e.key === 'Enter' && handleForgotPassword()}
-          />
-        </div>
-
-        <button
-          className="btn-login mt-10"
-          onClick={handleForgotPassword}
-          disabled={forgotPasswordLoading}
-          style={{ background: forgotPasswordLoading ? '#ccc' : '#004AAD' }}
-        >
-          {forgotPasswordLoading ? 'ĐANG GỬI...' : 'GỬI EMAIL RESET'}
-        </button>
-
-        <div className="text-center mt-5">
-          <button
-            onClick={() => {
-              setShowForgotPassword(false);
-              setForgotPasswordStaffId('');
-              setMsg({ text: '', type: '' });
-            }}
-            className="sub-title-dev"
-            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD' }}
-          >
-            QUAY LẠI ĐĂNG NHẬP
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fade-in">
@@ -151,14 +80,7 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
         {loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP NGAY'}
       </button>
 
-      <div className="text-center mt-5" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-        <button
-          onClick={() => setShowForgotPassword(true)}
-          className="sub-title-dev"
-          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD', fontSize: '11px' }}
-        >
-          QUÊN MẬT KHẨU?
-        </button>
+      <div className="text-center mt-5">
         <button
           onClick={onGoToRegister}
           className="sub-title-dev"
