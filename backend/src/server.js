@@ -30,8 +30,10 @@ const PORT = process.env.PORT || 3001;
 // Trust proxy for Render/Vercel
 app.set('trust proxy', 1);
 
-// Security middleware
-app.use(helmet());
+// Security middleware - Configure Helmet to allow CORS
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS Configuration
 const allowedOrigins = [
