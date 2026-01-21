@@ -69,7 +69,15 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
     const filteredStaff = useMemo(() => {
         // Filter staff by store if store is selected, else show all or empty
-        return master.staff?.filter(s => !formData.store_id || s.store === formData.store_id || s.store_code === formData.store_id) || [];
+        if (!formData.store_id) return master.staff || [];
+
+        const targetStore = String(formData.store_id).trim().toUpperCase();
+
+        return (master.staff || []).filter(s => {
+            // Robust check: handle 'store' vs 'store_code' key, casing, and type
+            const sCode = String(s.store || s.store_code || '').trim().toUpperCase();
+            return sCode === targetStore;
+        });
     }, [formData.store_id, master.staff]);
 
     const shiftStatus = useMemo(() => {
@@ -307,6 +315,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                     QUAY LẠI TRANG CHỦ
                 </button>
             </div>
+
         </div>
     );
 };

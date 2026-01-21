@@ -151,18 +151,18 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
         {loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP NGAY'}
       </button>
 
-      <div className="text-center mt-5" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="text-center mt-5" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
         <button
           onClick={() => setShowForgotPassword(true)}
           className="sub-title-dev"
-          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD' }}
+          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD', fontSize: '11px' }}
         >
           QUÊN MẬT KHẨU?
         </button>
         <button
           onClick={onGoToRegister}
           className="sub-title-dev"
-          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD' }}
+          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD', fontSize: '11px' }}
         >
           ĐĂNG KÝ NHÂN VIÊN MỚI
         </button>

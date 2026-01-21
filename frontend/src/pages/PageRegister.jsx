@@ -21,14 +21,14 @@ const PageRegister = ({ onNavigate }) => {
     const fetchStores = async () => {
       try {
         const response = await masterAPI.getStores();
-        if (response.data.success) {
-          setStores(response.data.data || []);
+        if (response.success) {
+          setStores(response.data || []);
         } else {
-          throw new Error(response.data.message);
+          throw new Error(response.message);
         }
       } catch (error) {
         console.error('Error loading stores:', error);
-        setMsg({ text: 'Không thể tải danh sách cửa hàng', type: 'error' });
+        setMsg({ text: `Lỗi tải cửa hàng: ${error.message || 'Lỗi kết nối'}`, type: 'error' });
       } finally {
         setLoadingStores(false);
       }
