@@ -5,6 +5,7 @@ import DashboardPage from './pages/PageDashboard';
 import PageShiftLog from './pages/PageShiftLog';
 import PageSetting from './pages/PageSetting';
 import PageLeaderReport from './pages/PageLeaderReport';
+import PageResetPassword from './pages/PageResetPassword';
 import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
 
@@ -12,6 +13,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [resetTokenInfo, setResetTokenInfo] = useState(null);
 
   useEffect(() => {
     // Kiểm tra token và lấy thông tin user
@@ -33,7 +35,18 @@ function App() {
         })
         .finally(() => setLoading(false));
     } else {
-      setLoading(false);
+      // Check for Reset Password Token in URL
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const staffId = params.get('staffId');
+
+      if (token && staffId) {
+        setResetTokenInfo({ token, staffId });
+        setCurrentPage('RESET_PASSWORD');
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -53,6 +66,8 @@ function App() {
     localStorage.removeItem('lastPage');
     setUser(null);
     setCurrentPage('LOGIN');
+    // Clear URL params if any
+    window.history.replaceState({}, document.title, "/");
   };
 
   if (loading) {
@@ -77,6 +92,14 @@ function App() {
         return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
       case 'SETTING':
         return <PageSetting user={user} onNavigate={handleNavigate} />;
+      case 'RESET_PASSWORD':
+        return <PageResetPassword token={resetTokenInfo?.token} staffId={resetTokenInfo?.staffId} onNavigate={(page) => {
+          if (page === 'LOGIN') {
+            window.history.replaceState({}, document.title, "/");
+            setResetTokenInfo(null);
+          }
+          handleNavigate(page);
+        }} />;
       default:
         return <PageLogin onLogin={handleLogin} onGoToRegister={() => handleNavigate('REGISTER')} />;
     }

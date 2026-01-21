@@ -6,17 +6,48 @@
 
 import { UserRepo } from '../../infra/user.repo.supabase.js';
 import bcrypt from 'bcryptjs';
-// import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const JWT_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || 'temp-secret-key-123';
+const APP_URL = process.env.CORS_ORIGIN || 'https://app.vinhhua.com';
 
 export class PasswordResetService {
   /**
    * Gửi email reset password
    */
   static async requestReset(staffId) {
-    // TEMPORARILY DISABLED due to migration
+    if (!staffId) return { success: false, message: 'Thiếu mã nhân viên' };
+
+    // 1. Check user exists
+    const user = await UserRepo.getByStaffId(staffId);
+    if (!user) {
+      return { success: false, message: 'Không tìm thấy nhân viên với mã này' };
+    }
+
+    // 2. Generate Token (Valid for 15 mins)
+    const token = jwt.sign(
+      { staffId: user.staff_id, email: user.email, type: 'RESET_PASSWORD' },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // 3. Create Link
+    // Default to localhost if dev, or the production URL
+    // Since we don't know exact frontend URL, we guess or use relative. 
+    // Ideally user provides this in env.
+    const resetLink = `${APP_URL}/?token=${token}&staffId=${user.staff_id}`;
+
+    // 4. Send Email (MOCK)
+    // In real app: await EmailService.send(user.email, resetLink);
+
+    console.log(`[MOCK EMAIL] Reset Link for ${staffId}: ${resetLink}`);
+
     return {
-      success: false,
-      message: 'Tính năng đang bảo trì trong quá trình chuyển đổi hệ thống.'
+      success: true,
+      message: `Đã gửi link reset (GIẢ LẬP). Vui lòng copy link này để test: ${resetLink}`
     };
   }
 
@@ -24,10 +55,44 @@ export class PasswordResetService {
    * Reset password với token
    */
   static async resetPassword(staffId, token, newPassword) {
-    // TEMPORARILY DISABLED due to migration
-    return {
-      success: false,
-      message: 'Tính năng đang bảo trì trong quá trình chuyển đổi hệ thống.'
-    };
+    if (!staffId || !token || !newPassword) {
+      return { success: false, message: 'Thiếu thông tin bắt buộc' };
+    }
+
+    try {
+      // 1. Verify Token
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      if (decoded.staffId !== staffId) {
+        return { success: false, message: 'Token không khớp với nhân viên' };
+      }
+
+      if (decoded.type !== 'RESET_PASSWORD') {
+        return { success: false, message: 'Token không hợp lệ' };
+      }
+
+      // 2. Hash Password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // 3. Update DB
+      const result = await UserRepo.updatePassword(staffId, hashedPassword);
+
+      if (!result) {
+        return { success: false, message: 'Lỗi cập nhật mật khẩu vào Database' };
+      }
+
+      return {
+        success: true,
+        message: 'Đổi mật khẩu thành công! Hãy đăng nhập lại.'
+      };
+
+    } catch (error) {
+      console.error('Reset Password Error:', error);
+      if (error.name === 'TokenExpiredError') {
+        return { success: false, message: 'Link reset đã hết hạn. Vui lòng thử lại.' };
+      }
+      return { success: false, message: 'Link reset không hợp lệ hoặc đã hết hạn.' };
+    }
   }
 }
