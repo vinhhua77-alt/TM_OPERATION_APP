@@ -13,8 +13,15 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 
 export class EmailService {
     static async sendResetEmail(toEmail, resetLink) {
+        // Enhanced logging for debugging
+        console.log('[EmailService] Checking email configuration...');
+        console.log(`[EmailService] EMAIL_USER exists: ${!!EMAIL_USER}`);
+        console.log(`[EmailService] EMAIL_PASS exists: ${!!EMAIL_PASS}`);
+        console.log(`[EmailService] EMAIL_USER value: ${EMAIL_USER ? EMAIL_USER.substring(0, 5) + '***' : 'UNDEFINED'}`);
+
         if (!EMAIL_USER || !EMAIL_PASS) {
-            console.error('Email configuration missing (EMAIL_USER or EMAIL_PASS)');
+            console.error('[EmailService] Email configuration missing (EMAIL_USER or EMAIL_PASS)');
+            console.error(`[EmailService] All env vars: ${Object.keys(process.env).filter(k => k.includes('EMAIL')).join(', ')}`);
             return false;
         }
 
