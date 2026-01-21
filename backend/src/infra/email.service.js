@@ -1,43 +1,44 @@
 /**
  * EMAIL SERVICE
- * Sử dụng Nodemailer để gửi email
+ * Sử dụng SendGrid API để gửi email
  */
 
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@vinhhua.com';
+
+// Initialize SendGrid
+if (SENDGRID_API_KEY) {
+    sgMail.setApiKey(SENDGRID_API_KEY);
+}
 
 export class EmailService {
     static async sendResetEmail(toEmail, resetLink) {
         // Enhanced logging for debugging
-        console.log('[EmailService] Checking email configuration...');
-        console.log(`[EmailService] EMAIL_USER exists: ${!!EMAIL_USER}`);
-        console.log(`[EmailService] EMAIL_PASS exists: ${!!EMAIL_PASS}`);
-        console.log(`[EmailService] EMAIL_USER value: ${EMAIL_USER ? EMAIL_USER.substring(0, 5) + '***' : 'UNDEFINED'}`);
+        console.log('[EmailService] Checking SendGrid configuration...');
+        console.log(`[EmailService] SENDGRID_API_KEY exists: ${!!SENDGRID_API_KEY}`);
+        console.log(`[EmailService] EMAIL_FROM: ${EMAIL_FROM}`);
+        console.log(`[EmailService] Sending to: ${toEmail}`);
 
-        if (!EMAIL_USER || !EMAIL_PASS) {
-            console.error('[EmailService] Email configuration missing (EMAIL_USER or EMAIL_PASS)');
-            console.error(`[EmailService] All env vars: ${Object.keys(process.env).filter(k => k.includes('EMAIL')).join(', ')}`);
+        if (!SENDGRID_API_KEY) {
+            console.error('[EmailService] SendGrid API key missing');
+            return false;
+        }
+
+        if (!toEmail) {
+            console.error('[EmailService] Recipient email is missing');
             return false;
         }
 
         try {
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: EMAIL_USER,
-                    pass: EMAIL_PASS
-                }
-            });
-
-            const mailOptions = {
-                from: `"Thái Mậu Operation App" <${EMAIL_USER}>`,
+            const msg = {
                 to: toEmail,
-                subject: 'Yêu cầu đặt lại mật khẩu',
+                from: EMAIL_FROM,
+                subject: 'Yêu cầu đặt lại mật khẩu - Thái Mậu Group',
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                         <h2 style="color: #004AAD; text-align: center;">YÊU CẦU ĐẶT LẠI MẬT KHẨU</h2>
@@ -55,12 +56,15 @@ export class EmailService {
                 `
             };
 
-            const info = await transporter.sendMail(mailOptions);
-            console.log('Email sent: ' + info.response);
+            await sgMail.send(msg);
+            console.log('[EmailService] Email sent successfully via SendGrid');
             return true;
 
         } catch (error) {
-            console.error('Error sending email:', error);
+            console.error('[EmailService] Error sending email:', error);
+            if (error.response) {
+                console.error('[EmailService] SendGrid error details:', error.response.body);
+            }
             return false;
         }
     }
