@@ -30,33 +30,18 @@ const PORT = process.env.PORT || 3001;
 // Trust proxy for Render/Vercel
 app.set('trust proxy', 1);
 
-// Security middleware - Configure Helmet to allow CORS
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+// TEMPORARILY DISABLE HELMET FOR DEBUGGING
+// app.use(helmet({
+//   crossOriginResourcePolicy: { policy: "cross-origin" }
+// }));
 
-// CORS Configuration
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://app.vinhhua.com',
-  'https://tm-operation-app.vercel.app'
-];
-
+// CORS Configuration - Simplified for production
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Still allow for now, but log it
-    }
-  },
+  origin: true, // Allow all origins for now
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
