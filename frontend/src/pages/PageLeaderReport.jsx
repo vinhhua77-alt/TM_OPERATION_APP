@@ -11,9 +11,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
     // 2. FORM STATE
     const [formData, setFormData] = useState({
-        store_id: user?.storeCode || '',
         area_code: '',
-        startH: '08',
+        startH: '',
+        startM: '00',
         startM: '00',
         endH: '',
         endM: '',
@@ -217,8 +217,11 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             {/* THỜI GIAN VÀO/RA */}
             <div className="grid-2 mt-5">
                 <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#94A3B8' }}>VÀO</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center' }} value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: formData.startH ? '#10B981' : '#94A3B8' }}>
+                        {formData.startH ? '✅ VÀO' : 'VÀO'}
+                    </span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: formData.startH ? '#10B981' : '#DDDDDD' }} value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
+                        <option value="">-- GIỜ --</option>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
@@ -227,8 +230,11 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                     </select>
                 </div>
                 <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#94A3B8' }}>RA</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center' }} value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: formData.endH ? '#10B981' : '#94A3B8' }}>
+                        {formData.endH ? '✅ RA' : 'RA'}
+                    </span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: formData.endH ? '#10B981' : '#DDDDDD' }} value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
+                        <option value="">-- GIỜ --</option>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
@@ -276,7 +282,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             </div>
 
             {/* TRẠNG THÁI VẬN HÀNH */}
-            <div className="section-title">TRẠNG THÁI VẬN HÀNH</div>
+            <div className="section-title" style={{ color: (formData.has_peak || formData.has_out_of_stock || formData.has_customer_issue) ? '#10B981' : '#004AAD' }}>
+                {(formData.has_peak || formData.has_out_of_stock || formData.has_customer_issue) ? '✅ TRẠNG THÁI VẬN HÀNH' : 'TRẠNG THÁI VẬN HÀNH'}
+            </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
                 {[{ id: 'has_peak', l: 'CA ĐÔNG' }, { id: 'has_out_of_stock', l: 'HẾT MÓN' }, { id: 'has_customer_issue', l: 'PHÀN NÀN' }].map(b => (
                     <button key={b.id} className={`btn-login ${formData[b.id] ? '' : 'btn-outline'}`}
@@ -315,7 +323,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             )}
 
             {/* CẢM NHẬN NHÂN SỰ */}
-            <div className="section-title" style={{ marginTop: '10px' }}>CA LÀM VIỆC HÔM NAY THẾ NÀO?</div>
+            <div className="section-title" style={{ marginTop: '10px', color: formData.mood > 0 ? '#10B981' : '#004AAD' }}>
+                {formData.mood > 0 ? '✅ CA LÀM VIỆC HÔM NAY THẾ NÀO?' : 'CA LÀM VIỆC HÔM NAY THẾ NÀO?'}
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: '10px', marginBottom: '8px', border: '1px solid #E2E8F0' }}>
                 {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
                     <span key={i} style={{ fontSize: '24px', cursor: 'pointer', opacity: formData.mood === (i + 1) ? 1 : 0.3, transform: formData.mood === (i + 1) ? 'scale(1.2)' : 'scale(1)', transition: '0.2s' }} onClick={() => handleInputChange('mood', i + 1)}>{m}</span>
@@ -323,7 +333,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             </div>
 
             {/* GHI NHẬN NHÂN SỰ */}
-            <div className="section-title">GHI NHẬN NHÂN SỰ</div>
+            <div className="section-title" style={{ color: (formData.khen_emp || formData.nhac_emp) ? '#10B981' : '#004AAD' }}>
+                {(formData.khen_emp || formData.nhac_emp) ? '✅ GHI NHẬN NHÂN SỰ' : 'GHI NHẬN NHÂN SỰ'}
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1fr', gap: '4px', marginBottom: '4px' }}>
                 <div style={{ fontSize: '8px', fontWeight: 900, color: '#10B981', border: '1px solid #BBF7D0', padding: '6px', borderRadius: '6px', textAlign: 'center', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👍 KHEN</div>
