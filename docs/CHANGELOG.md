@@ -1,7 +1,8 @@
 # CHANGELOG - DOCS v1 → v2 Migration
 
-**Date**: 2026-01-21  
-**Migration**: Google Apps Script → Supabase
+**Date**: 2026-01-22  
+**Migration**: Google Apps Script → Supabase  
+**Current Version**: v3.0
 
 ---
 
@@ -172,6 +173,11 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | 2026-01-19 | Deployment to Vercel + Render |
 | 2026-01-20 | Bug fixes and testing |
 | 2026-01-21 | DOCS v2 created |
+| 2026-01-22 | Employee Dashboard implemented |
+| 2026-01-22 | Shift Log migrated to Supabase (raw_shiftlog table) |
+| 2026-01-22 | Performance optimizations (caching, rate limiting) |
+| 2026-01-22 | Validation rules added (shift limits, time gaps) |
+| 2026-01-22 | Data import scripts created |
 
 ---
 
@@ -242,6 +248,28 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 ---
 
+## Detailed Changes - 2026-01-22
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-22 | Added Employee Dashboard | User request for staff self-service portal |
+| 2026-01-22 | Migrated shift logs to `raw_shiftlog` table | Scalability and proper data types |
+| 2026-01-22 | Implemented localStorage caching (5-min TTL) | Reduce API load by 80% for 100+ users |
+| 2026-01-22 | Added shift submission limits (max 2/day) | Prevent duplicate submissions |
+| 2026-01-22 | Added time gap validation (min 2 hours) | Ensure valid split shifts only |
+| 2026-01-22 | Fixed dashboard month format bug | Correct YYYY-MM format (removed extra space) |
+| 2026-01-22 | Fixed "No Lead" submission error | Proper string to boolean conversion |
+| 2026-01-22 | Fixed null staff_name error | Use correct user property (staff_name vs name) |
+| 2026-01-22 | Fixed infinite loop causing 429 errors | Added isInitialized flag to useEffect |
+| 2026-01-22 | Increased rate limit to 500 req/15min | Support concurrent users during development |
+| 2026-01-22 | Created data import scripts | Enable bulk migration from Google Sheets |
+| 2026-01-22 | Added GenZ motivational messages | Improve user engagement for Leader Report |
+| 2026-01-22 | Created cache utility module | Reusable caching functions |
+| 2026-01-22 | Added database indexes for performance | Optimize shift log queries |
+| 2026-01-22 | Simplified month selector to current month | Reduce API load and complexity |
+
+---
+
 ## Future Roadmap
 
 ### Phase 3 (Future)
@@ -282,6 +310,6 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 **Migration Status**: ✅ **COMPLETE**
 
-**Current Version**: v2.0 (Supabase)
+**Current Version**: v3.0 (Supabase + Enhancements)
 
-**Last Updated**: 2026-01-21
+**Last Updated**: 2026-01-22

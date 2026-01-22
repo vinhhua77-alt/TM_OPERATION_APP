@@ -6,6 +6,13 @@ import PageShiftLog from './pages/PageShiftLog';
 import PageSetting from './pages/PageSetting';
 import PageLeaderReport from './pages/PageLeaderReport';
 import PageResetPassword from './pages/PageResetPassword';
+import PageStaffManagement from './pages/PageStaffManagement';
+import PageStoreManagement from './pages/PageStoreManagement';
+import PageAnnouncementManagement from './pages/PageAnnouncementManagement';
+import PageIncidentManagement from './pages/PageIncidentManagement';
+import PageCareer from './pages/PageCareer';
+import AnnouncementPopup from './components/AnnouncementPopup';
+import AnnouncementBadge from './components/AnnouncementBadge';
 import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
 
@@ -25,7 +32,7 @@ function App() {
             setUser(res.user);
             // Restore last page or default to HOME
             const lastPage = localStorage.getItem('lastPage');
-            const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'SETTING', 'LEADER_REPORT'];
+            const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'SETTING', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER'];
             setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
           }
         })
@@ -92,6 +99,16 @@ function App() {
         return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
       case 'SETTING':
         return <PageSetting user={user} onNavigate={handleNavigate} />;
+      case 'STAFF_MANAGEMENT':
+        return <PageStaffManagement user={user} onBack={() => handleNavigate('SETTING')} />;
+      case 'STORE_MANAGEMENT':
+        return <PageStoreManagement user={user} onBack={() => handleNavigate('SETTING')} />;
+      case 'CAREER':
+        return <PageCareer user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'ANNOUNCEMENT_MANAGEMENT':
+        return <PageAnnouncementManagement user={user} onBack={() => handleNavigate('SETTING')} />;
+      case 'INCIDENT_MANAGEMENT':
+        return <PageIncidentManagement user={user} onBack={() => handleNavigate('SETTING')} />;
       case 'RESET_PASSWORD':
         return <PageResetPassword token={resetTokenInfo?.token} staffId={resetTokenInfo?.staffId} onNavigate={(page) => {
           if (page === 'LOGIN') {
@@ -111,6 +128,8 @@ function App() {
         {renderPage()}
         <TopMenu user={user} onNavigate={handleNavigate} onLogout={handleLogout} />
       </div>
+      {user && <AnnouncementPopup user={user} onClose={() => { }} />}
+      {user && <AnnouncementBadge user={user} />}
     </div>
   );
 }

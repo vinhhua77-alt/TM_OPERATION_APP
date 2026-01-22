@@ -61,7 +61,7 @@ router.get('/data', async (req, res) => {
         ] = await Promise.all([
             supabase.from('store_list').select('id, store_code, store_name').eq('active', true),
             supabase.from('shift_master').select('*').eq('active', true),
-            supabase.from('ui_layout_config').select('*').order('sort_order', { ascending: true }),
+            supabase.from('layout_master').select('*').eq('active', true).order('sort_order', { ascending: true }),
             supabase.from('sub_position_master').select('*').eq('active', true),
             supabase.from('checklist_master').select('*').eq('active', true).order('sort_order', { ascending: true }),
             supabase.from('incident_master').select('*').eq('active', true),
@@ -122,7 +122,7 @@ router.get('/data', async (req, res) => {
         // Let's output what is in the DB.
 
         layouts.forEach(l => {
-            const layoutKey = l.layout_id; // e.g., FOH, BOH
+            const layoutKey = l.layout_code; // Use layout_code from layout_master
 
             // Filter related items
             const subPosList = subPositions
@@ -141,12 +141,10 @@ router.get('/data', async (req, res) => {
                 .map(ic => ic.incident_name);
 
             layoutsData[layoutKey] = {
-                name: l.display_name,
+                name: l.layout_code, // Use layout_code for display (FOH, BOH, CASHIER)
                 subPositions: subPosList,
                 checklist: checklistList,
-                incidents: incidentList,
-                color: l.color_hex,
-                icon: l.icon_name
+                incidents: incidentList
             };
         });
 
@@ -156,7 +154,7 @@ router.get('/data', async (req, res) => {
             shifts: shiftsData,
             layouts: layoutsData,
             // Extra data for Leader Report
-            areas: layouts.map(l => l.display_name), // Dynamic areas list
+            areas: layouts.map(l => l.layout_code), // Use layout_code (FOH, BOH, CASHIER)
             staff: staffData,
             leaderChecklist: checklists.filter(c => c.layout === 'LEAD').map(c => c.checklist_text),
             leaderIncidents: incidents.filter(i => i.layout === 'LEAD').map(i => i.incident_name)

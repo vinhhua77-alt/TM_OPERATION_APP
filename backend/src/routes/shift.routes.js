@@ -1,47 +1,57 @@
 /**
  * SHIFT ROUTES
- * API endpoints cho Shift Log
+ * API endpoints for Shift Log
  */
 
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { ShiftService } from '../domain/shift/shift.service.js';
 
 const router = express.Router();
 
-// Tất cả routes cần authentication
-router.use(async (req, res, next) => {
-  await authenticateToken(req, res, next);
-});
+// All routes require authentication
+router.use(authenticateToken);
 
 /**
  * POST /api/shift/submit
- * Submit shift log
+ * Submit shift log to raw_shiftlog table
  */
 router.post('/submit', async (req, res, next) => {
   try {
     const payload = req.body;
+    const result = await ShiftService.submit(req.user, payload);
 
-    // In a real implementation:
-    // 1. Validate payload using Joi/Zod
-    // 2. Save to database/Supabase
-    // 3. Upload photo if exists
-
-    console.log('Received shift log:', payload);
-
-    // Validate required fields (basic check)
-    if (!payload.storeId || !payload.layout) {
-      return res.status(400).json({
-        success: false,
-        message: 'Thiếu thông tin bắt buộc (Store, Layout)'
-      });
+    if (!result.success) {
+      return res.status(400).json(result);
     }
 
-    // Return success mock
-    res.json({
-      success: true,
-      message: 'Gửi báo cáo thành công',
-      data: { id: 'LOG_' + Date.now() }
+    res.json(result);
+  } catch (error) {
+    console.error('Shift submit error:', error);
+    next(error);
+  }
+});
+
+/**
+ * GET /api/shift/logs/:staffId
+ * Get shift logs for a staff member
+ */
+router.get('/logs/:staffId', async (req, res, next) => {
+  try {
+    const { staffId } = req.params;
+    const { startDate, endDate, layout } = req.query;
+
+    const result = await ShiftService.getShiftLogs(staffId, {
+      startDate,
+      endDate,
+      layout
     });
+
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+
+    res.json(result);
   } catch (error) {
     next(error);
   }

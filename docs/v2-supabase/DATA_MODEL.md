@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## DATA_MODEL.md (v2 - Supabase Postgres)
 
-**Version**: 2.0  
-**Last Updated**: 2026-01-21  
+**Version**: 3.0  
+**Last Updated**: 2026-01-22  
 **Status**: Production
 
 ---
@@ -193,39 +193,59 @@ The data model follows these **immutable principles**:
 
 ## 4. RAW DATA SCHEMAS (APPEND-ONLY)
 
-### 4.1. raw_shiftlog
+### 4.1. raw_shiftlog (v3.0 - Updated 2026-01-22)
 
 **Purpose**: Employee shift reports (append-only)
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | BIGINT (PK) | Auto-increment ID |
-| version | TEXT | App version |
-| store_id | TEXT | FK → store_list.store_code |
-| date | DATE | Shift date |
-| staff_id | TEXT | FK → staff_master.staff_id |
-| staff_name | TEXT | Snapshot of name |
+| id | BIGSERIAL (PK) | Auto-increment ID |
+| version | TEXT | App version (default 'v2.0.0') |
+| store_id | TEXT NOT NULL | FK → store_list.store_code |
+| date | DATE NOT NULL | Shift date |
+| staff_id | TEXT NOT NULL | FK → staff_master.staff_id |
+| staff_name | TEXT NOT NULL | Snapshot of name |
 | role | TEXT | Snapshot of role |
-| lead | INTEGER | Is shift leader (0/1) |
-| start_time | TEXT | Shift start time |
-| end_time | TEXT | Shift end time |
-| duration | REAL | Hours worked |
-| layout | TEXT | Work layout (FOH, BOH, CASH, SUPPORT) |
-| sub_pos | TEXT | Sub-positions (JSON/CSV) |
-| checks | TEXT | Checklist results (JSON/CSV) |
+| lead | BOOLEAN | Is shift leader (true/false) |
+| start_time | TEXT | Shift start time (HH:MM) |
+| end_time | TEXT | Shift end time (HH:MM) |
+| duration | NUMERIC(5,2) | Hours worked (decimal) |
+| layout | TEXT NOT NULL | Work layout (FOH, BOH, CASHIER) |
+| sub_pos | TEXT | Sub-position |
+| checks | JSONB | Checklist results (JSON object) |
 | incident_type | TEXT | Incident code |
 | incident_note | TEXT | Incident description |
-| rating | INTEGER | Self-rating (1-5) |
-| selected_reasons | TEXT | Rating reasons (JSON/CSV) |
-| is_valid | INTEGER | Active record (1) or superseded (0) |
+| rating | TEXT | Self-rating (1-5 or OK/BUSY/FIXED/OPEN/OVER) |
+| selected_reasons | JSONB | Rating reasons (JSON array) |
+| is_valid | BOOLEAN | Active record (true) or superseded (false) |
 | photo_url | TEXT | Photo evidence URL |
-| created_at | TIMESTAMPTZ | Submission timestamp |
+| created_at | TIMESTAMPTZ | Submission timestamp (default NOW()) |
+
+**Performance Indexes**:
+```sql
+CREATE INDEX idx_raw_shiftlog_staff_date ON raw_shiftlog(staff_id, date);
+CREATE INDEX idx_raw_shiftlog_store_date ON raw_shiftlog(store_id, date);
+CREATE INDEX idx_raw_shiftlog_created_at ON raw_shiftlog(created_at);
+CREATE INDEX idx_raw_shiftlog_layout ON raw_shiftlog(layout);
+CREATE INDEX idx_raw_shiftlog_is_valid ON raw_shiftlog(is_valid);
+```
+
+**RLS Policies**:
+- Staff can INSERT their own shift logs
+- Staff can SELECT their own shift logs
+- Admin/OPS can SELECT all shift logs
+- ❌ NO UPDATE or DELETE policies (append-only enforced)
 
 **🔒 LOCK**:
 - ❌ **NEVER** UPDATE this table
 - ❌ **NEVER** DELETE from this table
 - ✅ **ONLY** INSERT new rows
-- ✅ To "edit", insert new row with `is_valid = 1`, mark old row `is_valid = 0`
+- ✅ To "edit", insert new row with `is_valid = true`, mark old row `is_valid = false`
+
+**Validation Rules (v3.0)**:
+- Maximum 2 shifts per day (for split shifts)
+- Minimum 2-hour gap between submissions
+- Required fields: store_id, date, staff_id, staff_name, layout
 
 ---
 
@@ -419,6 +439,10 @@ role_master
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
+| 2026-01-22 | Updated raw_shiftlog schema | Proper data types (BOOLEAN, NUMERIC, JSONB) |
+| 2026-01-22 | Added validation rules | Shift limits and time gap validation |
+| 2026-01-22 | Added performance indexes | Optimize query performance |
 | 2026-01-21 | Created DATA_MODEL.md v2.0 | Supabase migration complete |
 | 2026-01-15 | Migrated from GSheet to Postgres | Scalability + proper database |
 

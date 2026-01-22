@@ -1,33 +1,56 @@
 /**
  * DASHBOARD ROUTES
- * API endpoints cho Dashboard
+ * API endpoints for employee dashboard
  */
 
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { DashboardService } from '../domain/staff/dashboard.service.js';
 
 const router = express.Router();
 
-// Tất cả routes cần authentication
-router.use(async (req, res, next) => {
-  await authenticateToken(req, res, next);
+// All routes require authentication
+router.use(authenticateToken);
+
+/**
+ * GET /api/dashboard/:staffId
+ * Get employee dashboard statistics
+ * Query params: month (optional, format: YYYY-MM)
+ */
+router.get('/:staffId', async (req, res, next) => {
+  try {
+    const { staffId } = req.params;
+    const { month } = req.query;
+
+    const result = await DashboardService.getEmployeeDashboard(req.user, staffId, month);
+
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**
- * GET /api/dashboard/stats
- * Lấy thống kê dashboard
+ * GET /api/dashboard/:staffId/months
+ * Get available months for staff member
  */
-router.get('/stats', (req, res) => {
-  // Mock data matching the frontend expectation
-  res.json({
-    success: true,
-    data: {
-      totalLogs: 15,
-      totalIncidents: 2,
-      moodSummary: { "Rất ổn": 10, "Hơi căng": 4, "Quá tải": 1 },
-      moodIcons: { "Rất ổn": "🟢", "Hơi căng": "🟡", "Quá tải": "🔴" }
+router.get('/:staffId/months', async (req, res, next) => {
+  try {
+    const { staffId } = req.params;
+    const result = await DashboardService.getAvailableMonths(req.user, staffId);
+
+    if (!result.success) {
+      return res.status(500).json(result);
     }
-  });
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

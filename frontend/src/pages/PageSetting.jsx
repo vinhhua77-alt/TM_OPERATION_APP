@@ -89,11 +89,11 @@ const PageSetting = ({ user, onBack, onNavigate }) => {
 
             {subView === 'menu' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                    <button className="btn-login btn-outline" onClick={() => setSubView('staff')}>👥 1. Quản lý nhân sự</button>
-                    <button className="btn-login btn-outline" onClick={() => alert("Tính năng đang phát triển")}>🏪 2. Quản lý nhà hàng</button>
-                    <button className="btn-login btn-outline" onClick={() => alert("Tính năng đang phát triển")}>⚠️ 3. Quản lý sự cố</button>
+                    <button className="btn-login btn-outline" onClick={() => onNavigate('STAFF_MANAGEMENT')}>👥 1. Quản lý nhân sự</button>
+                    <button className="btn-login btn-outline" onClick={() => onNavigate('STORE_MANAGEMENT')}>🏪 2. Quản lý nhà hàng</button>
+                    <button className="btn-login btn-outline" onClick={() => onNavigate('INCIDENT_MANAGEMENT')}>⚠️ 3. Quản lý danh mục sự cố</button>
                     <button className="btn-login btn-outline" onClick={() => alert("Tính năng đang phát triển")}>📋 4. Layout & Checklist</button>
-                    <button className="btn-login btn-outline" onClick={() => alert("Tính năng đang phát triển")}>📢 5. Quản lý thông báo</button>
+                    <button className="btn-login btn-outline" onClick={() => onNavigate('ANNOUNCEMENT_MANAGEMENT')}>📢 5. Quản lý thông báo</button>
                     <div className="grid-2 mt-10"><button className="btn-login btn-outline" onClick={() => onNavigate('HOME')}>QUAY LẠI TRANG CHỦ</button></div>
                 </div>
             ) : (

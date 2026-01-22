@@ -159,7 +159,19 @@ const PageLeaderReport = ({ user, onNavigate }) => {
             const res = await leaderAPI.submitReport(payload);
 
             if (res.success) {
-                alert("✅ GỬI BÁO CÁO THÀNH CÔNG!");
+                // GenZ motivational messages
+                const messages = [
+                    "🎉 XONG RỒI! Anh/chị là LEADER xuất sắc nhất hôm nay! 💪",
+                    "🔥 CHỐT ĐƠN! Báo cáo của anh/chị quá đỉnh! Keep it up! 🚀",
+                    "✨ PERFECT! Team đang tự hào về anh/chị đấy! 🌟",
+                    "💯 DONE! Anh/chị vừa level up kỹ năng quản lý! 📈",
+                    "🎯 HOÀN THÀNH! Anh/chị là role model của team! 👑",
+                    "⚡ NHANH NHƯ CHỚP! Báo cáo đã được ghi nhận! 💪",
+                    "🌈 TUYỆT VỜI! Anh/chị làm việc quá chuyên nghiệp! 🎊",
+                    "🚀 BOOM! Một ngày làm việc thành công nữa! Let's go! 🔥"
+                ];
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                alert(randomMessage);
                 onNavigate('HOME');
             } else {
                 setError("❌ LỖI: " + (res.message || "Unknown error"));

@@ -21,6 +21,11 @@ import staffRoutes from './routes/staff.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import masterRoutes from './routes/master.routes.js';
 import leaderRoutes from './routes/leader.routes.js';
+import storeAnalyticsRoutes from './routes/store-analytics.routes.js';
+import masterDataRoutes from './routes/master-data.routes.js';
+import announcementRoutes from './routes/announcement.routes.js';
+import gamificationRoutes from './routes/gamification.routes.js';
+import { AnalyticsCronJob } from './jobs/analytics.cron.js';
 
 dotenv.config();
 
@@ -44,10 +49,11 @@ app.use(cors({
   exposedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
+// Rate limiting - Increased for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 500, // limit each IP to 500 requests per windowMs (increased from 100)
+  message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
 
@@ -68,6 +74,10 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/master', masterRoutes);
 app.use('/api/leader', leaderRoutes);
+app.use('/api/store-analytics', storeAnalyticsRoutes);
+app.use('/api/master-data', masterDataRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/gamification', gamificationRoutes);
 
 // Error handling
 app.use(errorHandler);
@@ -76,6 +86,9 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📧 Email User: ${process.env.EMAIL_USER || 'NOT SET'}`);
+
+  // Start analytics cron job
+  AnalyticsCronJob.start();
 });
 
 export default app;
