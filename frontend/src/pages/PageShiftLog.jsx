@@ -223,7 +223,9 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             {/* TIME SELECTION - Compact */}
             <div className="grid-2 mt-3" style={{ background: '#F8FAFC', padding: '8px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                 <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>GIỜ VÀO</label>
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: shiftInfo?.isCorrect ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
+                        {shiftInfo?.isCorrect ? '✅ GIỜ VÀO' : 'GIỜ VÀO'}
+                    </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
                             <option value="">--</option>
@@ -235,7 +237,9 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                     <span style={{ fontSize: '16px', color: '#CBD5E1' }}>➜</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>GIỜ RA</label>
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: shiftInfo?.isCorrect ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
+                        {shiftInfo?.isCorrect ? '✅ GIỜ RA' : 'GIỜ RA'}
+                    </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
                             <option value="">--</option>
@@ -278,7 +282,10 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             )}
 
             {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
-            <div className="section-title" style={{ marginTop: '16px', marginBottom: '8px' }}>KHU VỰC LÀM VIỆC</div>
+            {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
+            <div className="section-title" style={{ marginTop: '16px', marginBottom: '8px', color: form.layout ? '#10B981' : '#004AAD', borderColor: form.layout ? '#10B981' : '#004AAD' }}>
+                {form.layout ? '✅ KHU VỰC LÀM VIỆC' : 'KHU VỰC LÀM VIỆC'}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                 {Object.keys(master.layouts || {}).map(key => (
                     <button key={key} className={`btn-login`}
@@ -352,8 +359,8 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             )}
 
             {/* FEELINGS */}
-            <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                | CẢM NHẬN HÔM NAY
+            <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', color: form.rating ? '#10B981' : '#004AAD', borderColor: form.rating ? '#10B981' : '#004AAD' }}>
+                {form.rating ? '| ✅ CẢM NHẬN HÔM NAY' : '| CẢM NHẬN HÔM NAY'}
                 <label style={{ cursor: 'pointer', color: '#004AAD', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     📷 GỬI ẢNH (TÙY CHỌN)
                     <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => {
