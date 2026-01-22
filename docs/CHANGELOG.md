@@ -267,6 +267,10 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | 2026-01-22 | Created cache utility module | Reusable caching functions |
 | 2026-01-22 | Added database indexes for performance | Optimize shift log queries |
 | 2026-01-22 | Simplified month selector to current month | Reduce API load and complexity |
+| 2026-01-22 | UI/UX Overhaul: Global AppBar & Sidebar | Improved navigation and user experience |
+| 2026-01-22 | Added Mobile Bottom Navigation & FAB | Enhanced mobile experience (PWA-Feel) |
+| 2026-01-22 | Removed PageSetting & Flattened Nav | Simplification of app structure |
+| 2026-01-22 | Cleaned up Redundant Headers | Reduced visual clutter in sub-pages |
 
 ---
 

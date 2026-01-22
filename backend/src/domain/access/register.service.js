@@ -51,7 +51,7 @@ export class RegisterService {
       // 5. Hash password
       const passwordHash = await bcrypt.hash(formData.password, 10);
 
-      // 6. TẠO USER (Supabase)
+      // 6. TẠO USER (Supabase) - Status PENDING by default
       const user = await UserRepo.create({
         staff_id: formData.id,
         staff_name: formData.name,
@@ -59,7 +59,8 @@ export class RegisterService {
         password_hash: passwordHash,
         store_code: formData.storeId,
         role: 'STAFF',
-        active: 1
+        status: 'PENDING', // New users require approval
+        active: false // Inactive until approved
       });
 
       if (!user) {
@@ -68,7 +69,7 @@ export class RegisterService {
 
       return {
         success: true,
-        message: 'Đăng ký thành công! Bạn có thể đăng nhập ngay.'
+        message: 'Đăng ký thành công! Tài khoản của bạn đang chờ duyệt từ quản lý.'
       };
 
     } catch (error) {

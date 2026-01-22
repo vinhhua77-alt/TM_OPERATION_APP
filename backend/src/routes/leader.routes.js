@@ -18,7 +18,8 @@ router.post('/submit', async (req, res, next) => {
     try {
         const payload = req.body;
 
-        console.log('📝 Received LEADER REPORT:', JSON.stringify(payload, null, 2));
+        // Sanitize logging
+        console.log(`📝 Received LEADER REPORT: Store=${payload.store_id}, Area=${payload.area_code}, Leader=${payload.leaderName}`);
 
         // Validation (Basic)
         if (!payload.store_id || !payload.area_code) {

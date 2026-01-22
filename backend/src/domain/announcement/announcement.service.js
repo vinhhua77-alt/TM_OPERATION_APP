@@ -4,6 +4,8 @@
  */
 
 import { AnnouncementRepo } from '../../infra/announcement.repo.js';
+import { Sanitizer } from '../../utils/sanitizer.js';
+import { AuditRepo } from '../../infra/audit.repo.js';
 
 export class AnnouncementService {
     /**
@@ -50,10 +52,28 @@ export class AnnouncementService {
             throw new Error('Title and content are required');
         }
 
-        // Set creator
-        announcementData.created_by = currentUser.staff_id;
+        // Sanitization
+        const sanitizedData = {
+            ...announcementData,
+            title: Sanitizer.sanitizeText(announcementData.title),
+            content: Sanitizer.sanitizeHtml(announcementData.content)
+        };
 
-        return await AnnouncementRepo.create(announcementData);
+        // Set creator
+        sanitizedData.created_by = currentUser.staff_id;
+
+        const result = await AnnouncementRepo.create(sanitizedData);
+
+        // Audit Log
+        await AuditRepo.log({
+            userId: currentUser.id,
+            action: 'ANNOUNCEMENT_CREATED',
+            resourceType: 'announcement',
+            resourceId: result.id,
+            details: { title: sanitizedData.title }
+        });
+
+        return result;
     }
 
     /**
@@ -70,7 +90,23 @@ export class AnnouncementService {
             throw new Error('Unauthorized: You can only edit your own announcements');
         }
 
-        return await AnnouncementRepo.update(id, updates);
+        // Sanitization
+        const sanitizedUpdates = { ...updates };
+        if (updates.title) sanitizedUpdates.title = Sanitizer.sanitizeText(updates.title);
+        if (updates.content) sanitizedUpdates.content = Sanitizer.sanitizeHtml(updates.content);
+
+        const result = await AnnouncementRepo.update(id, sanitizedUpdates);
+
+        // Audit Log
+        await AuditRepo.log({
+            userId: currentUser.id,
+            action: 'ANNOUNCEMENT_UPDATED',
+            resourceType: 'announcement',
+            resourceId: id,
+            details: { updates: Object.keys(updates) }
+        });
+
+        return result;
     }
 
     /**
@@ -87,7 +123,18 @@ export class AnnouncementService {
             throw new Error('Unauthorized: You can only delete your own announcements');
         }
 
-        return await AnnouncementRepo.delete(id);
+        const result = await AnnouncementRepo.delete(id);
+
+        // Audit Log
+        await AuditRepo.log({
+            userId: currentUser.id,
+            action: 'ANNOUNCEMENT_DELETED',
+            resourceType: 'announcement',
+            resourceId: id,
+            details: { title: announcement.title }
+        });
+
+        return result;
     }
 
     /**

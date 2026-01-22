@@ -146,7 +146,8 @@ export class UserRepo {
                     password_hash: userData.password_hash || '',
                     role: userData.role || 'STAFF',
                     store_code: userData.store_code || '',
-                    active: userData.active !== undefined ? userData.active : true,
+                    status: userData.status || 'PENDING', // Default to PENDING
+                    active: userData.active !== undefined ? userData.active : false, // Default to false
                     tenant_id: userData.tenant_id || null
                 }])
                 .select()
@@ -242,14 +243,8 @@ export class UserRepo {
                 query = query.eq('store_code', filters.store_code);
             }
 
-            if (filters.status) {
-                if (filters.status === 'ACTIVE') {
-                    query = query.eq('active', true);
-                } else if (filters.status === 'INACTIVE') {
-                    query = query.eq('active', false);
-                } else if (filters.status === 'PENDING') {
-                    query = query.eq('active', false).is('password_hash', null);
-                }
+            if (filters.status && filters.status !== 'ALL') {
+                query = query.eq('status', filters.status);
             }
 
             if (filters.role && filters.role !== 'ALL') {
@@ -338,12 +333,11 @@ export class UserRepo {
 
             if (activeError) throw activeError;
 
-            // Get pending count (active=false AND no password_hash)
+            // Get pending count (status='PENDING')
             const { count: pendingCount, error: pendingError } = await supabase
                 .from('staff_master')
                 .select('*', { count: 'exact', head: true })
-                .eq('active', false)
-                .is('password_hash', null);
+                .eq('status', 'PENDING');
 
             if (pendingError) throw pendingError;
 

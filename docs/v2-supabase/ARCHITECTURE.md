@@ -98,7 +98,17 @@
 - **HTTP Client**: Fetch API
 - **Deployment**: Vercel
 
-### 2.2. Folder Structure
+### 2.2. Navigation & Layout Strategy
+The application employs a "Flat Navigation" structure with responsive design principles:
+
+*   **Global AppBar**: Fixed top header containing the Hamburger menu (left) and Notification/Profile (right).
+*   **Sidebar (TopMenu)**: Primary navigation for Desktop. Collapsible accordion menu for efficient space usage.
+*   **Bottom Navigation**: Mobile-only sticky footer providing quick access to core modules (Home, Shift Log, Leader Report).
+*   **Breadcrumbs**: Hierarchical context (Home > Module) replacing the need for explicit "Back" buttons.
+*   **Floating Action Button (FAB)**: Context-aware primary actions (e.g., "Add Staff") for mobile efficiency.
+*   **Layout**: `PageSetting` removed in favor of direct sidebar access to configuration modules.
+
+### 2.3. Folder Structure
 
 ```
 frontend/src/

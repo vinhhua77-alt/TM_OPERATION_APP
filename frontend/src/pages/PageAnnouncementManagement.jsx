@@ -21,6 +21,12 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
     const [message, setMessage] = useState({ text: '', type: '' });
     const [editingAnnouncement, setEditingAnnouncement] = useState(null);
 
+    // Helper to get Local ISO String for datetime-local input
+    const toLocalISOString = (date) => {
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+    };
+
     // Form state
     const [form, setForm] = useState({
         title: '',
@@ -30,7 +36,7 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
         target_type: 'ALL',
         target_stores: [],
         target_staff: [],
-        start_date: new Date().toISOString().slice(0, 16),
+        start_date: toLocalISOString(new Date()),
         end_date: '',
         active: true
     });
@@ -70,11 +76,18 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
         }
 
         try {
+            // Convert to UTC before sending to API
+            const payload = {
+                ...form,
+                start_date: new Date(form.start_date).toISOString(),
+                end_date: form.end_date ? new Date(form.end_date).toISOString() : null
+            };
+
             if (editingAnnouncement) {
-                await announcementAPI.update(editingAnnouncement.id, form);
+                await announcementAPI.update(editingAnnouncement.id, payload);
                 showMessage('Cập nhật thành công', 'success');
             } else {
-                await announcementAPI.create(form);
+                await announcementAPI.create(payload);
                 showMessage('Tạo thành công', 'success');
             }
 
@@ -89,6 +102,11 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
 
     const handleEdit = (announcement) => {
         setEditingAnnouncement(announcement);
+
+        // Convert UTC to Local for input
+        const startLocal = toLocalISOString(new Date(announcement.start_date));
+        const endLocal = announcement.end_date ? toLocalISOString(new Date(announcement.end_date)) : '';
+
         setForm({
             title: announcement.title,
             content: announcement.content,
@@ -97,8 +115,8 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
             target_type: announcement.target_type,
             target_stores: announcement.target_stores || [],
             target_staff: announcement.target_staff || [],
-            start_date: announcement.start_date.slice(0, 16),
-            end_date: announcement.end_date ? announcement.end_date.slice(0, 16) : '',
+            start_date: startLocal,
+            end_date: endLocal,
             active: announcement.active
         });
         setView('form');
@@ -124,13 +142,13 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
             target_type: 'ALL',
             target_stores: [],
             target_staff: [],
-            start_date: new Date().toISOString().slice(0, 16),
+            start_date: toLocalISOString(new Date()),
             end_date: '',
             active: true
         });
     };
 
-    const ListView = () => (
+    const renderList = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button className="btn-login" style={{ background: '#10B981' }} onClick={() => { resetForm(); setEditingAnnouncement(null); setView('form'); }}>
                 ➕ Tạo Thông Báo Mới
@@ -164,7 +182,7 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
         </div>
     );
 
-    const FormView = () => (
+    const renderForm = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '500px', overflowY: 'auto' }}>
             <h3 style={{ fontSize: '14px', fontWeight: '800' }}>{editingAnnouncement ? 'Sửa Thông Báo' : 'Tạo Thông Báo Mới'}</h3>
 
@@ -260,8 +278,8 @@ const PageAnnouncementManagement = ({ user, onBack }) => {
 
             {loading ? <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>⌛ Đang tải...</p> : (
                 <>
-                    {view === 'list' && <ListView />}
-                    {view === 'form' && <FormView />}
+                    {view === 'list' && renderList()}
+                    {view === 'form' && renderForm()}
                 </>
             )}
         </div>

@@ -1,32 +1,86 @@
-import { Home, BookOpen, BarChart2, Settings } from 'lucide-react';
+import React from 'react';
 
-const BottomNav = ({ active, onNavigate }) => {
-    const tabs = [
-        { id: 'HOME', label: 'HOME', icon: Home },
-        { id: 'SHIFT_LOG', label: 'NHẬT KÝ CA', icon: BookOpen },
-        { id: 'DASHBOARD', label: 'SỐ LIỆU', icon: BarChart2 },
-        { id: 'SETTING', label: 'SETTING', icon: Settings },
+const BottomNav = ({ currentPage, onNavigate }) => {
+    // Menu items configuration
+    const navItems = [
+        { id: 'HOME', icon: '🏠', label: 'Home' },
+        { id: 'SHIFT_LOG', icon: '📝', label: 'Báo Cáo' },
+        { id: 'LEADER_REPORT', icon: '📈', label: 'Leader' },
+        { id: 'SETTING', icon: '⚙️', label: 'Cấu hình' },
     ];
 
+    // CSS handled internally for this component
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 pb-6 flex justify-between items-center z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
-            {tabs.map(tab => {
-                const isActive = active === tab.id;
-                const Icon = tab.icon;
+        <div className="bottom-nav">
+            {navItems.map(item => {
+                const isActive = currentPage === item.id || (item.id === 'HOME' && currentPage === 'DASHBOARD');
                 return (
-                    <button
-                        key={tab.id}
-                        onClick={() => onNavigate(tab.id)}
-                        className={`flex flex-col items-center gap-1 transition-all ${isActive ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
-                            }`}
+                    <div
+                        key={item.id}
+                        onClick={() => onNavigate(item.id)}
+                        className={`nav-item ${isActive ? 'active' : ''}`}
                     >
-                        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className={`text-[9px] font-bold uppercase ${isActive ? 'text-blue-600' : 'text-gray-300'}`}>
-                            {tab.label}
-                        </span>
-                    </button>
+                        <div className="nav-icon">{item.icon}</div>
+                        <div className="nav-label">{item.label}</div>
+                    </div>
                 );
             })}
+
+            <style>{`
+                .bottom-nav {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    height: 60px;
+                    background: white;
+                    display: flex;
+                    justify-content: space-around;
+                    align-items: center;
+                    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                    z-index: 999; /* Below modal/toast but above content */
+                    padding-bottom: env(safe-area-inset-bottom); /* iOS support */
+                }
+
+                .nav-item {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    color: #9CA3AF;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    -webkit-tap-highlight-color: transparent;
+                }
+
+                .nav-item.active {
+                    color: #004AAD;
+                }
+
+                .nav-icon {
+                    font-size: 20px;
+                    margin-bottom: 2px;
+                    transition: transform 0.2s;
+                }
+
+                .nav-item.active .nav-icon {
+                    transform: translateY(-2px);
+                }
+
+                .nav-label {
+                    font-size: 10px;
+                    font-weight: 600;
+                }
+
+                /* Desktop Hide: This component should be hidden on larger screens usually */
+                @media (min-width: 768px) {
+                    .bottom-nav {
+                        display: none;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

@@ -17,7 +17,7 @@ const router = express.Router();
 router.post('/login', async (req, res, next) => {
   try {
     const { staffId, password } = req.body;
-    
+
     if (!staffId || !password) {
       return res.status(400).json({
         success: false,
@@ -25,10 +25,26 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    const result = await AuthService.login(staffId, password);
-    
+    const result = await AuthService.login(staffId, password, {
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    });
+
     if (result.success) {
-      res.json(result);
+      // SECURITY: Set JWT in HttpOnly cookie instead of response body
+      res.cookie('token', result.token, {
+        httpOnly: true, // Prevents JavaScript access (XSS protection)
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // CSRF protection
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      });
+
+      // Return user data WITHOUT token
+      res.json({
+        success: true,
+        user: result.user
+      });
     } else {
       res.status(401).json(result);
     }
@@ -61,6 +77,20 @@ router.get('/me', async (req, res, next) => {
       user: req.user
     });
   });
+});
+
+/**
+ * POST /api/auth/logout
+ * Clear authentication cookie
+ */
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/'
+  });
+  res.json({ success: true, message: 'Đăng xuất thành công' });
 });
 
 export default router;

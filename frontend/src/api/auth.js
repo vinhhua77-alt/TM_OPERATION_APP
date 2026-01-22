@@ -15,6 +15,10 @@ export const authAPI = {
 
   getMe: async () => {
     return apiClient.get('/auth/me');
+  },
+
+  logout: async () => {
+    return apiClient.post('/auth/logout');
   }
 };
 

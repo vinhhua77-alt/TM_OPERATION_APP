@@ -15,7 +15,7 @@ const router = express.Router();
 router.post('/request', async (req, res, next) => {
   try {
     const { staffId } = req.body;
-    
+
     if (!staffId) {
       return res.status(400).json({
         success: false,
@@ -23,7 +23,10 @@ router.post('/request', async (req, res, next) => {
       });
     }
 
-    const result = await PasswordResetService.requestReset(staffId);
+    const result = await PasswordResetService.requestReset(staffId, {
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    });
     res.json(result);
   } catch (error) {
     next(error);
@@ -37,7 +40,7 @@ router.post('/request', async (req, res, next) => {
 router.post('/reset', async (req, res, next) => {
   try {
     const { staffId, token, newPassword } = req.body;
-    
+
     if (!staffId || !token || !newPassword) {
       return res.status(400).json({
         success: false,
@@ -45,7 +48,10 @@ router.post('/reset', async (req, res, next) => {
       });
     }
 
-    const result = await PasswordResetService.resetPassword(staffId, token, newPassword);
+    const result = await PasswordResetService.resetPassword(staffId, token, newPassword, {
+      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    });
     res.json(result);
   } catch (error) {
     next(error);

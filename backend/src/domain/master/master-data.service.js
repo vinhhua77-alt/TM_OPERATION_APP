@@ -115,6 +115,16 @@ export class MasterDataService {
         if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
+        // Validation
+        if (!incidentData.incident_id || !incidentData.incident_name) {
+            throw new Error('incident_id and incident_name are required');
+        }
+
+        // Validate ID format (IC_LAYOUT_...)
+        if (!/^IC_[A-Z0-9]+_.+/.test(incidentData.incident_id)) {
+            throw new Error('Invalid incident_id format. Must be IC_{LAYOUT}_{NAME}');
+        }
+
         return await MasterDataRepo.createIncident(incidentData);
     }
 
@@ -122,6 +132,11 @@ export class MasterDataService {
         if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
+        // Validation
+        if (updates.incident_name !== undefined && !updates.incident_name) {
+            throw new Error('incident_name cannot be empty');
+        }
+
         return await MasterDataRepo.updateIncident(id, updates);
     }
 

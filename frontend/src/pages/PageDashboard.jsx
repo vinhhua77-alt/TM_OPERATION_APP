@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI } from '../api/dashboard';
+import { staffAPI } from '../api/staff';
 
 const PageDashboard = ({ user, onNavigate, onLogout }) => {
   const [loading, setLoading] = useState(true);
@@ -8,11 +9,16 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     if (user?.id && !isInitialized) {
       console.log('Loading available months for user:', user.id);
       loadAvailableMonths();
+      // Load pending approvals for authorized roles
+      if (['SM', 'ADMIN', 'OPS', 'BOD'].includes(user?.role)) {
+        loadPendingApprovals();
+      }
       setIsInitialized(true);
     }
   }, [user?.id, isInitialized]);
@@ -75,6 +81,17 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
     }
   };
 
+  const loadPendingApprovals = async () => {
+    try {
+      const res = await staffAPI.getStatistics();
+      if (res.success && res.data) {
+        setPendingCount(res.data.pending || 0);
+      }
+    } catch (error) {
+      console.error('Error loading pending approvals:', error);
+    }
+  };
+
   const formatMonthDisplay = (yearMonth) => {
     if (!yearMonth) return '';
     const [year, month] = yearMonth.split('-');
@@ -94,24 +111,18 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
     return labels[feeling] || feeling;
   };
 
-  // Quick Actions Menu Data
-  const menuItems = [
-    { id: 'SHIFT_LOG', label: 'Báo Cáo Ca', icon: '📝', color: '#4F46E5' },
-    { id: 'LEADER_REPORT', label: 'Báo Cáo Leader', icon: '📈', color: '#059669' },
-    { id: 'CAREER', label: 'Hồ Sơ Năng Lực', icon: '🏆', color: '#DB2777' },
-    { id: 'SETTING', label: 'Cấu Hình', icon: '🔧', color: '#4B5563' },
-  ];
+
 
   return (
     <div className="fade-in">
       {/* Header */}
-      <div className="header">
-        <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-        <h2 className="brand-title">🚀 WORKSPACE CỦA BẠN</h2>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <p className="sub-title-dev">Xin chào, {user?.name}! 👋</p>
-          <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Đăng xuất</button>
+      {/* Header Compact */}
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <p style={{ fontSize: '16px', fontWeight: '800', color: '#004AAD' }}>Xin chào, {user?.name || 'Bạn'}! 👋</p>
+          <p style={{ fontSize: '11px', color: '#6B7280' }}>Chúc bạn một ngày làm việc hiệu quả.</p>
         </div>
+        <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Đăng xuất</button>
       </div>
 
       {/* Current Month Display */}
@@ -133,6 +144,38 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
       {error && (
         <div style={{ background: '#FEE2E2', color: '#DC2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '11px', fontWeight: '600' }}>
           ⚠️ {error}
+        </div>
+      )}
+
+      {/* Pending Approvals Alert (for SM/Admin/OPS/BOD) */}
+      {['SM', 'ADMIN', 'OPS', 'BOD'].includes(user?.role) && pendingCount > 0 && (
+        <div
+          onClick={() => onNavigate('STAFF_MANAGEMENT')}
+          style={{
+            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+            border: '2px solid #F59E0B',
+            padding: '12px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ fontSize: '32px' }}>⚠️</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#92400E', marginBottom: '4px' }}>
+                Cần duyệt: {pendingCount} nhân viên
+              </div>
+              <div style={{ fontSize: '10px', color: '#78350F' }}>
+                Nhấn để xem danh sách nhân viên chờ duyệt
+              </div>
+            </div>
+            <div style={{ fontSize: '20px', color: '#F59E0B' }}>→</div>
+          </div>
         </div>
       )}
 
@@ -175,24 +218,6 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
             </div>
           )}
 
-          {/* Gamification Stats */}
-          {dashboardData.gamification && (
-            <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '12px', padding: '16px', marginBottom: '16px', color: 'white' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '800', marginBottom: '12px' }}>🏆 Thành tích</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '16px', fontWeight: '800' }}>Level {dashboardData.gamification.level}</span>
-                <span style={{ fontSize: '12px', opacity: 0.9 }}>{dashboardData.gamification.xp} / {dashboardData.gamification.nextLevelXp} XP</span>
-              </div>
-              <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px' }}>
-                <div style={{ height: '100%', width: `${dashboardData.gamification.progress}% `, background: 'white', borderRadius: '4px', transition: 'width 0.3s' }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '12px' }}>
-                <div>🔥 Streak: <strong>{dashboardData.gamification.streak} ngày</strong></div>
-                <div>🏅 Huy hiệu: <strong>{dashboardData.gamification.badges}</strong></div>
-              </div>
-            </div>
-          )}
-
           {/* Recent Shifts */}
           {dashboardData.recentShifts?.length > 0 && (
             <div style={{ background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -225,26 +250,7 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
         </>
       ) : null}
 
-      {/* Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '20px' }}>
-        {menuItems.map(item => (
-          <button
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              padding: '20px', borderRadius: '12px', border: 'none',
-              background: 'white', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              cursor: 'pointer', transition: 'transform 0.1s'
-            }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: item.color }}>{item.label}</div>
-          </button>
-        ))}
-      </div>
+
 
       {/* Footer */}
       <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#9CA3AF' }}>

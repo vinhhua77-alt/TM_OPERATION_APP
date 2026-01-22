@@ -11,15 +11,13 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true // SECURITY: Send HttpOnly cookies with requests
 });
 
-// Request interceptor: Thêm token vào header
+// Request interceptor: No longer needed for token (cookies sent automatically)
+// Keeping for potential future use (e.g., CSRF token)
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   return config;
 });
 

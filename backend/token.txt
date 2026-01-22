@@ -1,1 +1,0 @@
-﻿Không thể gửi email (Lỗi hệ thống). Link reset tạm thời của bạn là: http://localhost:3000/?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdGFmZklkIjoiTlYwMDEiLCJlbWFpbCI6IiIsInR5cGUiOiJSRVNFVF9QQVNTV09SRCIsImlhdCI6MTc2OTAwNTEyMiwiZXhwIjoxNzY5MDA2MDIyfQ.s1gqulrWiBurGlmOvCqBtYyY3YH1ouz8Gj0qcEzjfGE&staffId=NV001

@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '../../infra/supabase.client.js';
+import { Sanitizer } from '../../utils/sanitizer.js';
 
 export class ShiftService {
   /**
@@ -81,15 +82,17 @@ export class ShiftService {
         start_time: payload.startTime || '',
         end_time: payload.endTime || '',
         duration: parseFloat(payload.duration) || 0,
-        layout: payload.layout,
+        layout: payload.layout || 'Unknown', // Updated to include default
         sub_pos: payload.subPos || '',
         checks: typeof payload.checks === 'string' ? payload.checks : JSON.stringify(payload.checks || {}),
         incident_type: payload.incidentType || '',
-        incident_note: payload.incidentNote || '',
-        rating: payload.rating || '',
+        // Sanitize incident notes
+        incident_note: Sanitizer.sanitizeText(payload.incidentNote || ''),
+        rating: payload.rating || 0, // Updated to include default
         selected_reasons: typeof payload.selectedReasons === 'string' ? payload.selectedReasons : JSON.stringify(payload.selectedReasons || []),
         is_valid: true,
         photo_url: payload.photoUrl || '',
+        shift: payload.shift || 'Unknown', // New field
         created_at: new Date().toISOString()
       };
 

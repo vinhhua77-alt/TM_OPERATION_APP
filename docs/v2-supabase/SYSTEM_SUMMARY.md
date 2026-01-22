@@ -76,6 +76,7 @@ Data Storage
 - **State Management**: React hooks (useState, useEffect)
 - **API Client**: Fetch API
 - **Deployment**: Vercel
+- **UX Strategy**: Mobile-First (BottomNav, FAB) & Flat Navigation
 
 ### 4.2. Backend
 - **Runtime**: Node.js

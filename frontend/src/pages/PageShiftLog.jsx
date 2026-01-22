@@ -203,11 +203,8 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
 
     return (
         <div style={{ position: 'relative' }} className="fade-in">
-            <div className="header">
-                <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-                <h2 className="brand-title">NHẬT KÝ CA LÀM VIỆC</h2>
-                <div className="sub-title-dev">{user?.name}</div>
-            </div>
+            {/* Header Removed */}
+            <div style={{ marginTop: '10px' }} />
 
             {/* STORE & LEAD */}
             <div className="grid-2 mt-10">

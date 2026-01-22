@@ -5,20 +5,28 @@
  */
 
 import { UserRepo } from '../../infra/user.repo.supabase.js';
+import { AuditRepo } from '../../infra/audit.repo.js'; // Import AuditRepo
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
+
 dotenv.config();
 
-const JWT_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || 'temp-secret-key-123';
+// SECURITY: JWT_SECRET must be set separately from SUPABASE_SERVICE_ROLE_KEY
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not set! Password reset tokens cannot be generated securely.');
+}
+
 const APP_URL = process.env.CORS_ORIGIN || 'https://app.vinhhua.com';
 
 export class PasswordResetService {
   /**
    * Gửi email reset password
    */
-  static async requestReset(staffId) {
+  static async requestReset(staffId, context = {}) {
+    const { ip, userAgent } = context;
     if (!staffId) return { success: false, message: 'Thiếu mã nhân viên' };
 
     // 1. Check user exists
@@ -45,6 +53,16 @@ export class PasswordResetService {
     const { EmailService } = await import('../../infra/email.service.js');
     const emailSent = await EmailService.sendResetEmail(user.email, resetLink);
 
+    // LOGGING
+    await AuditRepo.log({
+      userId: user.id,
+      action: 'PASSWORD_RESET_REQUESTED',
+      resourceType: 'auth',
+      details: { emailSent },
+      ip,
+      userAgent
+    });
+
     if (emailSent) {
       return {
         success: true,
@@ -62,7 +80,8 @@ export class PasswordResetService {
   /**
    * Reset password với token
    */
-  static async resetPassword(staffId, token, newPassword) {
+  static async resetPassword(staffId, token, newPassword, context = {}) {
+    const { ip, userAgent } = context;
     if (!staffId || !token || !newPassword) {
       return { success: false, message: 'Thiếu thông tin bắt buộc' };
     }
@@ -88,6 +107,19 @@ export class PasswordResetService {
 
       if (!result) {
         return { success: false, message: 'Lỗi cập nhật mật khẩu vào Database' };
+      }
+
+      // LOGGING
+      // Need user ID for log
+      const user = await UserRepo.getByStaffId(staffId);
+      if (user) {
+        await AuditRepo.log({
+          userId: user.id,
+          action: 'PASSWORD_RESET_SUCCESS',
+          resourceType: 'auth',
+          ip,
+          userAgent
+        });
       }
 
       return {

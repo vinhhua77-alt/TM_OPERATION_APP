@@ -7,8 +7,14 @@ import jwt from 'jsonwebtoken';
 import { UserRepo } from '../infra/user.repo.supabase.js';
 
 export async function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  // SECURITY: Read token from HttpOnly cookie (preferred) or Authorization header (backward compatibility)
+  let token = req.cookies?.token; // From cookie
+
+  if (!token) {
+    // Fallback to Authorization header for backward compatibility
+    const authHeader = req.headers['authorization'];
+    token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  }
 
   if (!token) {
     return res.status(401).json({

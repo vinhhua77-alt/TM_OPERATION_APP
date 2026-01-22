@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI } from '../api/staff';
+import FAB from '../components/FAB';
 
 /**
  * PAGE STAFF MANAGEMENT
@@ -8,7 +9,7 @@ import { staffAPI } from '../api/staff';
 const PageStaffManagement = ({ user, onBack }) => {
     const [staffList, setStaffList] = useState([]);
     const [statistics, setStatistics] = useState(null);
-    const [filters, setFilters] = useState({ store_code: 'ALL', status: 'ALL', role: 'ALL' });
+    const [filters, setFilters] = useState({ store_code: 'ALL', status: 'PENDING', role: 'ALL' });
     const [selectedStaff, setSelectedStaff] = useState([]);
     const [editModal, setEditModal] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -77,7 +78,7 @@ const PageStaffManagement = ({ user, onBack }) => {
         if (!confirm(`Vô hiệu hóa nhân viên ${staffId}?`)) return;
 
         try {
-            const res = await staffAPI.deactivateStaff(staffId);
+            const res = await staffAPI.updateStaff(staffId, { active: false, status: 'INACTIVE' });
             if (res.success) {
                 showMessage('Đã vô hiệu hóa nhân viên', 'success');
                 loadStaffData();
@@ -85,6 +86,24 @@ const PageStaffManagement = ({ user, onBack }) => {
         } catch (error) {
             showMessage('Lỗi: ' + error.message, 'error');
         }
+    };
+
+    const handleActivate = async (staffId) => {
+        try {
+            const res = await staffAPI.updateStaff(staffId, { active: true, status: 'ACTIVE' });
+            if (res.success) {
+                showMessage('Đã kích hoạt nhân viên', 'success');
+                loadStaffData();
+            }
+        } catch (error) {
+            showMessage('Lỗi: ' + error.message, 'error');
+        }
+    };
+
+    const handleReject = async (staffId) => {
+        if (!confirm(`Từ chối yêu cầu của nhân viên ${staffId}?`)) return;
+        // For now, we just deactivate specific logic can vary
+        handleDeactivate(staffId);
     };
 
     const toggleSelectStaff = (staffId) => {
@@ -196,28 +215,9 @@ const PageStaffManagement = ({ user, onBack }) => {
 
     return (
         <div className="fade-in">
-            <div className="header">
-                <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-                <h2 className="brand-title">QUẢN LÝ NHÂN SỰ</h2>
-                <p className="sub-title-dev">Admin: {user?.name}</p>
-            </div>
+            {/* Header Removed for cleaner UI */}
 
-            <button
-                onClick={onBack}
-                style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#004AAD',
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    marginBottom: '10px'
-                }}
-            >
-                ← QUAY LẠI MENU CẤU HÌNH
-            </button>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
                 {/* Message Notification */}
                 {message.text && (
                     <div style={{
@@ -234,12 +234,37 @@ const PageStaffManagement = ({ user, onBack }) => {
                 )}
 
                 {/* Statistics Cards */}
+                {/* Statistics Cards - Clickable Filters */}
                 {statistics && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                        <StatCard label="Tổng" value={statistics.total} color="#3B82F6" />
-                        <StatCard label="Active" value={statistics.active} color="#10B981" />
-                        <StatCard label="Pending" value={statistics.pending} color="#F59E0B" />
-                        <StatCard label="Inactive" value={statistics.inactive} color="#EF4444" />
+                        <StatCard
+                            label="Tổng"
+                            value={statistics.total}
+                            color="#3B82F6"
+                            onClick={() => setFilters({ ...filters, status: 'ALL' })}
+                            isActive={filters.status === 'ALL'}
+                        />
+                        <StatCard
+                            label="Active"
+                            value={statistics.active}
+                            color="#10B981"
+                            onClick={() => setFilters({ ...filters, status: 'ACTIVE' })}
+                            isActive={filters.status === 'ACTIVE'}
+                        />
+                        <StatCard
+                            label="Pending"
+                            value={statistics.pending}
+                            color="#F59E0B"
+                            onClick={() => setFilters({ ...filters, status: 'PENDING' })}
+                            isActive={filters.status === 'PENDING'}
+                        />
+                        <StatCard
+                            label="Inactive"
+                            value={statistics.inactive}
+                            color="#EF4444"
+                            onClick={() => setFilters({ ...filters, status: 'INACTIVE' })}
+                            isActive={filters.status === 'INACTIVE'}
+                        />
                     </div>
                 )}
 
@@ -257,17 +282,8 @@ const PageStaffManagement = ({ user, onBack }) => {
                         ))}
                     </select>
 
-                    <select
-                        className="input-login"
-                        style={{ fontSize: '11px' }}
-                        value={filters.status}
-                        onChange={e => setFilters({ ...filters, status: e.target.value })}
-                    >
-                        <option value="ALL">Tất cả trạng thái</option>
-                        <option value="ACTIVE">Active</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="INACTIVE">Inactive</option>
-                    </select>
+                    {/* Status Select Removed - Using Cards Instead */}
+                    <div />
 
                     <select
                         className="input-login"
@@ -311,65 +327,142 @@ const PageStaffManagement = ({ user, onBack }) => {
                                     background: selectedStaff.includes(staff.staff_id) ? '#EFF6FF' : 'white'
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    {/* Checkbox for pending staff */}
-                                    {!staff.active && (
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedStaff.includes(staff.staff_id)}
-                                            onChange={() => toggleSelectStaff(staff.staff_id)}
-                                            style={{ width: '16px', height: '16px' }}
-                                        />
-                                    )}
 
-                                    {/* Staff Info */}
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '12px', fontWeight: '800' }}>
-                                            {staff.staff_name}
-                                            <span style={{
-                                                marginLeft: '8px',
-                                                fontSize: '9px',
-                                                padding: '2px 6px',
-                                                borderRadius: '4px',
-                                                background: staff.active ? '#D1FAE5' : '#FEE2E2',
-                                                color: staff.active ? '#059669' : '#DC2626'
-                                            }}>
-                                                {staff.active ? 'ACTIVE' : 'INACTIVE'}
-                                            </span>
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: '#666' }}>
-                                            {staff.staff_id} | {staff.role} | {staff.store_code}
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    width: '100%',
+                                    justifyContent: 'space-between',
+                                    flexWrap: 'wrap' // Mobile responsive: wrap content 
+                                }}>
+                                    {/* Left Side: Checkbox + Staff Info */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '200px' }}>
+                                        {/* Checkbox for pending staff */}
+                                        {!staff.active && (
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedStaff.includes(staff.staff_id)}
+                                                onChange={() => toggleSelectStaff(staff.staff_id)}
+                                                style={{ width: '16px', height: '16px', flexShrink: 0 }}
+                                            />
+                                        )}
+
+                                        {/* Staff Info */}
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span className="text-truncate">{staff.staff_name}</span>
+                                                <span style={{
+                                                    fontSize: '9px',
+                                                    padding: '2px 6px',
+                                                    borderRadius: '4px',
+                                                    background: staff.active ? '#D1FAE5' : '#FEE2E2',
+                                                    color: staff.active ? '#059669' : '#DC2626',
+                                                    flexShrink: 0
+                                                }}>
+                                                    {staff.active ? 'ACTIVE' : 'INACTIVE'}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }} className="text-truncate">
+                                                {staff.staff_id} | {staff.role} | {staff.store_code}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
-                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                    {/* Actions - Right Aligned */}
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        {/* Pending Actions: Approve / Reject */}
+                                        {!staff.active && filters.status === 'PENDING' ? (
+                                            <>
+                                                <button
+                                                    onClick={() => handleActivate(staff.staff_id)}
+                                                    style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        background: '#10B981',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        fontSize: '16px',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                    }}
+                                                    title="Duyệt"
+                                                >
+                                                    ✓
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReject(staff.staff_id)}
+                                                    style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        background: '#FEF2F2',
+                                                        color: '#EF4444',
+                                                        border: '1px solid #FECACA',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        fontSize: '16px',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                    }}
+                                                    title="Từ chối"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </>
+                                        ) : (
+                                            /* Active/Inactive Toggle Switch */
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '10px', color: staff.active ? '#10B981' : '#6B7280', fontWeight: 'bold' }}>
+                                                    {staff.active ? 'ON' : 'OFF'}
+                                                </span>
+                                                <div
+                                                    onClick={() => staff.active ? handleDeactivate(staff.staff_id) : handleActivate(staff.staff_id)}
+                                                    style={{
+                                                        width: '36px',
+                                                        height: '20px',
+                                                        background: staff.active ? '#10B981' : '#E5E7EB',
+                                                        borderRadius: '20px',
+                                                        position: 'relative',
+                                                        cursor: 'pointer',
+                                                        transition: 'background 0.3s'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        width: '16px',
+                                                        height: '16px',
+                                                        background: 'white',
+                                                        borderRadius: '50%',
+                                                        position: 'absolute',
+                                                        top: '2px',
+                                                        left: staff.active ? '18px' : '2px',
+                                                        transition: 'left 0.3s',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Edit Button */}
                                         <button
                                             onClick={() => setEditModal(staff)}
                                             style={{
                                                 background: 'none',
                                                 border: 'none',
                                                 cursor: 'pointer',
-                                                fontSize: '18px'
+                                                fontSize: '16px',
+                                                marginLeft: '8px',
+                                                opacity: 0.7
                                             }}
                                             title="Chỉnh sửa"
                                         >
                                             ✏️
                                         </button>
-                                        {staff.active && (
-                                            <button
-                                                onClick={() => handleDeactivate(staff.staff_id)}
-                                                style={{
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                    fontSize: '18px'
-                                                }}
-                                                title="Vô hiệu hóa"
-                                            >
-                                                🚫
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -379,21 +472,35 @@ const PageStaffManagement = ({ user, onBack }) => {
             </div>
 
             {editModal && <EditModal />}
+
+            {/* FAB: Add New Staff */}
+            <FAB
+                icon="➕"
+                onClick={() => setEditModal({})}
+                label="Thêm nhân viên"
+            />
         </div>
     );
 };
 
 // Statistics Card Component
-const StatCard = ({ label, value, color }) => (
-    <div style={{
-        padding: '12px',
-        borderRadius: '8px',
-        background: color + '15',
-        border: `2px solid ${color}`,
-        textAlign: 'center'
-    }}>
-        <div style={{ fontSize: '20px', fontWeight: '800', color }}>{value}</div>
-        <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>{label}</div>
+const StatCard = ({ label, value, color, onClick, isActive }) => (
+    <div
+        onClick={onClick}
+        style={{
+            padding: '12px',
+            borderRadius: '8px',
+            background: isActive ? color : color + '15', // Solid color if active
+            color: isActive ? 'white' : 'inherit',
+            border: `2px solid ${color}`,
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            transform: isActive ? 'scale(1.05)' : 'scale(1)',
+            boxShadow: isActive ? `0 4px 6px -1px ${color}66` : 'none'
+        }}>
+        <div style={{ fontSize: '20px', fontWeight: '800', color: isActive ? 'white' : color }}>{value}</div>
+        <div style={{ fontSize: '10px', color: isActive ? 'white' : '#666', marginTop: '4px' }}>{label}</div>
     </div>
 );
 
