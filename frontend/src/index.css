@@ -11,20 +11,27 @@
   padding: 0;
 }
 
+html,
 body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: #F7F7F7;
   color: #2B2B2B;
   line-height: 1.4;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  /* Allow scrolling but prevent bounce at root */
+
+  /* MOBILE FIXES */
+  overscroll-behavior-y: none !important;
+  /* STRICTLY PREVENT PULL-TO-REFRESH */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
   display: flex;
   justify-content: center;
-  min-height: 100vh;
-  /* MOBILE FIXES */
-  overscroll-behavior: none;
-  /* Prevent pull-to-refresh */
-  -webkit-tap-highlight-color: transparent;
-  /* Remove click highlight */
-  touch-action: manipulation;
 }
 
 #root {
