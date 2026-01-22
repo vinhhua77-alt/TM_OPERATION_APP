@@ -40,10 +40,11 @@ router.post('/login', async (req, res, next) => {
         path: '/'
       });
 
-      // Return user data WITHOUT token
+      // Return user data WITH token for client-side storage
       res.json({
         success: true,
-        user: result.user
+        user: result.user,
+        token: result.token
       });
     } else {
       res.status(401).json(result);

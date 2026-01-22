@@ -85,12 +85,20 @@ const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
                 {isHomePage ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <img
-                            src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91"
-                            alt="TMG Logo"
-                            style={{ height: '32px', filter: 'brightness(0) invert(1)' }}
-                        />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <img
+                                src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91"
+                                alt="TMG Logo"
+                                style={{ height: '24px', filter: 'brightness(0) invert(1)' }}
+                            />
+                            <span style={{ fontSize: '14px' }}>THÁI MẬU GROUP</span>
+                        </div>
+                        {user && (
+                            <div style={{ fontSize: '11px', fontWeight: '400', opacity: 0.9 }}>
+                                Chúc {user.full_name?.split(' ').pop()} một ngày tràn đầy năng lượng! ⚡
+                            </div>
+                        )}
                     </div>
                 ) : (
                     getPageTitle()
