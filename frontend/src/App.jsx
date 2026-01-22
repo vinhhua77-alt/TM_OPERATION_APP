@@ -84,10 +84,11 @@ function App() {
       // Continue with local cleanup even if API call fails
     }
 
-    // Clear local state
+    // Clear state regardless of backend success
     setUser(null);
-    setCurrentPage('LOGIN');
+    handleNavigate('LOGIN');
     localStorage.removeItem('lastPage');
+    localStorage.removeItem('token'); // Clear auth token
     // Clear URL params if any
     window.history.replaceState({}, document.title, "/");
   };
