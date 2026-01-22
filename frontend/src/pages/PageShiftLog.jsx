@@ -207,45 +207,39 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             <div style={{ marginTop: '10px' }} />
 
             {/* STORE & LEAD */}
-            <div className="grid-2 mt-10">
-                <select className="input-login" style={{ marginBottom: 0 }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
-                    <option value="">-- NHÀ HÀNG --</option>
+            <div className="grid-2 mt-4">
+                <select className="input-login" style={{ fontSize: '11px', fontWeight: '700', height: '40px' }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                    <option value="">-- CHỌN NHÀ HÀNG --</option>
                     {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.store_name || s.name}</option>)}
                 </select>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '4px' }}>
-                    {/* Simplified Leader selection/display */}
-                    <select ref={leadSelectRef} className="input-login" style={{ marginBottom: 0, padding: '0 5px', color: form.lead === 'KHÔNG CÓ LEAD CA' ? '#EF4444' : 'inherit', fontWeight: form.lead === 'KHÔNG CÓ LEAD CA' ? '800' : 'normal' }} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
-                        <option value="">-- LEAD CA --</option>
-                        <option value="KHÔNG CÓ LEAD CA" style={{ color: '#EF4444', fontWeight: '800' }}>⚠️ KHÔNG CÓ LEAD CA</option>
-                        {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
-                    </select>
-                </div>
+                <select ref={leadSelectRef} className="input-login" style={{ fontSize: '11px', fontWeight: '700', height: '40px', color: form.lead === 'KHÔNG CÓ LEAD CA' ? '#EF4444' : 'inherit' }} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
+                    <option value="">-- LEAD CA --</option>
+                    <option value="KHÔNG CÓ LEAD CA" style={{ color: '#EF4444' }}>⚠️ KHÔNG CÓ LEAD CA</option>
+                    {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                </select>
             </div>
 
-            {/* TIME */}
-            <div className="grid-2 mt-5">
-                <div>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px' }}>GIỜ VÀO *</label>
-                    <div className="grid-2">
-                        <select className="input-login" style={{ marginBottom: 0 }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
-                            <option value="">H</option>
-                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                        <select className="input-login" style={{ marginBottom: 0, background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
-                            <option value="00">00</option>
+            {/* TIME SELECTION - Compact */}
+            <div className="grid-2 mt-3" style={{ background: '#F8FAFC', padding: '8px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>GIỜ VÀO</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
+                            <option value="">--</option>
+                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px' }}>GIỜ RA</label>
-                    <div className="grid-2">
-                        <select className="input-login" style={{ marginBottom: 0 }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
-                            <option value="">H</option>
-                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                        <select className="input-login" style={{ marginBottom: 0, background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
-                            <option value="00">00</option>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
+                    <span style={{ fontSize: '16px', color: '#CBD5E1' }}>➜</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>GIỜ RA</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
+                            <option value="">--</option>
+                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
                         </select>
                     </div>
                 </div>
@@ -284,11 +278,22 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             )}
 
             {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
-            <div className="section-title">| KHU VỰC & VỊ TRÍ PHỤ</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+            <div className="section-title" style={{ marginTop: '16px', marginBottom: '8px' }}>KHU VỰC LÀM VIỆC</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                 {Object.keys(master.layouts || {}).map(key => (
-                    <button key={key} className={`btn-login ${form.layout === key ? '' : 'btn-outline'}`}
-                        style={{ padding: '8px 1px', fontSize: '9px', fontWeight: '800', background: form.layout === key ? '#004AAD' : 'white', color: form.layout === key ? 'white' : '#004AAD' }}
+                    <button key={key} className={`btn-login`}
+                        style={{
+                            padding: '10px 2px',
+                            fontSize: '10px',
+                            fontWeight: '800',
+                            background: form.layout === key ? '#004AAD' : '#F1F5F9',
+                            color: form.layout === key ? 'white' : '#64748B',
+                            border: form.layout === key ? 'none' : '1px solid #E2E8F0',
+                            borderRadius: '8px',
+                            boxShadow: form.layout === key ? '0 2px 4px rgba(0,74,173,0.3)' : 'none',
+                            transform: form.layout === key ? 'scale(1.02)' : 'scale(1)',
+                            transition: 'all 0.2s'
+                        }}
                         onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {}, incidentType: '' })}>
                         {master.layouts[key].name}
                     </button>
@@ -297,10 +302,17 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
 
             {/* SUB-POSITIONS - VISIBLE IF LAYOUT SELECTED */}
             {form.layout && master.layouts[form.layout]?.subPositions?.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginTop: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '8px' }}>
                     {master.layouts[form.layout].subPositions.map(sp => (
-                        <button key={sp} className={`btn-login ${form.subPos === sp ? '' : 'btn-outline'}`}
-                            style={{ padding: '6px 1px', fontSize: '9px', borderRadius: '8px', backgroundColor: form.subPos === sp ? '#E2E8F0' : '#fff', color: '#333', border: '1px solid #CBD5E1' }}
+                        <button key={sp} className={`btn-login`}
+                            style={{
+                                padding: '8px 2px',
+                                fontSize: '10px',
+                                borderRadius: '8px',
+                                backgroundColor: form.subPos === sp ? '#475569' : '#fff',
+                                color: form.subPos === sp ? 'white' : '#475569',
+                                border: form.subPos === sp ? 'none' : '1px dashed #CBD5E1'
+                            }}
                             onClick={() => setForm({ ...form, subPos: sp })}>
                             {sp}
                         </button>

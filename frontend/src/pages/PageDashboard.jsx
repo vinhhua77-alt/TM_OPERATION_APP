@@ -153,35 +153,48 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
           onClick={() => onNavigate('STAFF_MANAGEMENT')}
           style={{
             background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-            border: '2px solid #F59E0B',
+            border: '1px solid #F59E0B',
             padding: '12px',
             borderRadius: '12px',
             marginBottom: '16px',
             cursor: 'pointer',
             transition: 'transform 0.2s',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ fontSize: '32px' }}>⚠️</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ fontSize: '24px' }}>⚠️</div> {/* Smaller icon */}
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#92400E', marginBottom: '4px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#92400E', marginBottom: '2px' }}>
                 Cần duyệt: {pendingCount} nhân viên
               </div>
-              <div style={{ fontSize: '10px', color: '#78350F' }}>
-                Nhấn để xem danh sách nhân viên chờ duyệt
+              <div style={{ fontSize: '10px', color: '#B45309' }}>
+                Nhấn để xem ngay
               </div>
             </div>
-            <div style={{ fontSize: '20px', color: '#F59E0B' }}>→</div>
           </div>
         </div>
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px 0', fontSize: '14px', color: '#666' }}>
-          ⌛ Đang tải...
+        // SKELETON LOADING STATE - Prevents Layout Shift
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[1, 2, 3, 4].map(k => (
+              <div key={k} style={{ height: '80px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
+            ))}
+          </div>
+          <div style={{ height: '150px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
+          <div style={{ height: '100px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
+          <style>{`
+            @keyframes pulse {
+              0% { opacity: 0.6; }
+              50% { opacity: 1; }
+              100% { opacity: 0.6; }
+            }
+          `}</style>
         </div>
       ) : dashboardData ? (
         <>

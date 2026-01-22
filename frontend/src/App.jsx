@@ -144,17 +144,29 @@ function App() {
   }
 
   return (
-    <div className="container">
-      {/* Global AppBar */}
-      <AppBar
-        user={user}
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onMenuToggle={() => setShowMenu(!showMenu)}
-      />
+    <div className="container" style={{ padding: currentPage === 'LOGIN' ? '0' : undefined }}>
+      {/* Global AppBar - Hide on Login */}
+      {currentPage !== 'LOGIN' && (
+        <AppBar
+          user={user}
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          onMenuToggle={() => setShowMenu(!showMenu)}
+        />
+      )}
 
-      {/* Main Content with top padding for AppBar and bottom for Nav on mobile */}
-      <div className="card" id="main-card" style={{ position: 'relative', paddingTop: '56px', paddingBottom: '80px' }}>
+      {/* Main Content with top padding for AppBar */}
+      <div
+        className="card"
+        id="main-card"
+        style={{
+          position: 'relative',
+          paddingTop: currentPage === 'LOGIN' ? '0' : '56px',
+          background: currentPage === 'LOGIN' ? 'transparent' : undefined,
+          boxShadow: currentPage === 'LOGIN' ? 'none' : undefined,
+          minHeight: currentPage === 'LOGIN' ? '100vh' : undefined
+        }}
+      >
         <Breadcrumbs currentPage={currentPage} onNavigate={handleNavigate} />
         {renderPage()}
         <TopMenu
@@ -169,8 +181,8 @@ function App() {
       {/* Announcement Popup */}
       {user && showAnnouncements && <AnnouncementPopup user={user} onClose={() => setShowAnnouncements(false)} />}
 
-      {/* Bottom Navigation (Mobile) */}
-      {user && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
+      {/* Bottom Navigation (Mobile) - Hide on Login */}
+      {user && currentPage !== 'LOGIN' && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
     </div>
   );
 }
