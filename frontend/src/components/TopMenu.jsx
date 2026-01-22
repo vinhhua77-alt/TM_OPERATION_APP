@@ -108,6 +108,20 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
                     onClick={() => { closeMenu(); onNavigate('CAREER'); }}
                 />
 
+                <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
+
+                <MenuItem
+                    icon="📖"
+                    label="Hướng Dẫn Sử Dụng"
+                    onClick={() => { closeMenu(); onNavigate('GUIDE'); }}
+                />
+
+                <MenuItem
+                    icon="ℹ️"
+                    label="Về Hệ Thống"
+                    onClick={() => { closeMenu(); onNavigate('ABOUT'); }}
+                />
+
                 {/* Section: Management */}
                 {['ADMIN', 'MANAGER', 'SM', 'LEADER', 'OPS'].includes(user?.role) && (
                     <>

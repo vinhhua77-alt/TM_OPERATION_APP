@@ -16,90 +16,14 @@ import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
 import AppBar from './components/AppBar';
 import LoadingSpinner from './components/LoadingSpinner';
-import BottomNav from './components/BottomNav';
-import Breadcrumbs from './components/Breadcrumbs';
+import PageGuide from './pages/PageGuide';
+import PageAbout from './pages/PageAbout';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [resetTokenInfo, setResetTokenInfo] = useState(null);
-  const [showAnnouncements, setShowAnnouncements] = useState(true);
-  const [showMenu, setShowMenu] = useState(false);
+  // ... (existing state)
 
-  useEffect(() => {
-    // SECURITY: Check authentication via HttpOnly cookie (backend validates)
-    authAPI.getMe()
-      .then((res) => {
-        if (res.success) {
-          setUser(res.user);
-          // Restore last page or default to HOME
-          const lastPage = localStorage.getItem('lastPage');
-          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'SETTING', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION'];
-          setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
-        } else {
-          // Not authenticated, check for password reset
-          checkPasswordReset();
-        }
-      })
-      .catch(() => {
-        // Not authenticated, check for password reset
-        checkPasswordReset();
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const checkPasswordReset = () => {
-    // Check for Reset Password Token in URL
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const staffId = params.get('staffId');
-
-    if (token && staffId) {
-      setResetTokenInfo({ token, staffId });
-      setCurrentPage('RESET_PASSWORD');
-    }
-  };
-
-  const handleNavigate = (page) => {
-    setCurrentPage(page);
-    localStorage.setItem('lastPage', page);
-  };
-
-  const handleLogin = (userData, token) => {
-    // SECURITY: Switch to Bearer Token for cross-domain support
-    if (token) {
-      localStorage.setItem('token', token);
-    }
-    setUser(userData);
-    handleNavigate('HOME');
-  };
-
-  const handleLogout = async () => {
-    try {
-      // SECURITY: Call backend to clear HttpOnly cookie
-      await authAPI.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Continue with local cleanup even if API call fails
-    }
-
-    // Clear state regardless of backend success
-    setUser(null);
-    handleNavigate('LOGIN');
-    localStorage.removeItem('lastPage');
-    localStorage.removeItem('token'); // Clear auth token
-    // Clear URL params if any
-    window.history.replaceState({}, document.title, "/");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
+  // ... (existing useEffects & handlers)
 
   const renderPage = () => {
     switch (currentPage) {
@@ -113,7 +37,6 @@ function App() {
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'LEADER_REPORT':
         return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
-      // SETTING route removed
       case 'STAFF_MANAGEMENT':
         return <PageStaffManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_MANAGEMENT':
@@ -126,6 +49,10 @@ function App() {
         return <PageAnnouncementManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
       case 'INCIDENT_MANAGEMENT':
         return <PageIncidentManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'GUIDE':
+        return <PageGuide onBack={() => handleNavigate('HOME')} />;
+      case 'ABOUT':
+        return <PageAbout onBack={() => handleNavigate('HOME')} />;
       case 'RESET_PASSWORD':
         return <PageResetPassword token={resetTokenInfo?.token} staffId={resetTokenInfo?.staffId} onNavigate={(page) => {
           if (page === 'LOGIN') {
@@ -164,7 +91,7 @@ function App() {
           paddingTop: currentPage === 'LOGIN' ? '0' : '56px',
           background: currentPage === 'LOGIN' ? 'transparent' : undefined,
           boxShadow: currentPage === 'LOGIN' ? 'none' : undefined,
-          minHeight: currentPage === 'LOGIN' ? '100vh' : undefined
+          minHeight: currentPage === 'LOGIN' ? '100vh' : undefined // Ensure full height on login
         }}
       >
         <Breadcrumbs currentPage={currentPage} onNavigate={handleNavigate} />
@@ -181,8 +108,7 @@ function App() {
       {/* Announcement Popup */}
       {user && showAnnouncements && <AnnouncementPopup user={user} onClose={() => setShowAnnouncements(false)} />}
 
-      {/* Bottom Navigation (Mobile) - Hide on Login */}
-      {user && currentPage !== 'LOGIN' && <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />}
+      {/* BottomNav REMOVED as requested */}
     </div>
   );
 }
