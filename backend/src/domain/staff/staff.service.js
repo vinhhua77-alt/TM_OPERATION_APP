@@ -4,6 +4,7 @@
  */
 
 import { UserRepo } from '../../infra/user.repo.supabase.js';
+import bcrypt from 'bcryptjs';
 
 export class StaffService {
     /**
@@ -92,6 +93,16 @@ export class StaffService {
             if (!validRoles.includes(updates.role)) {
                 throw new Error(`Invalid role: ${updates.role}`);
             }
+        }
+
+        // Handle Password Update
+        if (updates.password) {
+            if (updates.password.length < 6) {
+                throw new Error('Password must be at least 6 characters');
+            }
+            const salt = await bcrypt.genSalt(10);
+            updates.password_hash = await bcrypt.hash(updates.password, salt);
+            delete updates.password; // Remove plain password
         }
 
         try {

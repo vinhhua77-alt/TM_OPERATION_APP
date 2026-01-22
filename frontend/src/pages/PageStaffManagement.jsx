@@ -160,6 +160,14 @@ const PageStaffManagement = ({ user, onBack }) => {
                             onChange={e => setFormData({ ...formData, gmail: e.target.value })}
                         />
 
+                        <input
+                            className="input-login"
+                            type="password"
+                            placeholder="Mật khẩu mới (Để trống nếu không đổi)"
+                            value={formData.password || ''}
+                            onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        />
+
                         <select
                             className="input-login"
                             value={formData.role}

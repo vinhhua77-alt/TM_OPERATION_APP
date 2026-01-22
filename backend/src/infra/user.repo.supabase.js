@@ -287,7 +287,7 @@ export class UserRepo {
      */
     static async updateStaffInfo(staffId, updates) {
         try {
-            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active'];
+            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash'];
             const filteredUpdates = {};
 
             // Only allow specific fields to be updated

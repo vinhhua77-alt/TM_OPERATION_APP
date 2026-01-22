@@ -92,7 +92,6 @@ export class ShiftService {
         selected_reasons: typeof payload.selectedReasons === 'string' ? payload.selectedReasons : JSON.stringify(payload.selectedReasons || []),
         is_valid: true,
         photo_url: payload.photoUrl || '',
-        shift: payload.shift || 'Unknown', // New field
         created_at: new Date().toISOString()
       };
 

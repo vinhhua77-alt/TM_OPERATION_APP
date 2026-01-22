@@ -223,11 +223,11 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
             {/* TIME SELECTION - Compact */}
             <div className="grid-2 mt-3" style={{ background: '#F8FAFC', padding: '8px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                 <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: shiftInfo?.isCorrect ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
-                        {shiftInfo?.isCorrect ? '✅ GIỜ VÀO' : 'GIỜ VÀO'}
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: form.startH ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
+                        {form.startH ? '✅ GIỜ VÀO' : 'GIỜ VÀO'}
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
+                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px', borderColor: form.startH ? '#10B981' : '#DDDDDD' }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
                             <option value="">--</option>
                             {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
                         </select>
@@ -237,11 +237,11 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                     <span style={{ fontSize: '16px', color: '#CBD5E1' }}>➜</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: shiftInfo?.isCorrect ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
-                        {shiftInfo?.isCorrect ? '✅ GIỜ RA' : 'GIỜ RA'}
+                    <label style={{ fontSize: '9px', fontWeight: '800', color: form.endH ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
+                        {form.endH ? '✅ GIỜ RA' : 'GIỜ RA'}
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px' }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
+                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px', borderColor: form.endH ? '#10B981' : '#DDDDDD' }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
                             <option value="">--</option>
                             {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
                         </select>
