@@ -15,9 +15,12 @@ const apiClient = axios.create({
   withCredentials: true // SECURITY: Send HttpOnly cookies with requests
 });
 
-// Request interceptor: No longer needed for token (cookies sent automatically)
-// Keeping for potential future use (e.g., CSRF token)
+// Request interceptor: Attach Bearer Token (Cross-Domain Support)
 apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

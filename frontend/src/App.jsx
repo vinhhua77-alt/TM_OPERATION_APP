@@ -66,9 +66,11 @@ function App() {
     localStorage.setItem('lastPage', page);
   };
 
-  const handleLogin = (userData) => {
-    // SECURITY: Token is now stored in HttpOnly cookie by backend
-    // No need to store in localStorage (XSS protection)
+  const handleLogin = (userData, token) => {
+    // SECURITY: Switch to Bearer Token for cross-domain support
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     setUser(userData);
     handleNavigate('HOME');
   };
