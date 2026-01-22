@@ -58,6 +58,8 @@ app.use(helmet({
 
 // CORS Configuration - Whitelist allowed origins
 const allowedOrigins = [
+  'https://app.vinhhua.com', // MAIN DOMAIN
+  'https://www.app.vinhhua.com',
   'https://tm-operation-app.vercel.app',
   'https://tm-operation-app-git-main-vinhhua77-alts-projects.vercel.app', // Vercel preview
   'http://localhost:5173', // Vite dev server
