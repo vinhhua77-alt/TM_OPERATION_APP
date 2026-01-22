@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## DEV_PLAYBOOK.md (v2 - Supabase)
 
-**Version**: 2.0  
-**Last Updated**: 2026-01-21  
+**Version**: 3.0  
+**Last Updated**: 2026-01-22  
 **Status**: Production
 
 ---
@@ -371,6 +371,115 @@ router.post('/submit', authenticateToken, async (req, res, next) => {
 - Staff ID: `TM9999`
 - Password: `123456`
 
+### 9.3. TESTING EMPLOYEE DASHBOARD (v3.0)
+
+### 9.3.1. Manual Testing
+
+**Test Case 1: Dashboard Load**
+```bash
+# 1. Login as staff
+# 2. Navigate to Dashboard
+# 3. Verify data loads
+# Expected: Monthly stats, feeling distribution, recent shifts display
+```
+
+**Test Case 2: Cache Functionality**
+```bash
+# 1. Load dashboard
+# 2. Check browser console: "💾 Dashboard data cached"
+# 3. Refresh page
+# Expected: Console shows "✅ Using cached dashboard data"
+# Expected: No API call in Network tab
+```
+
+**Test Case 3: Cache Expiration**
+```bash
+# 1. Load dashboard
+# 2. Wait 6 minutes
+# 3. Refresh page
+# Expected: Console shows "⏰ Cache expired, fetching fresh data"
+# Expected: New API call in Network tab
+```
+
+### 9.3.2. API Testing
+
+**Dashboard API**:
+```bash
+# Get dashboard data
+curl -X GET "http://localhost:3001/api/dashboard/TM0001?month=2026-01" \
+  -H "Authorization: Bearer <token>"
+
+# Expected: 200 OK with dashboard data
+```
+
+### 9.3.3. Performance Testing
+
+**Cache Hit Rate**:
+```bash
+# 1. Load dashboard 10 times within 5 minutes
+# Expected: 1 API call + 9 cache hits
+# Cache hit rate: 90%
+```
+
+**Database Query Performance**:
+```sql
+-- Test dashboard query speed
+EXPLAIN ANALYZE
+SELECT * FROM raw_shiftlog
+WHERE staff_id = 'TM0001'
+  AND date >= '2026-01-01'
+  AND date <= '2026-01-31';
+
+-- Expected: Index scan, < 50ms
+```
+
+### 9.4. TESTING SHIFT SUBMISSION VALIDATION (v3.0)
+
+### 9.4.1. Submission Limits
+
+**Test Case 1: First Shift**
+```bash
+# Submit first shift of the day
+# Expected: ✅ Success
+```
+
+**Test Case 2: Second Shift (Valid)**
+```bash
+# Wait 2+ hours
+# Submit second shift
+# Expected: ✅ Success
+# Console: "⚠️ Staff XXX đang gửi ca thứ 2 (ca gãy)"
+```
+
+**Test Case 3: Second Shift (Too Soon)**
+```bash
+# Submit second shift after 1 hour
+# Expected: ❌ Error
+# Message: "⏰ Vui lòng đợi 60 phút nữa..."
+```
+
+**Test Case 4: Third Shift (Rejected)**
+```bash
+# Submit third shift
+# Expected: ❌ Error
+# Message: "⚠️ Bạn đã gửi đủ 2 ca trong ngày!"
+```
+
+### 9.4.2. Field Validation
+
+**Test Case: No Lead Submission**
+```bash
+# Submit with lead = "KHÔNG CÓ LEAD"
+# Expected: ✅ Success
+# Database: lead = false (boolean)
+```
+
+**Test Case: Missing Staff Name**
+```bash
+# Submit without staffName
+# Expected: ✅ Success (fallback to user.staff_name)
+```
+
 ---
 
 ## 10. DEPLOYMENT
@@ -460,7 +569,61 @@ router.post('/submit', authenticateToken, async (req, res, next) => {
 
 ---
 
-## 14. RELATED DOCUMENTATION
+---
+
+## 14. DATA IMPORT PROCEDURES (v3.0)
+
+### 14.1. Google Sheets Migration
+
+**Script**: `backend/scripts/migrate-from-gsheet.js`
+
+**Steps**:
+```bash
+# 1. Setup Google credentials
+cp ~/Downloads/credentials.json backend/
+
+# 2. Update .env
+GOOGLE_CREDENTIALS_PATH=./credentials.json
+STAFF_SHEET_ID=1ABC...XYZ
+
+# 3. Run migration
+node backend/scripts/migrate-from-gsheet.js
+
+# Expected: "🎉 Migration completed!"
+```
+
+### 14.2. CSV Import
+
+**Via Supabase UI**:
+1. Open Supabase Dashboard → Table Editor
+2. Select table → Insert → Import CSV
+3. Upload file → Map columns → Import
+
+**Via SQL**:
+```sql
+COPY staff_master(staff_id, staff_name, email, role, store_code)
+FROM '/path/to/staff.csv'
+DELIMITER ','
+CSV HEADER;
+```
+
+### 14.3. Table-to-Table Migration
+
+**Script**: `backend/database/migrations/migrate_RAW_SHIFTLOG_to_raw_shiftlog.sql`
+
+**Run in Supabase SQL Editor**:
+```sql
+-- Copy from old table to new table
+INSERT INTO raw_shiftlog (...)
+SELECT ... FROM RAW_SHIFTLOG;
+
+-- Verify
+SELECT COUNT(*) FROM raw_shiftlog;
+```
+
+---
+
+## 15. RELATED DOCUMENTATION
 
 **MUST READ**:
 - [ANTIGRAVITY_RULES.md](./ANTIGRAVITY_RULES.md) - Non-negotiable rules
@@ -475,10 +638,14 @@ router.post('/submit', authenticateToken, async (req, res, next) => {
 
 ---
 
-## 15. CHANGE LOG
+## 16. CHANGE LOG
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-22 | Updated to v3.0 | New testing procedures |
+| 2026-01-22 | Added Dashboard testing | Employee Dashboard feature |
+| 2026-01-22 | Added validation testing | Shift submission limits |
+| 2026-01-22 | Added data import procedures | Migration scripts |
 | 2026-01-21 | Created DEV_PLAYBOOK.md v2.0 | Supabase migration |
 
 ---

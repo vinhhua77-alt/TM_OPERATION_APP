@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## FLOW.md (v2 - Supabase)
 
-**Version**: 2.0  
-**Last Updated**: 2026-01-21  
+**Version**: 3.0  
+**Last Updated**: 2026-01-22  
 **Status**: Production
 
 ---
@@ -148,6 +148,23 @@ Employee submits shift report after completing shift
    - INSERT into raw_shiftlog (service role)
 6. Backend: Return { success: true, data }
 7. Frontend: Show success message
+
+### 5.2.1. Validation Rules (v3.0)
+
+**Submission Limits**:
+- Maximum 2 shifts per day (for split shifts/ca gãy)
+- Minimum 2-hour gap between submissions
+- Error if >= 2 shifts: "⚠️ Bạn đã gửi đủ 2 ca trong ngày!"
+- Error if < 2 hours: "⏰ Vui lòng đợi X phút nữa..."
+
+**Field Validation**:
+- `lead`: Convert string → boolean (true/false)
+- `staff_name`: Fallback to user.staff_name if missing
+- `checks`: Must be valid JSONB object
+- `selected_reasons`: Must be valid JSONB array
+- Required: store_id, date, staff_id, staff_name, layout
+
+**Implementation**: `backend/src/domain/shift/shift.service.js`
 ```
 
 ### 5.3. Code Mapping
@@ -192,6 +209,16 @@ Shift leader documents shift conditions, coaching, and risks
    - INSERT into raw_lead_shift (service role)
 6. Backend: Return { success: true, data }
 7. Frontend: Show success message
+
+### 6.2.1. Success Messages (v3.0)
+
+**Motivational Messages** (random selection):
+- "🎉 XONG RỒI! Anh/chị là LEADER xuất sắc nhất hôm nay! 💪"
+- "🔥 CHỐT ĐƠN! Báo cáo của anh/chị quá đỉnh! Keep it up! 🚀"
+- "✨ PERFECT! Team đang tự hào về anh/chị đấy! 🌟"
+- ... (8 messages total)
+
+**Purpose**: Improve user engagement and motivation
 ```
 
 ### 6.3. Code Mapping
@@ -370,7 +397,65 @@ Admin disables a user account immediately
 
 ---
 
-## 11. FORBIDDEN FLOWS
+## 11. FLOW 10 – EMPLOYEE DASHBOARD (v3.0)
+
+### 11.1. Business Flow
+
+Employee views personal dashboard with monthly statistics, gamification, and recent shifts
+
+### 11.2. Technical Flow
+
+```
+1. User navigates to PageDashboard.jsx
+2. Frontend: Check localStorage cache
+   - Cache key: `dashboard_{staffId}_{month}`
+   - TTL: 5 minutes
+   - If valid cache exists, use cached data (skip API call)
+3. Frontend: GET /api/dashboard/:staffId?month=YYYY-MM
+   Headers: { Authorization: Bearer <token> }
+4. Backend: authenticateToken middleware
+5. Backend: dashboard.routes.js → DashboardService.getEmployeeDashboard()
+   - Validate month format (YYYY-MM)
+   - Check authorization (staff can view own, admin can view all)
+   - Query raw_shiftlog for month data
+   - Aggregate statistics:
+     * Total shifts, hours, avg duration, avg rating
+     * Feeling distribution (OK/BUSY/FIXED/OPEN/OVER percentages)
+     * Recent 5 shifts
+   - Query gamification data (level, XP, streak, badges)
+6. Backend: Return { success: true, data }
+7. Frontend: Cache response in localStorage
+8. Frontend: Render dashboard UI
+```
+
+### 11.3. Code Mapping
+
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Frontend | `pages/PageDashboard.jsx` | Dashboard UI |
+| API Client | `api/dashboard.js` | GET /api/dashboard/:staffId |
+| Cache | `utils/cache.js` | localStorage caching |
+| Middleware | `middleware/auth.middleware.js` | JWT validation |
+| Route | `routes/dashboard.routes.js` | Route handler |
+| Domain | `domain/staff/dashboard.service.js` | Business logic |
+| Repository | `infra/dashboard.repo.js` | DB queries |
+
+### 11.4. Data Mapping
+
+- **Read**: `raw_shiftlog`, `staff_master`, `gamification` (if exists)
+- **Write**: None
+- **Mode**: Read-only with client-side caching
+
+### 11.5. Performance Optimizations (v3.0)
+
+- **localStorage Cache**: 5-minute TTL reduces API calls by ~80%
+- **Database Indexes**: 5 indexes on raw_shiftlog for fast queries
+- **Single Month**: Only current month loaded (no dropdown)
+- **Batch Queries**: All data fetched in single API call
+
+---
+
+## 12. FORBIDDEN FLOWS
 
 ❌ **NEVER IMPLEMENT THESE**:
 1. Frontend writes to RAW tables directly
@@ -381,7 +466,7 @@ Admin disables a user account immediately
 
 ---
 
-## 12. COMPARISON: v1 (GAS) vs v2 (Supabase)
+## 13. COMPARISON: v1 (GAS) vs v2 (Supabase)
 
 | Flow | v1 (GAS) | v2 (Supabase) |
 |------|----------|---------------|
@@ -394,16 +479,20 @@ Admin disables a user account immediately
 
 ---
 
-## 13. CHANGE LOG
+## 14. CHANGE LOG
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
+| 2026-01-22 | Added FLOW 10: Employee Dashboard | Staff self-service feature |
+| 2026-01-22 | Added shift submission validation | Prevent duplicate submissions |
+| 2026-01-22 | Added GenZ motivational messages | Improve user engagement |
 | 2026-01-21 | Created FLOW.md v2.0 | Supabase migration |
 | 2026-01-15 | Migrated from GAS to REST API | Modern API stack |
 
 ---
 
-## 14. RELATED DOCUMENTATION
+## 15. RELATED DOCUMENTATION
 
 - [ANTIGRAVITY_RULES.md](./ANTIGRAVITY_RULES.md) - Rules 02, 03, 09
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
