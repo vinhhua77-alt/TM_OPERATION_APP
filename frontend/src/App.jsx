@@ -22,9 +22,77 @@ import PageAbout from './pages/PageAbout';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
-  // ... (existing state)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [resetTokenInfo, setResetTokenInfo] = useState(null);
+  const [showAnnouncements, setShowAnnouncements] = useState(true);
+  const [showMenu, setShowMenu] = useState(false);
 
-  // ... (existing useEffects & handlers)
+  useEffect(() => {
+    // SECURITY: Check authentication via HttpOnly cookie (backend validates)
+    authAPI.getMe()
+      .then((res) => {
+        if (res.success) {
+          setUser(res.user);
+          // Restore last page or default to HOME
+          const lastPage = localStorage.getItem('lastPage');
+          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT'];
+          setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
+        } else {
+          // Not authenticated, check for password reset
+          checkPasswordReset();
+        }
+      })
+      .catch(() => {
+        // Not authenticated, check for password reset
+        checkPasswordReset();
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const checkPasswordReset = () => {
+    // Check for Reset Password Token in URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const staffId = params.get('staffId');
+
+    if (token && staffId) {
+      setResetTokenInfo({ token, staffId });
+      setCurrentPage('RESET_PASSWORD');
+    }
+  };
+
+  const handleNavigate = (page) => {
+    setCurrentPage(page);
+    localStorage.setItem('lastPage', page);
+  };
+
+  const handleLogin = (userData, token) => {
+    // SECURITY: Switch to Bearer Token for cross-domain support
+    if (token) {
+      localStorage.setItem('token', token);
+    }
+    setUser(userData);
+    handleNavigate('HOME');
+  };
+
+  const handleLogout = async () => {
+    try {
+      // SECURITY: Call backend to clear HttpOnly cookie
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with local cleanup even if API call fails
+    }
+
+    // Clear state regardless of backend success
+    setUser(null);
+    handleNavigate('LOGIN');
+    localStorage.removeItem('lastPage');
+    localStorage.removeItem('token'); // Clear auth token
+    // Clear URL params if any
+    window.history.replaceState({}, document.title, "/");
+  };
 
   const renderPage = () => {
     switch (currentPage) {
