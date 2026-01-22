@@ -16,6 +16,7 @@ import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
 import AppBar from './components/AppBar';
 import LoadingSpinner from './components/LoadingSpinner';
+import Breadcrumbs from './components/Breadcrumbs';
 import PageGuide from './pages/PageGuide';
 import PageAbout from './pages/PageAbout';
 
