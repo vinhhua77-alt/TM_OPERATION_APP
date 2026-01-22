@@ -126,7 +126,7 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
           </button>
         </div>
       </div>
-      <p style={{ marginTop: '2rem', color: '#666', fontSize: '0.8rem' }}>© 2026 Powered by IT Team</p>
+      <p style={{ marginTop: '2rem', color: '#666', fontSize: '0.8rem' }}>© 2026 Powered by Vinh Gà</p>
     </div>
   );
 };

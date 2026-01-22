@@ -483,12 +483,53 @@ Employee views personal dashboard with monthly statistics, gamification, and rec
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-22 | Added FLOW 11: Staff Password Edit | Support for admin-initiated password resets |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
 | 2026-01-22 | Added FLOW 10: Employee Dashboard | Staff self-service feature |
 | 2026-01-22 | Added shift submission validation | Prevent duplicate submissions |
 | 2026-01-22 | Added GenZ motivational messages | Improve user engagement |
 | 2026-01-21 | Created FLOW.md v2.0 | Supabase migration |
 | 2026-01-15 | Migrated from GAS to REST API | Modern API stack |
+
+---
+
+## 16. FLOW 11 – STAFF PASSWORD EDIT (v3.0)
+
+### 16.1. Business Flow
+
+Admin or Manager resets/updates an employee's password via Staff Management
+
+### 16.2. Technical Flow
+
+```
+1. Admin opens edit modal in PageStaffManagement.jsx
+2. User enters new password and clicks "Lưu"
+3. Frontend: PUT /api/staff/:staff_id { password }
+4. Backend: staff.routes.js → StaffService.updateStaff()
+   - Validate input (min 6 chars)
+   - Salt and Hash new password (bcryptjs)
+   - Set password_hash and delete plain password from payload
+   - Call UserRepo.updateStaffInfo()
+5. Backend: UserRepo.updateStaffInfo()
+   - UPDATE staff_master SET password_hash = ... WHERE staff_id = ...
+6. Return { success: true, data }
+```
+
+### 16.3. Code Mapping
+
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Frontend | `pages/PageStaffManagement.jsx` | Edit Modal with password field |
+| API Client | `api/staff.js` | PUT /api/staff/:staff_id |
+| Route | `routes/staff.routes.js` | Route handler |
+| Domain | `domain/staff/staff.service.js` | Password hashing (bcryptjs) |
+| Repository | `infra/user.repo.supabase.js` | DB update |
+
+### 16.4. Data Mapping
+
+- **Read**: `staff_master` (check permissions)
+- **Write**: `staff_master` (update password_hash)
+- **Mode**: Write (mutable table)
 
 ---
 

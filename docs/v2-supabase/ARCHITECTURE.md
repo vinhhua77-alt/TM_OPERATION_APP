@@ -522,7 +522,7 @@ const limiter = rateLimit({
    - Audit log creation
 
 4. **Sensitive Operations**
-   - Password hashing
+   - Password hashing (implemented in AuthService and StaffService)
    - Service role key usage
    - Permission checks
 
@@ -606,6 +606,8 @@ GitHub Repository
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-22 | **Security: Staff Password Hashing** | Enabled bcrypt hashing for admin-initiated password updates |
+| 2026-01-22 | **UX: Standardized UI Feedback** | Visual validation (✅) and floating popups implemented |
 | 2026-01-22 | Updated to v3.0 | Performance + caching layer |
 | 2026-01-22 | Added localStorage caching | Reduce API load by 80% |
 | 2026-01-22 | Added database indexes | 10x faster queries |

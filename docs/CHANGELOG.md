@@ -271,6 +271,11 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | 2026-01-22 | Added Mobile Bottom Navigation & FAB | Enhanced mobile experience (PWA-Feel) |
 | 2026-01-22 | Removed PageSetting & Flattened Nav | Simplification of app structure |
 | 2026-01-22 | Cleaned up Redundant Headers | Reduced visual clutter in sub-pages |
+| 2026-01-22 | **UX: Visual Validation (✅)** | Added green checkmarks for completed sections in Shift Log & Leader Report |
+| 2026-01-22 | **UX: Smart Defaults & UI Logic** | Auto-set End Time (+8h) and rounded current hour defaults |
+| 2026-01-22 | **Feat: Staff Password Edit** | Enabled password updates in Staff Management (with hashing) |
+| 2026-01-22 | **UX: Register Floating Popups** | Converted register messages to non-obscured floating popups |
+| 2026-01-22 | **BugFix: Backend Schema Mismatch** | Removed invalid `shift` column from `raw_shiftlog` insert |
 
 ---
 
