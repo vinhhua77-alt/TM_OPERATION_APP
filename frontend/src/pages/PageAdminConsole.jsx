@@ -71,22 +71,22 @@ const PageAdminConsole = ({ onBack }) => {
             </div>
 
             {/* TABS */}
-            <div className="flex w-full border-b border-gray-200 mb-4 overflow-x-auto no-scrollbar">
+            <div className="flex w-full border-b border-gray-200 mb-4">
                 <button
                     onClick={() => setActiveTab('flags')}
-                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'flags' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 pb-2 pt-1 px-1 text-xs sm:text-sm font-semibold text-center ${activeTab === 'flags' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Feature Flags (IT)
                 </button>
                 <button
                     onClick={() => setActiveTab('perms')}
-                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'perms' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 pb-2 pt-1 px-1 text-xs sm:text-sm font-semibold text-center ${activeTab === 'perms' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Permission Matrix (Ops)
                 </button>
                 <button
                     onClick={() => setActiveTab('audit')}
-                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'audit' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 pb-2 pt-1 px-1 text-xs sm:text-sm font-semibold text-center ${activeTab === 'audit' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Audit Logs 📜
                 </button>
@@ -277,13 +277,13 @@ const PageAdminConsole = ({ onBack }) => {
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-gray-50 sticky top-0 z-30 shadow-sm">
                                 <tr>
-                                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase whitespace-nowrap sticky left-0 z-40 bg-gray-50 border-r border-gray-200 min-w-[140px]">
+                                    <th className="px-2 py-2 text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap sticky left-0 z-40 bg-gray-50 border-r border-gray-200 min-w-[90px]">
                                         Time
                                     </th>
-                                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Actor</th>
-                                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Action</th>
-                                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Target</th>
-                                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase min-w-[200px]">Details</th>
+                                    <th className="px-2 py-2 text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Actor</th>
+                                    <th className="px-2 py-2 text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Action</th>
+                                    <th className="px-2 py-2 text-[10px] font-bold text-gray-500 uppercase whitespace-nowrap">Target</th>
+                                    <th className="px-2 py-2 text-[10px] font-bold text-gray-500 uppercase min-w-[120px]">Details</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -296,22 +296,22 @@ const PageAdminConsole = ({ onBack }) => {
                                 ) : (
                                     auditLogs.map((log) => (
                                         <tr key={log.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap font-mono sticky left-0 bg-white border-r border-gray-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                            <td className="px-2 py-2 text-[10px] text-gray-500 whitespace-nowrap font-mono sticky left-0 bg-white border-r border-gray-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                                 {new Date(log.created_at).toLocaleString('vi-VN')}
                                             </td>
-                                            <td className="px-4 py-2 text-xs text-gray-700 font-medium whitespace-nowrap">
+                                            <td className="px-2 py-2 text-[10px] text-gray-700 font-medium whitespace-nowrap">
                                                 {log.actor_id ? (log.actor_id.substring(0, 8) + '...') : 'SYSTEM'}
                                             </td>
-                                            <td className="px-4 py-2 text-xs">
-                                                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded font-bold border border-gray-200">
+                                            <td className="px-2 py-2 text-[10px]">
+                                                <span className="bg-gray-100 text-gray-700 px-1 py-0.5 rounded font-bold border border-gray-200">
                                                     {log.action}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-2 text-xs text-gray-600 whitespace-nowrap">
+                                            <td className="px-2 py-2 text-[10px] text-gray-600 whitespace-nowrap">
                                                 <div className="font-bold">{log.resource_type}</div>
-                                                <div className="text-[10px] text-gray-400">{log.resource_id}</div>
+                                                <div className="text-[9px] text-gray-400">{log.resource_id}</div>
                                             </td>
-                                            <td className="px-4 py-2 text-[10px] text-gray-500 font-mono break-all leading-tight">
+                                            <td className="px-2 py-2 text-[9px] text-gray-500 font-mono break-all leading-tight">
                                                 {log.new_value ? (
                                                     <div className="max-h-[60px] overflow-auto">
                                                         {JSON.stringify(log.new_value)}
