@@ -71,22 +71,22 @@ const PageAdminConsole = ({ onBack }) => {
             </div>
 
             {/* TABS */}
-            <div className="flex w-full border-b border-gray-200 mb-4">
+            <div className="flex w-full border-b border-gray-200 mb-4 overflow-x-auto no-scrollbar">
                 <button
                     onClick={() => setActiveTab('flags')}
-                    className={`flex-1 pb-2 pt-1 px-2 text-sm font-semibold text-center ${activeTab === 'flags' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'flags' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Feature Flags (IT)
                 </button>
                 <button
                     onClick={() => setActiveTab('perms')}
-                    className={`flex-1 pb-2 pt-1 px-2 text-sm font-semibold text-center ${activeTab === 'perms' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'perms' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Permission Matrix (Ops)
                 </button>
                 <button
                     onClick={() => setActiveTab('audit')}
-                    className={`flex-1 pb-2 pt-1 px-2 text-sm font-semibold text-center ${activeTab === 'audit' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`flex-1 min-w-max pb-2 pt-1 px-4 text-sm font-semibold text-center whitespace-nowrap ${activeTab === 'audit' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Audit Logs 📜
                 </button>
