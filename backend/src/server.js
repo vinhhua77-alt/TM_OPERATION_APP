@@ -25,6 +25,7 @@ import storeAnalyticsRoutes from './routes/store-analytics.routes.js';
 import masterDataRoutes from './routes/master-data.routes.js';
 import announcementRoutes from './routes/announcement.routes.js';
 import gamificationRoutes from './routes/gamification.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { AnalyticsCronJob } from './jobs/analytics.cron.js';
 
 dotenv.config();
@@ -140,6 +141,7 @@ app.use('/api/store-analytics', storeAnalyticsRoutes);
 app.use('/api/master-data', masterDataRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling
 app.use(errorHandler);

@@ -19,6 +19,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import Breadcrumbs from './components/Breadcrumbs';
 import PageGuide from './pages/PageGuide';
 import PageAbout from './pages/PageAbout';
+import PageAdminConsole from './pages/PageAdminConsole';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
@@ -36,7 +37,7 @@ function App() {
           setUser(res.user);
           // Restore last page or default to HOME
           const lastPage = localStorage.getItem('lastPage');
-          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT'];
+          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE'];
           setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
         } else {
           // Not authenticated, check for password reset
@@ -125,6 +126,8 @@ function App() {
         return <PageGuide onBack={() => handleNavigate('HOME')} />;
       case 'ABOUT':
         return <PageAbout onBack={() => handleNavigate('HOME')} />;
+      case 'ADMIN_CONSOLE':
+        return <PageAdminConsole user={user} onBack={() => handleNavigate('HOME')} />;
       case 'RESET_PASSWORD':
         return <PageResetPassword token={resetTokenInfo?.token} staffId={resetTokenInfo?.staffId} onNavigate={(page) => {
           if (page === 'LOGIN') {

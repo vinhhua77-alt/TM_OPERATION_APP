@@ -194,6 +194,17 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
                                             onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }}
                                             style={{ paddingLeft: '50px', fontSize: '12px' }}
                                         />
+
+
+                                        {['ADMIN', 'OPS'].includes(user?.role) && (
+                                            <MenuItem
+                                                icon="🛡️"
+                                                label="Admin Console"
+                                                onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
+                                                style={{ paddingLeft: '50px', fontSize: '12px', color: '#7C3AED', fontWeight: '800' }}
+                                            />
+                                        )}
+
                                         <MenuItem
                                             icon="📊"
                                             label="Cấu hình Benchmark"
