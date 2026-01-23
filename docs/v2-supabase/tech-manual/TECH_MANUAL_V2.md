@@ -164,25 +164,25 @@ Mọi API nhạy cảm đều phải vượt qua 2 lớp bảo vệ:
 2. `hasPermission(role, key)`: Kiểm tra Permission Matrix. Nếu Role không có quyền -> Chặn.
 
 ---
-102: 
-103: ## 9. AUDIT LOGS SYSTEM - V3.3
-104: 
-105: Hệ thống ghi nhận dấu vết hoạt động (Audit Trail) phục vụ mục đích an ninh và kiểm soát.
-106: 
-107: ### 9.1. Database Design
-108: - **Table**: `audit_logs`
-109: - **Cấu trúc**:
-110:   - `id`: UUID (PK).
-111:   - `actor_id`: UUID (User thực hiện hành động).
-112:   - `action`: String (CREATE, UPDATE, DELETE, LOGIN...).
-113:   - `resource_type`: String (Tên bảng hoặc module bị tác động).
-114:   - `resource_id`: String (ID của đối tượng bị tác động).
-115:   - `old_value` / `new_value`: JSONB (Lưu snapshot dữ liệu trước và sau khi thay đổi).
-116:   - `created_at`: Thời gian thực.
-117: 
-118: ### 9.2. Implementation
-119: - **Backend Service**: `AccessService.getAuditLogs()` lấy dữ liệu 100 log gần nhất.
-120: - **Frontend**: Hiển thị dạng bảng với cột "Time" được ghim cố định (Sticky Column) để tối ưu trải nghiệm trên Mobile.
-121: 
-122: ---
+
+## 9. AUDIT LOGS SYSTEM - V3.3
+
+Hệ thống ghi nhận dấu vết hoạt động (Audit Trail) phục vụ mục đích an ninh và kiểm soát.
+
+### 9.1. Database Design
+- **Table**: `audit_logs`
+- **Cấu trúc**:
+  - `id`: UUID (PK).
+  - `actor_id`: UUID (User thực hiện hành động).
+  - `action`: String (CREATE, UPDATE, DELETE, LOGIN...).
+  - `resource_type`: String (Tên bảng hoặc module bị tác động).
+  - `resource_id`: String (ID của đối tượng bị tác động).
+  - `old_value` / `new_value`: JSONB (Lưu snapshot dữ liệu trước và sau khi thay đổi).
+  - `created_at`: Thời gian thực.
+
+### 9.2. Implementation
+- **Backend Service**: `AccessService.getAuditLogs()` lấy dữ liệu 100 log gần nhất.
+- **Frontend**: Hiển thị dạng bảng với cột "Time" được ghim cố định (Sticky Column) để tối ưu trải nghiệm trên Mobile.
+
+---
 **Thái Mẫu Group - IT Department**
