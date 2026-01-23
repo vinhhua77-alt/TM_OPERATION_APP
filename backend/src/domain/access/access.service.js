@@ -58,4 +58,11 @@ export class AccessService {
         }
         throw new Error('Invalid config type');
     }
+
+    /**
+     * Get System Audit Logs
+     */
+    static async getAuditLogs(limit = 100) {
+        return await AccessRepo.getAuditLogs(limit);
+    }
 }

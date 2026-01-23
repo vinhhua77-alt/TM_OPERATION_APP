@@ -94,6 +94,10 @@ Tính năng quản trị nâng cao giúp kiểm soát hệ thống:
     - Dành cho bộ phận Vận hành (Ops).
     - Phân quyền chi tiết: Ai được làm gì (VD: Store Manager có được xem báo cáo tài chính không?).
     - Tích vào ô tương ứng để cấp/thu hồi quyền ngay lập tức.
+98. **Tab Audit Logs** (Beta):
+    - Dành cho bộ phận Kiểm soát.
+    - Xem lại toàn bộ lịch sử hoạt động hệ thống: Ai làm gì, Khi nào, Thay đổi giá trị từ A sang B.
+    - Cột "Time" và tiêu đề luôn được cố định để dễ tra cứu khi danh sách dài.
 
 ---
 

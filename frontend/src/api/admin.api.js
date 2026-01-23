@@ -7,5 +7,9 @@ export const adminAPI = {
 
     updateConfig: async (type, payload) => {
         return await client.post('/admin/config', { type, payload });
+    },
+
+    getAuditLogs: async () => {
+        return await client.get('/admin/audit-logs');
     }
 };

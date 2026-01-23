@@ -44,4 +44,17 @@ router.post('/config', authenticateToken, requireAdminOrOps, async (req, res, ne
     }
 });
 
+/**
+ * GET /api/admin/audit-logs
+ * Get system audit logs
+ */
+router.get('/audit-logs', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+    try {
+        const data = await AccessService.getAuditLogs();
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;

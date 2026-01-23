@@ -101,4 +101,18 @@ export class AccessRepo {
         if (error) throw error;
         return data.can_access;
     }
+
+    /**
+     * Get system audit logs
+     */
+    static async getAuditLogs(limit = 100) {
+        const { data, error } = await supabase
+            .from('audit_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
+        return data;
+    }
 }
