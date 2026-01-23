@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { masterDataAPI } from '../api/master-data';
 import FAB from '../components/FAB';
 
-const PageStoreManagement = ({ user, onBack }) => {
-    const [currentView, setCurrentView] = useState('menu');
+const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
+    const [currentView, setCurrentView] = useState(initialView);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
     // Metadata for dropdowns
     const [dropdownLayouts, setDropdownLayouts] = useState([]);
     const [dropdownStores, setDropdownStores] = useState([]);
-
-
 
     // Data Lists
     const [stores, setStores] = useState([]);
@@ -44,6 +42,11 @@ const PageStoreManagement = ({ user, onBack }) => {
     useEffect(() => {
         if (currentView !== 'menu') loadData();
     }, [currentView, filters]);
+
+    // Update view if prop changes
+    useEffect(() => {
+        setCurrentView(initialView);
+    }, [initialView]);
 
     const loadMetadata = async () => {
         try {
@@ -206,11 +209,11 @@ const PageStoreManagement = ({ user, onBack }) => {
 
     // Header & Filter Bar
     const renderFilters = (showLayout = false) => (
-        <div style={{ display: 'grid', gridTemplateColumns: `1fr ${showLayout ? '1fr' : ''} auto auto`, gap: '8px', marginBottom: '10px' }}>
+        <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-4 flex flex-col md:flex-row gap-3">
             {/* Store Filter */}
             <select
-                className="input-login"
-                style={{ fontSize: '11px' }}
+                className="input-login flex-1"
+                style={{ fontSize: '12px' }}
                 value={filters.store}
                 onChange={e => setFilters({ ...filters, store: e.target.value })}
             >
@@ -223,12 +226,12 @@ const PageStoreManagement = ({ user, onBack }) => {
             {/* Layout Filter */}
             {showLayout && (
                 <select
-                    className="input-login"
-                    style={{ fontSize: '11px' }}
+                    className="input-login flex-1"
+                    style={{ fontSize: '12px' }}
                     value={filters.layout}
                     onChange={e => setFilters({ ...filters, layout: e.target.value })}
                 >
-                    <option value="ALL">Tất cả Layout</option>
+                    <option value="ALL">📂 Tất cả Layout</option>
                     {dropdownLayouts.map(l => (
                         <option key={l.layout_code} value={l.layout_code}>{l.layout_name}</option>
                     ))}
@@ -237,14 +240,14 @@ const PageStoreManagement = ({ user, onBack }) => {
 
             {/* Active Filter */}
             <select
-                className="input-login"
-                style={{ fontSize: '11px' }}
+                className="input-login w-full md:w-auto"
+                style={{ fontSize: '12px' }}
                 value={filters.active}
                 onChange={e => setFilters({ ...filters, active: e.target.value })}
             >
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
+                <option value="ALL">👁️ Tất cả</option>
+                <option value="ACTIVE">✅ Active</option>
+                <option value="INACTIVE">🚫 Inactive</option>
             </select>
         </div>
     );
@@ -335,31 +338,30 @@ const PageStoreManagement = ({ user, onBack }) => {
 
     return (
         <div className="fade-in">
-            <div className="header">
-                <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-                <h2 className="brand-title">QUẢN LÝ NHÀ HÀNG</h2>
+            {/* Navigation Header */}
+            <div className="flex items-center justify-between mb-4">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-1 text-slate-500 font-bold text-xs hover:text-slate-800 transition-colors"
+                >
+                    <span className="text-lg">←</span> QUAY LẠI
+                </button>
+                <div className="text-right">
+                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide">
+                        {currentView === 'info' && 'DANH SÁCH CỬA HÀNG'}
+                        {currentView === 'checklist' && 'CHECKLIST MẪU'}
+                        {currentView === 'positions' && 'VỊ TRÍ (POSITIONS)'}
+                        {currentView === 'roles' && 'VAI TRÒ (ROLES)'}
+                        {currentView === 'shifts' && 'CA LÀM VIỆC'}
+                        {currentView === 'incidents' && 'LOẠI SỰ CỐ'}
+                        {currentView === 'layouts' && 'LAYOUT KHU VỰC'}
+                    </h2>
+                </div>
             </div>
-
-            <button onClick={currentView === 'menu' ? onBack : () => setCurrentView('menu')} style={{ background: 'none', border: 'none', color: '#004AAD', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginBottom: '10px' }}>
-                ← {currentView === 'menu' ? 'QUAY LẠI MENU CẤU HÌNH' : 'QUAY LẠI'}
-            </button>
 
             {message.text && (
                 <div style={{ padding: '10px', borderRadius: '8px', background: message.type === 'error' ? '#FEE2E2' : '#D1FAE5', color: message.type === 'error' ? '#DC2626' : '#059669', fontSize: '11px', fontWeight: '600', textAlign: 'center', marginBottom: '10px' }}>
                     {message.text}
-                </div>
-            )}
-
-            {currentView === 'menu' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '10px' }}>
-
-                    <MenuCard icon="🏪" title="Stores" onClick={() => setCurrentView('info')} />
-                    <MenuCard icon="📋" title="Checklist" onClick={() => setCurrentView('checklist')} />
-                    <MenuCard icon="👤" title="Positions" onClick={() => setCurrentView('positions')} />
-                    <MenuCard icon="🛡️" title="Roles" onClick={() => setCurrentView('roles')} />
-                    <MenuCard icon="🕐" title="Shifts" onClick={() => setCurrentView('shifts')} />
-                    <MenuCard icon="⚠️" title="Incidents" onClick={() => setCurrentView('incidents')} />
-                    <MenuCard icon="🏢" title="Layout" onClick={() => setCurrentView('layouts')} />
                 </div>
             )}
 

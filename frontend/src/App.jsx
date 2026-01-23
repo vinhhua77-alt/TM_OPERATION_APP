@@ -133,7 +133,21 @@ function App() {
       case 'STAFF_MANAGEMENT':
         return <PageStaffManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_MANAGEMENT':
-        return <PageStoreManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
+        return <PageStoreManagement user={user} initialView="info" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_STORES':
+        return <PageStoreManagement user={user} initialView="info" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_CHECKLIST':
+        return <PageStoreManagement user={user} initialView="checklist" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_POSITIONS':
+        return <PageStoreManagement user={user} initialView="positions" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_ROLES':
+        return <PageStoreManagement user={user} initialView="roles" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_SHIFTS':
+        return <PageStoreManagement user={user} initialView="shifts" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_INCIDENTS':
+        return <PageStoreManagement user={user} initialView="incidents" onBack={() => handleNavigate('DASHBOARD')} />;
+      case 'STORE_LAYOUTS':
+        return <PageStoreManagement user={user} initialView="layouts" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'CAREER':
         return <PageCareer user={user} onBack={() => handleNavigate('HOME')} />;
       case 'GAMIFICATION':

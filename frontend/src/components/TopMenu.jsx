@@ -1,210 +1,173 @@
 import { useState } from 'react';
+import {
+    Home, FileEdit, ClipboardList, BarChart3, TrendingUp, Globe,
+    Gamepad2, Award, Users, Store, Megaphone, AlertTriangle,
+    Settings, BookOpen, Info, LogOut, ChevronDown, ChevronRight, X
+} from 'lucide-react';
 
 const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) => {
-    const [expandedConfigs, setExpandedConfigs] = useState(false);
     const [logoutConfirm, setLogoutConfirm] = useState(false);
 
-    // State for collapsible sections
-    const [openSections, setOpenSections] = useState({
-        dailyTask: true,
-        dailyReport: true,
-        bgQt: true,
-        advanced: false, // Default collapsed
-        management: true, // User focused on this right now
-        config: false // Default collapsed
+    // Default open states for sections
+    const [expandedSections, setExpandedSections] = useState({
+        reports: true,
+        analytics: true,
+        management: false,
+        system: false
     });
 
-    const toggleSection = (section) => {
-        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    const toggleSection = (key) => {
+        setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    // Sidebar styling constants
-    const sidebarWidth = '280px';
-
-    // Close menu helper
     const closeMenu = () => {
         onClose();
     };
 
-    // Helper: Collapsible Section Header
-    const MenuSectionHeader = ({ label, isOpen, onToggle }) => (
+    // --- COMPONENTS ---
+
+    const SectionHeader = ({ label, isOpen, onClick }) => (
         <div
-            onClick={onToggle}
-            style={{
-                padding: '0 20px',
-                marginBottom: '4px',
-                marginTop: '16px',
-                fontSize: '11px',
-                fontWeight: '700',
-                color: '#9CA3AF',
-                textTransform: 'uppercase',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: 'pointer',
-                userSelect: 'none'
-            }}
+            onClick={onClick}
+            className="flex items-center justify-between px-6 py-3 mt-2 cursor-pointer group select-none"
         >
-            <span>{label}</span>
-            <span style={{ fontSize: '10px', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-                ▼
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">
+                {label}
+            </span>
+            {isOpen ?
+                <ChevronDown size={14} className="text-slate-300 group-hover:text-slate-500" /> :
+                <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500" />
+            }
+        </div>
+    );
+
+    const MenuItem = ({ icon: Icon, label, onClick, active = false, colorClass = "text-slate-600" }) => (
+        <div
+            onClick={onClick}
+            className={`
+                flex items-center gap-4 px-6 py-3 cursor-pointer transition-all border-l-4
+                ${active ? 'bg-blue-50 border-blue-500' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'}
+            `}
+        >
+            <Icon size={20} className={active ? "text-blue-600" : colorClass} strokeWidth={2} />
+            <span className={`text-sm font-medium ${active ? 'text-blue-700' : 'text-slate-700'}`}>
+                {label}
             </span>
         </div>
     );
 
-    // Menu content component
+    // --- MENU CONTENT ---
     const MenuContent = () => (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: showMenu ? 0 : `-${sidebarWidth}`, // Slide in/out
-            bottom: 0,
-            width: sidebarWidth,
-            background: '#FFFFFF',
-            zIndex: 1001,
-            boxShadow: showMenu ? '4px 0 24px rgba(0,0,0,0.15)' : 'none',
-            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-        }}>
-            {/* 1. Header: User Info */}
-            <div style={{
-                padding: '24px 20px',
-                background: 'linear-gradient(135deg, #004AAD 0%, #0066CC 100%)',
-                color: 'white'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {/* Simplified Avatar */}
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        flexShrink: 0, // Prevent shrinking
-                        borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        border: '2px solid rgba(255,255,255,0.3)'
-                    }}>
+        <div className={`
+            fixed top-0 left-0 h-full w-[280px] bg-white z-[1001] shadow-2xl flex flex-col
+            transform transition-transform duration-300 ease-out
+            ${showMenu ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+            {/* 1. HEADER */}
+            <div className="relative h-40 bg-slate-900 flex flex-col justify-end p-6 border-b border-slate-100 overflow-hidden">
+                {/* Decorative Circles */}
+                <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-blue-500 rounded-full opacity-20 blur-xl"></div>
+                <div className="absolute top-[20px] left-[-10px] w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-xl"></div>
+
+                {/* Close Button (Mobile convenience) */}
+                <button
+                    onClick={closeMenu}
+                    className="absolute top-4 right-4 p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition"
+                >
+                    <X size={18} />
+                </button>
+
+                <div className="relative z-10 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white/20">
                         {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-
-                    {/* User Details */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: '800', lineHeight: '1.2' }}>
-                            {user?.name || 'Khách'}
+                    <div>
+                        <div className="text-white font-bold text-lg leading-tight">
+                            {user?.name || 'Guest'}
                         </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px' }}>
-                            <span style={{
-                                background: 'rgba(255,255,255,0.2)',
-                                padding: '2px 8px',
-                                borderRadius: '10px',
-                                fontWeight: '600'
-                            }}>
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
                                 {user?.role || 'Guest'}
                             </span>
-                            <span style={{ opacity: 0.9 }}>
-                                {user?.store_code || 'TMG'}
-                            </span>
+                            <span className="text-xs text-slate-300 font-medium">#{user?.store_code || 'TMG'}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* 2. Scrollable Menu Items */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
+            {/* 2. SCROLLABLE LIST */}
+            <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
 
+                {/* GLOBAL */}
                 <MenuItem
-                    icon="🏠"
-                    label="Trang chủ Workspace"
+                    icon={Home}
+                    label="Trang chủ"
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
-                {/* --- DAILY TASK --- */}
-                {(sysConfig?.featureFlags?.some(f => ['MODULE_5S', 'MODULE_CASHIER', 'MODULE_WASTE', 'MODULE_INVENTORY'].includes(f))) && (
-                    <>
-                        <MenuSectionHeader
-                            label="Daily Task"
-                            isOpen={openSections.dailyTask}
-                            onToggle={() => toggleSection('dailyTask')}
-                        />
-                        {openSections.dailyTask && (
-                            <div className="fade-in">
-                                {sysConfig?.featureFlags?.includes('MODULE_5S') && (
-                                    <MenuItem icon="🧹" label="Báo cáo 5S" onClick={() => alert('Tính năng Báo cáo 5S đang phát triển')} />
-                                )}
-                                {sysConfig?.featureFlags?.includes('MODULE_CASHIER') && (
-                                    <MenuItem icon="💰" label="Báo cáo Thu Ngân" onClick={() => alert('Tính năng Báo cáo Thu Ngân đang phát triển')} />
-                                )}
-                                {sysConfig?.featureFlags?.includes('MODULE_WASTE') && (
-                                    <MenuItem icon="🗑️" label="Báo cáo Hàng Hủy" onClick={() => alert('Tính năng Báo cáo Hàng Hủy đang phát triển')} />
-                                )}
-                                {sysConfig?.featureFlags?.includes('MODULE_INVENTORY') && (
-                                    <MenuItem icon="📦" label="Báo cáo Kho cuối ngày" onClick={() => alert('Tính năng Báo cáo Kho đang phát triển')} />
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* ---DAILY REPORT --- */}
-                <MenuSectionHeader
-                    label="Daily Report"
-                    isOpen={openSections.dailyReport}
-                    onToggle={() => toggleSection('dailyReport')}
+                {/* --- DAILY OPERATIONS --- */}
+                <SectionHeader
+                    label="Vận Hành Hàng Ngày"
+                    isOpen={expandedSections.reports}
+                    onClick={() => toggleSection('reports')}
                 />
-                {openSections.dailyReport && (
-                    <div className="fade-in">
+
+                {expandedSections.reports && (
+                    <div className="animate-in slide-in-from-left-2 duration-200">
                         {user?.role !== 'LEADER' && (
-                            <MenuItem icon="📝" label="Nhật ký ca trực - Staff" onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }} />
+                            <MenuItem
+                                icon={FileEdit}
+                                label="Gửi Báo Cáo Ca"
+                                colorClass="text-blue-600"
+                                onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }}
+                            />
                         )}
 
                         {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                            <MenuItem icon="📈" label="Báo Cáo Ca - Leader" onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }} />
+                            <MenuItem
+                                icon={ClipboardList}
+                                label="Báo Cáo Ca Trưởng"
+                                colorClass="text-indigo-600"
+                                onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }}
+                            />
                         )}
 
-                        {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                            <MenuItem icon="📋" label="Báo Cáo Ngày - SM" onClick={() => alert('Tính năng đang phát triển: Nhật ký quản lý (SM Report)')} />
+                        {/* Feature Flags for Task Modules */}
+                        {sysConfig?.featureFlags?.includes('MODULE_5S') && (
+                            <MenuItem icon={Award} label="Chấm điểm 5S" onClick={() => alert('Đang phát triển')} />
                         )}
                     </div>
                 )}
 
-                {/* --- DASHBOARD (Báo Cáo Quản Trị) --- */}
+                {/* --- ANALYTICS --- */}
                 {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
                     <>
-                        <MenuSectionHeader
-                            label="Báo cáo Quản trị"
-                            isOpen={openSections.bgQt}
-                            onToggle={() => toggleSection('bgQt')}
+                        <SectionHeader
+                            label="Báo Cáo Quản Trị"
+                            isOpen={expandedSections.analytics}
+                            onClick={() => toggleSection('analytics')}
                         />
-                        {openSections.bgQt && (
-                            <div className="fade-in">
+                        {expandedSections.analytics && (
+                            <div className="animate-in slide-in-from-left-2 duration-200">
                                 <MenuItem
-                                    icon="📊"
-                                    label="Leader Dashboard (Ngày)"
+                                    icon={BarChart3}
+                                    label="Leader Dashboard"
                                     onClick={() => { closeMenu(); onNavigate('ANALYTICS_LEADER'); }}
-                                    style={{ color: '#004AAD' }}
                                 />
-
                                 {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
                                     <MenuItem
-                                        icon="📈"
-                                        label="SM Dashboard (Tuần)"
+                                        icon={TrendingUp}
+                                        label="SM Dashboard"
+                                        colorClass="text-emerald-600"
                                         onClick={() => { closeMenu(); onNavigate('ANALYTICS_SM'); }}
-                                        style={{ color: '#059669' }}
                                     />
                                 )}
-
                                 {['OPS', 'ADMIN', 'BOD'].includes(user?.role) && (
                                     <MenuItem
-                                        icon="🌍"
-                                        label="OPS Dashboard (Chuỗi)"
+                                        icon={Globe}
+                                        label="OPS Dashboard Chain"
+                                        colorClass="text-purple-600"
                                         onClick={() => { closeMenu(); onNavigate('ANALYTICS_OPS'); }}
-                                        style={{ color: '#7C3AED', fontWeight: 'bold' }}
                                     />
                                 )}
                             </div>
@@ -212,204 +175,121 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                     </>
                 )}
 
-                {/* --- TÍNH NĂNG NÂNG CAO --- */}
+                {/* --- ADVANCED FEATURES --- */}
                 {(sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') || sysConfig?.featureFlags?.includes('MODULE_CAREER')) && (
                     <>
-                        <MenuSectionHeader
-                            label="Tính Năng Nâng Cao"
-                            isOpen={openSections.advanced}
-                            onToggle={() => toggleSection('advanced')}
-                        />
-                        {openSections.advanced && (
-                            <div className="fade-in">
-                                {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
-                                    <MenuItem icon="🏅" label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
-                                )}
-                                {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
-                                    <MenuItem icon="🏆" label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
-                                )}
-                            </div>
+                        <SectionHeader label="Phát Triển & Game" isOpen={true} onClick={() => { }} />
+                        {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
+                            <MenuItem icon={Gamepad2} label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
+                            <MenuItem icon={Award} label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
                         )}
                     </>
                 )}
 
-                {/* --- QUẢN LÝ --- */}
+
+                {/* --- MANAGEMENT (ADMIN ONLY) --- */}
                 {['ADMIN', 'MANAGER', 'SM', 'OPS'].includes(user?.role) && (
                     <>
-                        <MenuSectionHeader
-                            label="Quản Lý"
-                            isOpen={openSections.management}
-                            onToggle={() => toggleSection('management')}
+                        {/* 1. STORE MANAGEMENT SUB-SECTION */}
+                        <SectionHeader
+                            label="Quản Lý Cửa Hàng"
+                            isOpen={expandedSections.store}
+                            onClick={() => toggleSection('store')}
                         />
-                        {openSections.management && (
-                            <div className="fade-in">
-                                <MenuItem icon="👥" label="Quản lý Nhân sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
-                                <MenuItem icon="🏪" label="Quản lý Cửa hàng" onClick={() => { closeMenu(); onNavigate('STORE_MANAGEMENT'); }} />
-                                <MenuItem icon="📢" label="Quản lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
-                                <MenuItem icon="⚠️" label="Quản lý Sự cố" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
+                        {expandedSections.store && (
+                            <div className="animate-in slide-in-from-left-2 duration-200 border-l-2 border-slate-100 ml-6 my-1">
+                                <MenuItem icon={Store} label="Thông tin Tiệm" onClick={() => { closeMenu(); onNavigate('STORE_STORES'); }} />
+                                <MenuItem icon={Users} label="Ca Làm Việc" onClick={() => { closeMenu(); onNavigate('STORE_SHIFTS'); }} />
+                                <MenuItem icon={ClipboardList} label="Checklist Mẫu" onClick={() => { closeMenu(); onNavigate('STORE_CHECKLIST'); }} />
+                                <MenuItem icon={Award} label="Vai Trò (Role)" onClick={() => { closeMenu(); onNavigate('STORE_ROLES'); }} />
+                                <MenuItem icon={Users} label="Vị Trí (Position)" onClick={() => { closeMenu(); onNavigate('STORE_POSITIONS'); }} />
+                                <MenuItem icon={AlertTriangle} label="Loại Sự Cố" onClick={() => { closeMenu(); onNavigate('STORE_INCIDENTS'); }} />
+                                <MenuItem icon={Settings} label="Layout/Khu vưc" onClick={() => { closeMenu(); onNavigate('STORE_LAYOUTS'); }} />
+                            </div>
+                        )}
+
+                        <SectionHeader
+                            label="Quản Lý Hệ Thống"
+                            isOpen={expandedSections.management}
+                            onClick={() => toggleSection('management')}
+                        />
+                        {expandedSections.management && (
+                            <div className="animate-in slide-in-from-left-2 duration-200">
+                                <MenuItem icon={Users} label="Nhân Sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
+                                <MenuItem icon={Megaphone} label="Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                                <MenuItem icon={AlertTriangle} label="Sự Cố (Logs)" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
+                                {['ADMIN', 'OPS'].includes(user?.role) && (
+                                    <MenuItem
+                                        icon={Settings}
+                                        label="Admin Console"
+                                        colorClass="text-rose-600"
+                                        onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
+                                    />
+                                )}
                             </div>
                         )}
                     </>
                 )}
 
-                {/* --- CẤU HÌNH HỆ THỐNG --- */}
-                {['ADMIN', 'OPS'].includes(user?.role) && (
-                    <>
-                        <MenuSectionHeader
-                            label="Cấu Hình Hệ Thống"
-                            isOpen={openSections.config}
-                            onToggle={() => toggleSection('config')}
-                        />
-                        {openSections.config && (
-                            <div className="fade-in">
-                                <MenuItem
-                                    icon="🛡️"
-                                    label="Admin Console"
-                                    onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
-                                    style={{ color: '#7C3AED', fontWeight: 'bold' }}
-                                />
+                <div className="my-4 border-t border-slate-100 mx-6"></div>
 
-                                <MenuItem icon="📊" label="Cấu hình Benchmark" onClick={() => alert("Tính năng đang phát triển")} />
-                            </div>
-                        )}
-                    </>
-                )}
+                <MenuItem icon={BookOpen} label="Hướng Dẫn" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
+                <MenuItem icon={Info} label="Giới Thiệu" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
+            </div>
 
-                <div style={{ borderTop: '1px solid #F3F4F6', margin: '16px 0' }} />
-
-                <MenuItem icon="📖" label="Hướng Dẫn Sử Dụng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
-                <MenuItem icon="ℹ️" label="About" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
-
-                <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
-
-                <MenuItem
-                    icon="🚪"
-                    label="Đăng xuất"
-                    color="#EF4444"
+            {/* 3. FOOTER */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50">
+                <button
                     onClick={() => setLogoutConfirm(true)}
-                />
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm"
+                >
+                    <LogOut size={16} />
+                    <span>Đăng xuất</span>
+                </button>
+                <div className="text-center mt-2 text-[10px] text-slate-400 font-mono">
+                    System v2.0 • Supabase
+                </div>
             </div>
-
-            {/* 3. Footer: App Version */}
-            <div style={{
-                padding: '16px',
-                borderTop: '1px solid #E5E7EB',
-                textAlign: 'center',
-                fontSize: '10px',
-                color: '#9CA3AF'
-            }}>
-                Thái Mậu Group App v2.0
-            </div>
-        </div>
-    );
-
-    // Section Title
-    const MenuSectionTitle = ({ label }) => (
-        <div style={{ padding: '0 20px', marginBottom: '8px', marginTop: '16px', fontSize: '11px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase' }}>
-            {label}
-        </div>
-    );
-
-    // Reuseable MenuItem Component
-    const MenuItem = ({ icon, label, onClick, color = '#374151', style = {} }) => (
-        <div
-            onClick={onClick}
-            className="sidebar-item"
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 20px',
-                cursor: 'pointer',
-                color: color,
-                fontSize: '13px',
-                fontWeight: '600',
-                transition: 'background 0.2s',
-                ...style
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
-            <span style={{ fontSize: '18px' }}>{icon}</span>
-            {label}
         </div>
     );
 
     return (
         <>
-            {/* BACKDROP OVERLAY */}
+            {/* BACKDROP */}
             {showMenu && (
                 <div
-                    onClick={() => closeMenu()}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        backdropFilter: 'blur(2px)', // Modern glass effect
-                        zIndex: 1000,
-                        transition: 'opacity 0.3s'
-                    }}
+                    onClick={closeMenu}
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[1000] animate-in fade-in duration-200"
                 />
             )}
 
-            {/* SIDEBAR CONTENT */}
+            {/* DRAWER */}
             <MenuContent />
 
-            {/* LOGOUT CONFIRMATION MODAL */}
+            {/* LOGOUT MODAL */}
             {logoutConfirm && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 10002, // Top of everything
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(2px)'
-                }}>
-                    <div style={{
-                        background: 'white',
-                        padding: '24px',
-                        borderRadius: '16px',
-                        width: '300px',
-                        textAlign: 'center',
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-                    }}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚪</div>
-                        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#111827' }}>Xác nhận đăng xuất?</h3>
-                        <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#6B7280' }}>
-                            Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
-                        </p>
-                        <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-xs shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                            🚪
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Đăng xuất ngay?</h3>
+                        <p className="text-sm text-slate-500 mb-6">Bạn sẽ cần đăng nhập lại để tiếp tục công việc.</p>
+
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setLogoutConfirm(false)}
-                                style={{
-                                    flex: 1,
-                                    padding: '10px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #E5E7EB',
-                                    background: 'white',
-                                    color: '#374151',
-                                    fontWeight: '600',
-                                    cursor: 'pointer'
-                                }}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={() => { setLogoutConfirm(false); closeMenu(); onLogout(); }}
-                                style={{
-                                    flex: 1,
-                                    padding: '10px',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    background: '#EF4444',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    cursor: 'pointer'
-                                }}
+                                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 shadow-lg shadow-rose-200"
                             >
-                                Đăng xuất
+                                Đồng ý
                             </button>
                         </div>
                     </div>
