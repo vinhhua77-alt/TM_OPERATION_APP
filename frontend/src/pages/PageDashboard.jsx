@@ -3,7 +3,6 @@ import { dashboardAPI } from '../api/dashboard';
 import StatCard from '../components/StatCard';
 import RecentShifts from '../components/RecentShifts';
 import MoodChart from '../components/MoodChart';
-import BottomNav from '../components/BottomNav';
 
 const PageDashboard = ({ user, onNavigate, onLogout }) => {
   const [loading, setLoading] = useState(true);
@@ -117,19 +116,19 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50 pb-20 fade-in">
       {/* HEADER */}
-      <div className="bg-white px-5 pt-6 pb-2 mb-4 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white px-4 pt-4 pb-2 mb-3 sticky top-0 z-10 shadow-sm">
         <div className="flex justify-between items-center mb-1">
           <div>
-            <div className="text-slate-400 text-xs font-bold tracking-wider mb-1">DASHBOARD CÁ NHÂN</div>
-            <h1 className="text-2xl font-black text-slate-800">
+            <div className="text-slate-400 text-[10px] font-bold tracking-wider mb-0.5">DASHBOARD CÁ NHÂN</div>
+            <h1 className="text-lg font-black text-slate-800">
               Xin chào, <span className="text-blue-600">{safeUser?.name?.split(' ').pop()}!</span> 👋
             </h1>
           </div>
           <div
             onClick={onLogout}
-            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </div>
@@ -139,7 +138,7 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
         <select
           value={selectedMonth}
           onChange={handleMonthChange}
-          className="w-full mt-2 bg-slate-50 border-none text-slate-600 font-bold text-sm py-2 px-3 rounded-lg focus:ring-0"
+          className="w-full mt-1 bg-slate-50 border-none text-slate-600 font-bold text-xs py-2 px-3 rounded-lg focus:ring-0"
         >
           {months.map(m => (
             <option key={m.month} value={m.month}>Tháng {m.month} ({m.completed_shifts}/{m.total_shifts} ca)</option>
@@ -148,23 +147,23 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
         </select>
       </div>
 
-      <div className="px-4 space-y-5">
+      <div className="px-3 space-y-3">
 
         {/* === SECTION: TẢI CÔNG VIỆC STORE === */}
         {safeUser?.storeCode && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden">
-            <div className="flex justify-between items-end mb-4">
+          <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 relative overflow-hidden">
+            <div className="flex justify-between items-end mb-3">
               <div>
-                <h2 className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">PHÂN TÍCH TẢI CÔNG VIỆC</h2>
-                <div className="font-bold text-slate-700 text-sm">{safeUser.storeCode}</div>
+                <h2 className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-0.5">PHÂN TÍCH TẢI CÔNG VIỆC</h2>
+                <div className="font-bold text-slate-700 text-xs">{safeUser.storeCode}</div>
               </div>
               {/* Filter Controls */}
-              <div className="flex bg-slate-100 rounded-lg p-1">
+              <div className="flex bg-slate-100 rounded-lg p-0.5">
                 {['day', 'week', 'month'].map(p => (
                   <button
                     key={p}
                     onClick={() => setWorkloadPeriod(p)}
-                    className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${workloadPeriod === p ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                    className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${workloadPeriod === p ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
                   >
                     {p === 'day' ? 'NGÀY' : p === 'week' ? 'TUẦN' : 'THÁNG'}
                   </button>
@@ -174,112 +173,116 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
 
             {/* Content */}
             {workloadLoading ? (
-              <div className="animate-pulse space-y-3">
-                <div className="h-4 bg-slate-100 w-1/3 rounded"></div>
-                <div className="h-8 bg-slate-100 w-full rounded-lg"></div>
+              <div className="animate-pulse space-y-2">
+                <div className="h-3 bg-slate-100 w-1/3 rounded"></div>
+                <div className="h-6 bg-slate-100 w-full rounded-lg"></div>
               </div>
             ) : workload ? (
               <div>
                 {/* Total Hours */}
-                <div className="flex items-baseline mb-3">
-                  <div className="text-3xl font-black text-slate-800 mr-2">{workload.total_hours}h</div>
-                  <div className="text-xs text-slate-400 font-bold">Tổng giờ công</div>
+                <div className="flex items-baseline mb-2">
+                  <div className="text-2xl font-black text-slate-800 mr-2">{workload.total_hours}h</div>
+                  <div className="text-[10px] text-slate-400 font-bold">Total hours</div>
                 </div>
 
                 {/* Split Bar */}
-                <div className="space-y-3">
-                  <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100">
+                <div className="space-y-2">
+                  <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-100">
                     <div style={{ width: `${(workload.morning_hours / workload.total_hours) * 100}%` }} className="bg-blue-400"></div>
                     <div style={{ width: `${(workload.evening_hours / workload.total_hours) * 100}%` }} className="bg-orange-400"></div>
                   </div>
 
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-[10px] font-bold">
                     <div className="text-blue-500">
-                      <span className="block text-[10px] text-slate-400">CA SÁNG</span>
+                      <span className="block text-[9px] text-slate-400">CA SÁNG</span>
                       {workload.morning_hours}h
                     </div>
                     <div className="text-right text-orange-500">
-                      <span className="block text-[10px] text-slate-400">CA CHIỀU</span>
+                      <span className="block text-[9px] text-slate-400">CA CHIỀU</span>
                       {workload.evening_hours}h
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4 text-slate-400 text-xs italic">
+              <div className="text-center py-3 text-slate-400 text-[10px] italic">
                 Chưa có dữ liệu phân tích cho {workloadPeriod === 'day' ? 'hôm qua' : 'giai đoạn này'}.
               </div>
             )}
           </div>
         )}
 
-        {/* 1. STATS GRID (Personal) */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* 1. STATS STRIP (Horizontal Scroll) */}
+        {/* Negative margin to allow full-bleed scrolling while keeping padding for content */}
+        {/* 1. STATS GRID (3 Columns) */}
+        <div className="grid grid-cols-3 gap-2">
           <StatCard
             label="TỔNG CA"
             value={data?.stats?.shift_count || 0}
             subValue={`${data?.stats?.total_hours || 0}h`}
             icon="📅"
             color="blue"
+            compact={true}
           />
           <StatCard
             label="ĐÁNH GIÁ"
             value={data?.stats?.avg_rating || "—"}
-            subValue="Trung bình"
+            subValue="TB"
             icon="⭐"
             color="yellow"
+            compact={true}
           />
           <StatCard
-            label="TB THỜI GIAN"
+            label="THỜI GIAN"
             value={`${data?.stats?.avg_duration || 0}h`}
-            subValue="Mỗi ca"
+            subValue="/ca"
             icon="⏱️"
             color="purple"
+            compact={true}
           />
           <StatCard
-            label="THU NHẬP (ƯỚC TÍNH)"
+            label="THU NHẬP"
             value={data?.stats?.estimated_salary ? `${(data.stats.estimated_salary / 1000).toFixed(0)}k` : "—"}
-            subValue="VND"
+            subValue=""
             icon="💰"
             color="green"
             isMoney
+            compact={true}
           />
         </div>
 
         {/* 2. RECENT SHIFTS */}
         <div>
-          <h2 className="text-slate-800 font-bold text-lg mb-3 flex items-center">
-            <span className="bg-blue-100 text-blue-600 p-1 rounded mr-2 text-sm">📋</span>
+          <h2 className="text-slate-800 font-bold text-base mb-2 flex items-center">
+            <span className="bg-blue-100 text-blue-600 p-1 rounded mr-2 text-xs">📋</span>
             Nhật Ký Gần Đây
           </h2>
           {data?.recent_shifts?.length > 0 ? (
-            <RecentShifts shifts={data.recent_shifts} />
+            <RecentShifts shifts={data.recent_shifts} compact={true} />
           ) : (
-            <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300">
-              <div className="text-4xl mb-2">📭</div>
-              <div className="text-slate-400 text-sm">Chưa có nhật ký nào trong tháng này</div>
+            <div className="text-center py-6 bg-white rounded-xl border border-dashed border-slate-300">
+              <div className="text-2xl mb-1">📭</div>
+              <div className="text-slate-400 text-xs">Chưa có nhật ký nào trong tháng này</div>
             </div>
           )}
         </div>
 
         {/* 3. MOOD CHART */}
         {data?.chart_data?.length > 0 && (
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-slate-800 font-bold flex items-center">
+          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-slate-800 font-bold flex items-center text-sm">
                 <span className="bg-rose-100 text-rose-500 p-1 rounded mr-2 text-xs">❤️</span>
                 Biểu Đồ Cảm Xúc
               </h2>
             </div>
-            <div className="h-40">
+            <div className="h-32">
               <MoodChart data={data.chart_data} />
             </div>
           </div>
         )}
 
       </div>
-
-      <BottomNav active="HOME" onNavigate={onNavigate} />
     </div>
   );
 };

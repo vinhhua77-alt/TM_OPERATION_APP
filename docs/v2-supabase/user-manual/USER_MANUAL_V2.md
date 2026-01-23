@@ -30,7 +30,7 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 
 ### 2.1. Gửi Báo Cáo Ca Làm Việc (Shift Log)
 Đây là nhiệm vụ bắt buộc sau mỗi ca làm việc.
-1. Chọn **Gửi Báo Cáo** (hoặc biểu tượng văn bản trên thanh menu dưới).
+1. Chọn **Gửi Báo Cáo** từ Menu chính (biểu tượng 3 gạch góc trái).
 2. Chọn **Chi nhánh** và **Layout** làm việc (FOH, BOH, Cashier...).
 3. Chọn **Thời gian Vào/Ra** (hệ thống cho phép chọn bước nhảy 30 phút).
 4. Tích chọn các đầu việc đã hoàn thành trong **Checklist**.
@@ -41,7 +41,7 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 **Lưu ý**: Hệ thống chỉ cho phép gửi tối đa 2 báo cáo/ngày và mỗi báo cáo phải cách nhau ít nhất 2 tiếng.
 
 ### 2.2. Xem Bảng Điều Khiển Cá Nhân (Dashboard)
-- Tại trang chủ, bạn có thể xem thống kê tổng số ca, tổng giờ làm và mức độ hoàn thành checklist của mình trong tháng.
+- Tại trang chủ, các chỉ số thống kê được sắp xếp dạng lưới (Grid 3 cột) gọn gàng.
 - Dữ liệu được cập nhật từ bảng `raw_shiftlog` hỗ trợ theo dõi hiệu suất cá nhân theo thời gian thực.
 
 ### 2.3. Hồ Sơ Năng Lực (My Career Center)

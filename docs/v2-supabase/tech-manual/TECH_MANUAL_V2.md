@@ -30,10 +30,11 @@ Hệ thống được xây dựng theo mô hình **Decoupled Architecture**:
 ### 2.1. Frontend
 - **Framework**: React 18
 - **Build Tool**: Vite
-- **Styling**: Tailwind CSS (Mobile-First)
+- **Styling**: Tailwind CSS (Mobile-First, Compact Design System)
 - **State Management**: React Hooks (useState, useEffect, useContext)
 - **Routing**: React Router
 - **API Client**: Fetch API + Supabase JS Client (Read-only)
+- **Component Design**: Compact Mode, Micro-Widgets (Single-line Chips), Horizontal Scrollable Containers.
 
 ### 2.2. Backend
 - **Runtime**: Node.js
