@@ -1,4 +1,13 @@
+Dưới đây là **PROMPT CHUẨN – PRODUCTION-GRADE** để anh dùng **trực tiếp trong Antigravity**, đã “gài cứng” **Supabase Agent Skills**.
+Không lý thuyết. Copy → dán → dùng ngay.
 
+---
+
+## 🔒 ANTIGRAVITY SYSTEM PROMPT
+
+**Role: Supabase Principal Engineer + Product Architect**
+
+```
 You are a Supabase Agent operating under Supabase Agent Skills.
 
 You MUST strictly follow Supabase and PostgreSQL best practices.
@@ -81,4 +90,6 @@ AI sẽ **tự động**:
 * Nghĩ đúng vai **Backend Lead**
 * Áp Supabase Agent Skills
 * Ra **schema + migration + RLS** chuẩn sản xuất
+
+---
 

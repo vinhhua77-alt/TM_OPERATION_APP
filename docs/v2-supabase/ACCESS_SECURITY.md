@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## ACCESS_SECURITY.md (v2 - Supabase)
 
-**Version**: 2.0  
-**Last Updated**: 2026-01-21  
+**Version**: 3.0  
+**Last Updated**: 2026-01-23  
 **Status**: Production
 
 ---
@@ -90,7 +90,17 @@ Supabase Postgres ← RLS POLICIES
 }
 ```
 
-**Token Expiry**: 24 hours (configurable via JWT_SECRET)
+**Token Expiry**: 24 hours for Session Tokens, 15 minutes for Password Reset Tokens.
+
+---
+
+### 4.3. Password Reset Tokens (Temporal JWT)
+
+**Mechanism**:
+- Separate `JWT_SECRET` for password reset tokens.
+- Short-lived expiry (15 minutes).
+- Payload includes `staffId`, `email`, and `type: 'RESET_PASSWORD'`.
+- Verification requires both JWT signature and `staffId` match.
 
 ---
 
@@ -132,6 +142,16 @@ Supabase Postgres ← RLS POLICIES
 | STAFF | 10 | Regular employee |
 
 **Higher level = more permissions**
+
+---
+
+### 5.2. Page-level Access Restrictions
+
+Specific modules have hardcoded role-based restrictions to enforce business workflows:
+
+- **Shift Log**: Restricted to roles below `LEADER`. Users with `LEADER` role and above should use `Leader Report`.
+- **Staff Management**: Restricted to `ADMIN` and `OPS` roles.
+- **SM Action**: Restricted to `SM`, `OPS`, and `BOD` roles.
 
 ---
 
@@ -427,6 +447,8 @@ supabase.rpc('raw_sql', { query: `SELECT * FROM staff_master WHERE staff_id = '$
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-23 | Added Password Reset Token security | Documented short-lived JWT for self-service reset |
+| 2026-01-23 | Documented Page-level restrictions | Added role-based access rules for Shift Log (v4.0) |
 | 2026-01-21 | Created ACCESS_SECURITY.md v2.0 | Supabase migration |
 | 2026-01-15 | Migrated from GAS to JWT | Modern auth stack |
 

@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## FLOW.md (v2 - Supabase)
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
+**Version**: 4.0  
+**Last Updated**: 2026-01-23  
 **Status**: Production
 
 ---
@@ -483,7 +483,8 @@ Employee views personal dashboard with monthly statistics, gamification, and rec
 
 | Date | Change | Reason |
 |------|--------|--------|
-| 2026-01-22 | Added FLOW 11: Staff Password Edit | Support for admin-initiated password resets |
+| 2026-01-23 | Added FLOW 12: User Password Reset | Support for self-service password recovery |
+| 2026-01-23 | Added FLOW 13: Staff Activation Sync | Maintain consistency between status and active flags |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
 | 2026-01-22 | Added FLOW 10: Employee Dashboard | Staff self-service feature |
 | 2026-01-22 | Added shift submission validation | Prevent duplicate submissions |
@@ -493,13 +494,15 @@ Employee views personal dashboard with monthly statistics, gamification, and rec
 
 ---
 
-## 16. FLOW 11 – STAFF PASSWORD EDIT (v3.0)
+---
 
-### 16.1. Business Flow
+## 12. FLOW 11 – STAFF PASSWORD EDIT (ADMIN) (v3.0)
+
+### 12.1. Business Flow
 
 Admin or Manager resets/updates an employee's password via Staff Management
 
-### 16.2. Technical Flow
+### 12.2. Technical Flow
 
 ```
 1. Admin opens edit modal in PageStaffManagement.jsx
@@ -515,7 +518,7 @@ Admin or Manager resets/updates an employee's password via Staff Management
 6. Return { success: true, data }
 ```
 
-### 16.3. Code Mapping
+### 12.3. Code Mapping
 
 | Layer | File | Responsibility |
 |-------|------|----------------|
@@ -525,11 +528,84 @@ Admin or Manager resets/updates an employee's password via Staff Management
 | Domain | `domain/staff/staff.service.js` | Password hashing (bcryptjs) |
 | Repository | `infra/user.repo.supabase.js` | DB update |
 
-### 16.4. Data Mapping
+### 12.4. Data Mapping
 
 - **Read**: `staff_master` (check permissions)
 - **Write**: `staff_master` (update password_hash)
 - **Mode**: Write (mutable table)
+
+---
+
+## 13. FLOW 12 – USER PASSWORD RESET (SELF-SERVICE)
+
+### 13.1. Business Flow
+
+User resets their own forgotten password via email verification.
+
+### 13.2. Technical Flow
+
+```
+1. User clicks "Quên mật khẩu?" in PageLogin.jsx
+2. User enters Staff ID and clicks "Gửi yêu cầu"
+3. Frontend: POST /api/password-reset/request { staffId }
+4. Backend: password-reset.routes.js → PasswordResetService.requestReset()
+   - Verify staff exists in staff_master
+   - Generate temporal JWT token (15m expiry)
+   - Create reset link with token and staffId
+   - Send email via EmailService (SendGrid)
+   - Log request to audit_logs
+5. User clicks link in email → redirected to frontend with token params
+6. Frontend: Detects token/staffId in URL, shows PageResetPassword.jsx
+7. User enters new password and clicks "Đặt lại mật khẩu"
+8. Frontend: POST /api/password-reset/reset { staffId, token, newPassword }
+9. Backend: password-reset.routes.js → PasswordResetService.resetPassword()
+   - Verify JWT token and staffId match
+   - Hash new password (bcryptjs)
+   - Update staff_master.password_hash
+   - Log success to audit_logs
+10. Backend: Return { success: true, message }
+11. Frontend: Redirect to login
+```
+
+### 13.3. Code Mapping
+
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Frontend | `pages/PageLogin.jsx` | Trigger request modal |
+| Frontend | `pages/PageResetPassword.jsx` | Reset password form |
+| API Client | `api/auth.js` | API calls |
+| Route | `routes/password-reset.routes.js` | Route handler |
+| Domain | `domain/access/password-reset.service.js` | Business logic |
+| Email | `infra/email.service.js` | SendGrid integration |
+| Repository | `infra/user.repo.supabase.js` | DB updates |
+| Audit | `infra/audit.repo.js` | Action logging |
+
+### 13.4. Data Mapping
+
+- **Read**: `staff_master` (verify ID)
+- **Write**: `staff_master` (update password_hash), `audit_logs` (INSERT)
+- **Mode**: Write (mutable tables)
+
+---
+
+## 14. FLOW 13 – STAFF ACTIVATION SYNC
+
+### 14.1. Business Flow
+
+Ensure staff status (PENDING/ACTIVE) and `active` flag (true/false) are synchronized.
+
+### 14.2. Technical Flow
+
+```
+1. Admin activates staff in PageStaffManagement.jsx
+2. Frontend: PUT /api/staff/:staff_id { status: 'ACTIVE', active: true }
+3. Backend: staff.routes.js → StaffService.updateStaff()
+   - Ensure 'status' and 'active' are consistent
+   - Call UserRepo.updateStaffInfo()
+4. Backend: UserRepo.updateStaffInfo()
+   - UPDATE staff_master SET status = 'ACTIVE', active = true WHERE staff_id = ...
+5. Effect: Staff can now login and bypass AUTH:USER_DISABLED middleware.
+```
 
 ---
 

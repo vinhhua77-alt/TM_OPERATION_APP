@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## ARCHITECTURE.md (v2 - Supabase)
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
+**Version**: 4.0  
+**Last Updated**: 2026-01-23  
 **Status**: Production
 
 ---
@@ -32,6 +32,7 @@
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  ROUTES LAYER                                          │ │
 │  │  - auth.routes.js                                      │ │
+│  │  - password-reset.routes.js                            │ │
 │  │  - shift.routes.js                                     │ │
 │  │  - leader.routes.js                                    │ │
 │  │  - staff.routes.js                                     │ │
@@ -55,11 +56,12 @@
 │  └────────────────────────┬───────────────────────────────┘ │
 │                           │                                  │
 │  ┌────────────────────────▼───────────────────────────────┐ │
-│  │  REPOSITORY LAYER (Data Access)                       │ │
+│  │  INFRASTRUCTURE LAYER                                  │ │
 │  │  - UserRepo                                            │ │
 │  │  - StaffRepo                                           │ │
 │  │  - ShiftRepo                                           │ │
-│  │  - StoreRepo                                           │ │
+│  │  - AuditRepo                                           │ │
+│  │  - EmailService (Nodemailer/SendGrid)                  │ │
 │  │  - Supabase client (service role key)                 │ │
 │  └────────────────────────┬───────────────────────────────┘ │
 └───────────────────────────┼──────────────────────────────────┘
@@ -106,6 +108,7 @@ The application employs a "Flat Navigation" structure with responsive design pri
 *   **Bottom Navigation**: Mobile-only sticky footer providing quick access to core modules (Home, Shift Log, Leader Report).
 *   **Breadcrumbs**: Hierarchical context (Home > Module) replacing the need for explicit "Back" buttons.
 *   **Floating Action Button (FAB)**: Context-aware primary actions (e.g., "Add Staff") for mobile efficiency.
+*   **Time Selection UX**: Standardized 30-minute interval selection (e.g., 08:00, 08:30) for all time inputs in reporting modules to ensure data consistency and reduce input errors.
 *   **Layout**: `PageSetting` removed in favor of direct sidebar access to configuration modules.
 
 ### 2.3. Folder Structure
@@ -182,10 +185,12 @@ backend/src/
 │   ├── shift/
 │   │   └── shift.service.js
 │   └── ...
-├── infra/              # Data access layer
+├── infra/              # Data access & external services
 │   ├── user.repo.supabase.js
 │   ├── staff.repo.supabase.js
 │   ├── shift.repo.supabase.js
+│   ├── audit.repo.js
+│   └── email.service.js
 │   └── ...
 ├── database/           # Database schema
 │   └── schema.js
@@ -606,6 +611,9 @@ GitHub Repository
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-23 | **Auth: Self-Service Password Reset** | Implemented email-based password recovery flow |
+| 2026-01-23 | **Logic: Staff Activation Sync** | Ensured consistency between status and active flags |
+| 2026-01-23 | **UX: 30-min Time Intervals** | Synced time selection steps across reporting pages |
 | 2026-01-22 | **Security: Staff Password Hashing** | Enabled bcrypt hashing for admin-initiated password updates |
 | 2026-01-22 | **UX: Standardized UI Feedback** | Visual validation (✅) and floating popups implemented |
 | 2026-01-22 | Updated to v3.0 | Performance + caching layer |

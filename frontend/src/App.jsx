@@ -11,7 +11,6 @@ import PageAnnouncementManagement from './pages/PageAnnouncementManagement';
 import PageIncidentManagement from './pages/PageIncidentManagement';
 import PageCareer from './pages/PageCareer';
 import PageGamification from './pages/PageGamification';
-import PageFeatureManagement from './pages/PageFeatureManagement';
 import AnnouncementPopup from './components/AnnouncementPopup';
 import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
@@ -37,7 +36,7 @@ function App() {
           setUser(res.user);
           // Restore last page or default to HOME
           const lastPage = localStorage.getItem('lastPage');
-          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'FEATURE_MANAGEMENT'];
+          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT'];
           setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
         } else {
           // Not authenticated, check for password reset
@@ -114,8 +113,6 @@ function App() {
         return <PageStaffManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_MANAGEMENT':
         return <PageStoreManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
-      case 'FEATURE_MANAGEMENT':
-        return <PageFeatureManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
       case 'CAREER':
         return <PageCareer user={user} onBack={() => handleNavigate('HOME')} />;
       case 'GAMIFICATION':

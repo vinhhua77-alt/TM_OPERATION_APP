@@ -32,6 +32,8 @@ This folder contains **production documentation** for TM_OPERATION_APP after mig
 | Document | Purpose |
 |----------|---------|
 | **[SYSTEM_SUMMARY.md](./SYSTEM_SUMMARY.md)** | High-level overview |
+| **[tech-manual/TECH_MANUAL_V2.md](./tech-manual/TECH_MANUAL_V2.md)** | Detailed Technical Guide |
+| **[user-manual/USER_MANUAL_V2.md](./user-manual/USER_MANUAL_V2.md)** | End-user Instruction Manual |
 | **[../CHANGELOG.md](../CHANGELOG.md)** | Migration history (v1 → v2) |
 
 ### For AI Assistants (Antigravity)

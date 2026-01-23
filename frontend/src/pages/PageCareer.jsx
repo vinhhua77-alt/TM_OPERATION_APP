@@ -83,9 +83,9 @@ const PageCareer = ({ user, onBack }) => {
 
             {/* 2. KEY METRICS */}
             <div className="grid-2" style={{ gap: '12px', marginBottom: '20px' }}>
-                <MetricCard icon="⏱️" value="156h" label="Giờ công tháng này" trend="+5%" />
-                <MetricCard icon="🛠️" value="5" label="Sự cố đã xử lý" color="#10B981" />
-                <MetricCard icon="🔥" value={`${stats.current_streak} ngày`} label="Chuỗi đi làm" />
+                <MetricCard icon="⏱️" value={`${stats.total_hours_month || 0}h`} label="Giờ công tháng này" />
+                <MetricCard icon="🛠️" value={stats.incident_count_month || 0} label="Sự cố đã xử lý" color="#10B981" />
+                <MetricCard icon="🔥" value={`${stats.current_streak || 0} ngày`} label="Chuỗi đi làm" />
                 <MetricCard icon="😊" value={stats.eNPS_30d || '-'} label="Điểm cảm xúc (TB)" />
             </div>
 

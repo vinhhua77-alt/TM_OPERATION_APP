@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## DATA_MODEL.md (v2 - Supabase Postgres)
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
+**Version**: 4.0  
+**Last Updated**: 2026-01-23  
 **Status**: Production
 
 ---
@@ -51,14 +51,14 @@ The data model follows these **immutable principles**:
 **Purpose**: Authentication, authorization, audit
 
 - `tenants`
+- `audit_logs`
+- `announcements`
+- `app_modules`
+- `idempotent_requests` (future)
 - `users` (not used - using staff_master instead)
 - `roles` (not used - using role_master instead)
 - `permissions` (future)
 - `role_permissions` (future)
-- `idempotent_requests` (future)
-- `audit_logs` (future)
-- `announcements`
-- `app_modules`
 
 ---
 
@@ -326,21 +326,25 @@ CREATE INDEX idx_raw_shiftlog_is_valid ON raw_shiftlog(is_valid);
 
 ---
 
-### 5.2. announcements
+---
+
+### 5.2. audit_logs
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | BIGINT (PK) | Auto-increment ID |
-| record_id | TEXT | Announcement ID |
-| content | TEXT | Message content |
-| start_date | TIMESTAMPTZ | Display start date |
-| end_date | TIMESTAMPTZ | Display end date |
-| active | BOOLEAN | Active status |
-| priority | TEXT | Priority level (HIGH, MEDIUM, LOW) |
-| created_at | TIMESTAMPTZ | Creation timestamp |
-| updated_at | TIMESTAMPTZ | Last update timestamp |
+| user_id | TEXT | FK → staff_master.staff_id |
+| action | TEXT | Action name (e.g., LOGIN, SHIFT_SUBMIT) |
+| resource_type | TEXT | Related resource category |
+| resource_id | TEXT | Specific resource identifier |
+| details | JSONB | Extra dynamic metadata |
+| ip_address | TEXT | Client IP address |
+| user_agent | TEXT | Client browser/device info |
+| created_at | TIMESTAMPTZ | Event timestamp (default NOW()) |
 
 ---
+
+### 5.3. announcements
 
 ## 6. DATA RELATIONSHIPS
 
@@ -439,6 +443,7 @@ role_master
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-23 | Moved audit_logs to Active tables | Implemented for security & traceability |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
 | 2026-01-22 | Updated raw_shiftlog schema | Proper data types (BOOLEAN, NUMERIC, JSONB) |
 | 2026-01-22 | Added validation rules | Shift limits and time gap validation |

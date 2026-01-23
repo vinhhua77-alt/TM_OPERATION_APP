@@ -1,9 +1,9 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## SYSTEM SUMMARY (v2 - Supabase)
 
-**Version**: 2.0  
-**Last Updated**: 2026-01-21  
-**Status**: Production (Migrated from GAS)
+**Version**: 4.0  
+**Last Updated**: 2026-01-23  
+**Status**: Production (v4.0 Enhancements)
 
 ---
 
@@ -38,7 +38,11 @@ Operation App is an internal operations management system for Thái Mậu Group,
 - Actions: ACK, FIX, REOPEN, ESCALATE, IGNORE
 - Full audit trail of management decisions
 
-### 2.4. Dashboard & Reports
+### 2.4. Self-Service (Nhân viên)
+- **Self-Service Password Reset**: Users can reset forgotten passwords via email verification.
+- **Attendance Consistency**: Synced time selection (30-min intervals) across all reporting tools.
+
+### 2.5. Dashboard & Reports
 - Real-time operational metrics
 - Store performance analytics
 - Staff activity tracking
@@ -209,6 +213,8 @@ Git Repository (GitHub)
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-23 | Updated to v4.0 | Self-Service Password Reset + Time Sync |
+| 2026-01-22 | Updated to v3.0 | Employee Dashboard + Performance |
 | 2026-01-21 | Created SYSTEM_SUMMARY.md v2.0 | Supabase migration complete |
 | 2026-01-15 | Migrated from GAS to Supabase | Scalability + modern stack |
 

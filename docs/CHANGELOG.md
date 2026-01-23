@@ -173,11 +173,11 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | 2026-01-19 | Deployment to Vercel + Render |
 | 2026-01-20 | Bug fixes and testing |
 | 2026-01-21 | DOCS v2 created |
-| 2026-01-22 | Employee Dashboard implemented |
-| 2026-01-22 | Shift Log migrated to Supabase (raw_shiftlog table) |
-| 2026-01-22 | Performance optimizations (caching, rate limiting) |
-| 2026-01-22 | Validation rules added (shift limits, time gaps) |
-| 2026-01-22 | Data import scripts created |
+| 2026-01-22 | Core feature migration and optimizations (v3.0) |
+| 2026-01-23 | Self-Service Password Reset flow implemented |
+| 2026-01-23 | Staff Activation status sync logic added |
+| 2026-01-23 | 30-minute interval selection for reporting synced |
+| 2026-01-23 | Role-based access restriction for Leader Role on Shift Log |
 
 ---
 
@@ -245,6 +245,18 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 4. Can redeploy v1 GAS project
 
 **However**: v2 is production-ready and stable.
+
+---
+
+## Detailed Changes - 2026-01-23
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-23 | Implemented Self-Service Password Reset | Enable users to reset forgotten passwords via email |
+| 2026-01-23 | Added Staff Activation Sync | Ensure staff status and active flags are synchronized across backend and UI |
+| 2026-01-23 | Synced 30-min Reporting Intervals | Improve UX and consistency in time selection across reporting pages |
+| 2026-01-23 | Restricted LEADER access to Shift Log | Business rule: Leaders should only use Leader Report |
+| 2026-01-23 | Migrated Auth to Bearer Tokens | Enable reliable cross-domain authentication in production |
 
 ---
 

@@ -91,10 +91,24 @@ export class GamificationRepo {
     // --- AGGREGATION FOR DASHBOARD ---
 
     static async getDashboardMetrics(staffId) {
-        // 1. Shift Stats (Mock for now, normally join shift_logs)
-        // 2. Incident Stats (Mock)
-        // 3. eNPS score (Avg of last 30 days)
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
 
+        // 1. Fetch shift logs for current month to calculate hours and incidents
+        const { data: shiftData, error: shiftError } = await supabase
+            .from('raw_shiftlog')
+            .select('duration, incident_type, incident_note')
+            .eq('staff_id', staffId)
+            .gte('created_at', startOfMonth)
+            .lte('created_at', endOfMonth);
+
+        if (shiftError) console.error('Error fetching shift metrics:', shiftError);
+
+        const totalHours = shiftData?.reduce((sum, s) => sum + (parseFloat(s.duration) || 0), 0) || 0;
+        const incidentCount = shiftData?.filter(s => s.incident_type && s.incident_type !== 'NONE').length || 0;
+
+        // 2. eNPS score (Avg of last 30 days mood score)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -109,6 +123,8 @@ export class GamificationRepo {
             : 0;
 
         return {
+            total_hours_month: totalHours.toFixed(1),
+            incident_count_month: incidentCount,
             eNPS_30d: avgMood,
             feedback_count: feedbackData?.length || 0
         };

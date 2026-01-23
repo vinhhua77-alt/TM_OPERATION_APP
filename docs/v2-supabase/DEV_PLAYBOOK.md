@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## DEV_PLAYBOOK.md (v2 - Supabase)
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
+**Version**: 4.0  
+**Last Updated**: 2026-01-23  
 **Status**: Production
 
 ---
@@ -65,6 +65,10 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
 JWT_SECRET=your-secret-key-here
 PORT=3001
 NODE_ENV=development
+
+# Email Service (Nodemailer/SendGrid)
+SENDGRID_API_KEY=your-sendgrid-key
+EMAIL_FROM=noreply@vinhhua.com
 ```
 
 **Frontend** (`frontend/.env`):
@@ -480,6 +484,15 @@ WHERE staff_id = 'TM0001'
 # Expected: ✅ Success (fallback to user.staff_name)
 ```
 
+### 9.5. TESTING PASSWORD RESET (v4.0)
+
+1. **Request Reset**: Submit `staffId` via "Quên mật khẩu" in `PageLogin`.
+2. **Check Delivery**: Verify `[EmailService]` console logs or check actual mailbox if configured.
+3. **Verify Link**: Click the link in the email, check if it opens `PageResetPassword`.
+4. **Update Password**: Enter new password and submit.
+5. **Database Check**: Verify `staff_master.password_hash` has been updated for that user.
+6. **Login Test**: Attempt to login with the brand new password.
+
 ---
 
 ## 10. DEPLOYMENT
@@ -642,6 +655,8 @@ SELECT COUNT(*) FROM raw_shiftlog;
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-23 | Added Email Service setup | SendGrid instructions for Password Reset |
+| 2026-01-23 | Added Password Reset testing | Step-by-step verification guide |
 | 2026-01-22 | Updated to v3.0 | New testing procedures |
 | 2026-01-22 | Added Dashboard testing | Employee Dashboard feature |
 | 2026-01-22 | Added validation testing | Shift submission limits |
