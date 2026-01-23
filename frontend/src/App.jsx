@@ -28,28 +28,47 @@ function App() {
   const [resetTokenInfo, setResetTokenInfo] = useState(null);
   const [showAnnouncements, setShowAnnouncements] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  // System Configuration (Feature Flags)
+  const [sysConfig, setSysConfig] = useState({
+    featureFlags: [],
+    loaded: false
+  });
 
   useEffect(() => {
-    // SECURITY: Check authentication via HttpOnly cookie (backend validates)
+    // 1. Check authentication
     authAPI.getMe()
       .then((res) => {
         if (res.success) {
           setUser(res.user);
-          // Restore last page or default to HOME
-          const lastPage = localStorage.getItem('lastPage');
-          const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE'];
-          setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
+          restoreLastPage();
         } else {
-          // Not authenticated, check for password reset
           checkPasswordReset();
         }
       })
-      .catch(() => {
-        // Not authenticated, check for password reset
-        checkPasswordReset();
-      })
+      .catch(() => checkPasswordReset())
       .finally(() => setLoading(false));
+
+    // 2. Load System Config (Feature Flags) - Fail-safe (won't block app if fails)
+    import('./api/admin.api').then(({ adminAPI }) => {
+      adminAPI.getConsoleData()
+        .then(res => {
+          if (res.success) {
+            const activeFlags = res.data.featureFlags
+              .filter(f => f.is_enabled)
+              .map(f => f.flag_key);
+            setSysConfig({ featureFlags: activeFlags, loaded: true });
+          }
+        })
+        .catch(err => console.warn('Failed to load system config', err));
+    });
+
   }, []);
+
+  const restoreLastPage = () => {
+    const lastPage = localStorage.getItem('lastPage');
+    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE'];
+    setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
+  };
 
   const checkPasswordReset = () => {
     // Check for Reset Password Token in URL
@@ -173,6 +192,7 @@ function App() {
         {renderPage()}
         <TopMenu
           user={user}
+          sysConfig={sysConfig}
           onNavigate={handleNavigate}
           onLogout={handleLogout}
           showMenu={showMenu}

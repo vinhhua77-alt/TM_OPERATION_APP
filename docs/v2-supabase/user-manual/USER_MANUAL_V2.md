@@ -84,6 +84,17 @@ Quản lý sử dụng mục này để ghi nhận các phản hồi hoặc xử
 - Admin/OPS có quyền kích hoạt hoặc vô hiệu hóa tài khoản nhân viên.
 - Chỉnh sửa thông tin nhân viên hoặc reset mật khẩu cho nhân viên khi cần thiết.
 
+### 4.3. Admin Console (Dành cho IT & Ops)
+Tính năng quản trị nâng cao giúp kiểm soát hệ thống:
+1. **Truy cập**: Vào menu **Cấu hình hệ thống** > chọn **Admin Console**.
+2. **Tab Feature Flags**:
+    - Dành cho bộ phận IT.
+    - Bật/Tắt các tính năng mới (ví dụ: Module Báo cáo AI, Giao diện mới).
+3. **Tab Permission Matrix**:
+    - Dành cho bộ phận Vận hành (Ops).
+    - Phân quyền chi tiết: Ai được làm gì (VD: Store Manager có được xem báo cáo tài chính không?).
+    - Tích vào ô tương ứng để cấp/thu hồi quyền ngay lập tức.
+
 ---
 
 ## 5. CÁC CÂU HỎI THƯỜNG GẶP (FAQ)

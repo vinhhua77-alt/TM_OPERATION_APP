@@ -140,4 +140,28 @@ Có khả năng vô hiệu hóa tài khoản ngay lập tức bằng cách set `
 - Luôn sử dụng bước nhảy 30 phút cho các input thời gian.
 
 ---
+---
+
+## 8. ADMIN CONSOLE (Feature Flags & Permissions) - V3.0
+
+Hệ thống quản trị tập trung giúp tách biệt việc triển khai kỹ thuật (Deployment) và vận hành nghiệp vụ (Business Operation).
+
+### 8.1. Kiến trúc (Architecture)
+```text
+User Request → Auth (Identity) → Feature Flag Check (System) → Permission Check (Role) → Business Logic
+```
+- **Feature Flags**: Quản lý bởi IT/Release Team. Quyết định một tính năng có "tồn tại" trong hệ thống hay không.
+- **Permission Matrix**: Quản lý bởi Ops/Admin. Quyết định Role nào được dùng tính năng nào.
+
+### 8.2. Core Database Schema
+- `system_feature_flags`: Chứa trạng thái bật/tắt của các tính năng (VD: `OPS_INTELLIGENCE`, `NEW_DASHBOARD`).
+- `permissions_master`: Danh mục tất cả quyền hạn trong hệ thống.
+- `role_permissions`: Ma trận phân quyền giữa Role và Feature.
+
+### 8.3. Quy tắc truy cập
+Mọi API nhạy cảm đều phải vượt qua 2 lớp bảo vệ:
+1. `isFeatureActive(key)`: Kiểm tra Feature Flag. Nếu OFF -> Chặn toàn bộ.
+2. `hasPermission(role, key)`: Kiểm tra Permission Matrix. Nếu Role không có quyền -> Chặn.
+
+---
 **Thái Mẫu Group - IT Department**

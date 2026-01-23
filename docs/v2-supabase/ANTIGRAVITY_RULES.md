@@ -375,6 +375,44 @@ router.post('/submit', async (req, res, next) => {
 
 ---
 
+---
+
+## 🛠️ GIT & DEPLOYMENT RULES
+
+### RULE 29: No Git Push Without Permission
+**Never push code to the remote repository without explicit user approval.**
+
+- ❌ FORBIDDEN: `git push` without asking "Can I push now?"
+- ✅ REQUIRED: Always ask for confirmation before pushing changes.
+- ✅ REQUIRED: List the changes that will be pushed.
+
+**Violation**: Unauthorized code deployment. Risk of breaking production.
+
+---
+
+### RULE 30: Documentation Must Accompany Code
+**Every feature push MUST include updated Tech Manual and User Manual.**
+
+- ❌ FORBIDDEN: Pushing code changes without updating docs.
+- ✅ REQUIRED: Update `docs/v2-supabase/tech-manual/` (implementation details).
+- ✅ REQUIRED: Update `docs/v2-supabase/user-manual/` (usage instructions).
+- ✅ REQUIRED: Commit docs together with code.
+
+**Violation**: "Hidden features" that nobody knows how to use or maintain.
+
+---
+
+### RULE 31: Clear Semantic Versioning
+**All commits/releases MUST have clear versioning marks.**
+
+- ✅ REQUIRED: Use semantic versioning (vX.Y.Z) in commit messages or tags.
+- ✅ REQUIRED: Update `package.json` version if applicable.
+- ❌ FORBIDDEN: Vague messages like "update code".
+
+**Violation**: Impossible to track changes or rollback release.
+
+---
+
 ## 🎯 ENFORCEMENT
 
 ### How to Use These Rules

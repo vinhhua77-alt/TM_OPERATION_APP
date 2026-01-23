@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
+const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) => {
     const [expandedConfigs, setExpandedConfigs] = useState(false);
     const [logoutConfirm, setLogoutConfirm] = useState(false);
 
@@ -79,156 +79,119 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
             {/* 2. Scrollable Menu Items */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
 
-                {/* Section: Main */}
-                <div style={{ padding: '0 20px', marginBottom: '8px', fontSize: '11px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Menu Chính
-                </div>
-
                 <MenuItem
                     icon="🏠"
                     label="Trang chủ Workspace"
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
-                {user?.role !== 'LEADER' && (
-                    <MenuItem
-                        icon="📝"
-                        label="Nhật ký ca trực"
-                        onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }}
-                    />
-                )}
-
-                <MenuItem
-                    icon="🏅"
-                    label="Thành tích Game"
-                    onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }}
-                />
-
-                <MenuItem
-                    icon="🏆"
-                    label="Hồ sơ năng lực (Career)"
-                    onClick={() => { closeMenu(); onNavigate('CAREER'); }}
-                />
-
-                <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
-
-                <MenuItem
-                    icon="📖"
-                    label="Hướng Dẫn Sử Dụng"
-                    onClick={() => { closeMenu(); onNavigate('GUIDE'); }}
-                />
-
-                <MenuItem
-                    icon="ℹ️"
-                    label="Về Hệ Thống"
-                    onClick={() => { closeMenu(); onNavigate('ABOUT'); }}
-                />
-
-                {/* Section: Management */}
-                {['ADMIN', 'MANAGER', 'SM', 'LEADER', 'OPS'].includes(user?.role) && (
+                {/* --- DAILY TASK --- */}
+                {(sysConfig?.featureFlags?.some(f => ['MODULE_5S', 'MODULE_CASHIER', 'MODULE_WASTE', 'MODULE_INVENTORY'].includes(f))) && (
                     <>
-                        <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
-                        <div style={{ padding: '0 20px', marginBottom: '8px', fontSize: '11px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase' }}>
-                            Quản lý
-                        </div>
+                        <MenuSectionTitle label="Daily Task" />
 
-                        {user.role !== 'STAFF' && (
-                            <MenuItem
-                                icon="📈"
-                                label="Leader Report"
-                                onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }}
-                            />
+                        {sysConfig?.featureFlags?.includes('MODULE_5S') && (
+                            <MenuItem icon="🧹" label="Báo cáo 5S" onClick={() => alert('Tính năng Báo cáo 5S đang phát triển')} />
                         )}
-
-                        {['ADMIN', 'MANAGER', 'SM', 'OPS'].includes(user?.role) && (
-                            <>
-                                {/* Staff Management - Standalone as requested */}
-                                <MenuItem
-                                    icon="👥"
-                                    label="Quản lý nhân sự"
-                                    onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }}
-                                />
-
-                                {/* Settings with Accordion Submenu */}
-                                <div
-                                    onClick={() => setExpandedConfigs(!expandedConfigs)}
-                                    className="sidebar-item"
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '12px 20px',
-                                        cursor: 'pointer',
-                                        color: '#374151',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        transition: 'background 0.2s',
-                                        background: expandedConfigs ? '#F9FAFB' : 'transparent'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-                                    onMouseLeave={e => !expandedConfigs && (e.currentTarget.style.background = 'transparent')}
-                                >
-                                    <span style={{ fontSize: '18px' }}>⚙️</span>
-                                    <div style={{ flex: 1 }}>Cấu hình hệ thống</div>
-                                    <span style={{ fontSize: '10px', transform: expandedConfigs ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>▼</span>
-                                </div>
-
-                                {/* Expanded Submenu */}
-                                {expandedConfigs && (
-                                    <div style={{ background: '#F9FAFB', paddingBottom: '8px' }}>
-                                        <MenuItem
-                                            icon="🏪"
-                                            label="Quản lý Cửa hàng"
-                                            onClick={() => { closeMenu(); onNavigate('STORE_MANAGEMENT'); }}
-                                            style={{ paddingLeft: '50px', fontSize: '12px' }}
-                                        />
-                                        <MenuItem
-                                            icon="📢"
-                                            label="Quản lý Thông báo"
-                                            onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }}
-                                            style={{ paddingLeft: '50px', fontSize: '12px' }}
-                                        />
-                                        <MenuItem
-                                            icon="⚠️"
-                                            label="Quản lý Sự cố"
-                                            onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }}
-                                            style={{ paddingLeft: '50px', fontSize: '12px' }}
-                                        />
-
-
-                                        {['ADMIN', 'OPS'].includes(user?.role) && (
-                                            <MenuItem
-                                                icon="🛡️"
-                                                label="Admin Console"
-                                                onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
-                                                style={{ paddingLeft: '50px', fontSize: '12px', color: '#7C3AED', fontWeight: '800' }}
-                                            />
-                                        )}
-
-                                        <MenuItem
-                                            icon="📊"
-                                            label="Cấu hình Benchmark"
-                                            onClick={() => {
-                                                alert("Tính năng đang phát triển: Cấu hình các chỉ số KPI/Benchmark cho hệ thống.");
-                                            }}
-                                            style={{ paddingLeft: '50px', fontSize: '12px' }}
-                                        />
-                                    </div>
-                                )}
-                            </>
+                        {sysConfig?.featureFlags?.includes('MODULE_CASHIER') && (
+                            <MenuItem icon="💰" label="Báo cáo Thu Ngân" onClick={() => alert('Tính năng Báo cáo Thu Ngân đang phát triển')} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_WASTE') && (
+                            <MenuItem icon="🗑️" label="Báo cáo Hàng Hủy" onClick={() => alert('Tính năng Báo cáo Hàng Hủy đang phát triển')} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_INVENTORY') && (
+                            <MenuItem icon="📦" label="Báo cáo Kho cuối ngày" onClick={() => alert('Tính năng Báo cáo Kho đang phát triển')} />
                         )}
                     </>
                 )}
 
-                {/* Section: Account */}
+                {/* --- REPORT --- */}
+                <MenuSectionTitle label="Report" />
+
+                {user?.role !== 'LEADER' && (
+                    <MenuItem icon="📝" label="Nhật ký ca trực - Staff" onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }} />
+                )}
+
+                {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                    <MenuItem icon="📈" label="Leader Report" onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }} />
+                )}
+
+                {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                    <MenuItem icon="📋" label="SM Report" onClick={() => alert('Tính năng đang phát triển: Nhật ký quản lý (SM Report)')} />
+                )}
+
+                {/* --- TÍNH NĂNG NÂNG CAO --- */}
+                {(sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') || sysConfig?.featureFlags?.includes('MODULE_CAREER')) && (
+                    <>
+                        <MenuSectionTitle label="Tính Năng Nâng Cao" />
+
+                        {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
+                            <MenuItem icon="🏅" label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
+                            <MenuItem icon="🏆" label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
+                        )}
+                    </>
+                )}
+
+                {/* --- QUẢN LÝ --- */}
+                {['ADMIN', 'MANAGER', 'SM', 'OPS'].includes(user?.role) && (
+                    <>
+                        <MenuSectionTitle label="Quản Lý" />
+
+                        <MenuItem icon="👥" label="Quản lý Nhân sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
+                        <MenuItem icon="📢" label="Quản lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                    </>
+                )}
+
+                {/* --- CẤU HÌNH HỆ THỐNG --- */}
+                {['ADMIN', 'OPS'].includes(user?.role) && (
+                    <>
+                        <MenuSectionTitle label="Cấu Hình Hệ Thống" />
+
+                        <MenuItem
+                            icon="🛡️"
+                            label="Admin Console"
+                            onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
+                            style={{ color: '#7C3AED', fontWeight: 'bold' }}
+                        />
+
+                        <MenuItem icon="🏪" label="Quản lý Cửa hàng" onClick={() => { closeMenu(); onNavigate('STORE_MANAGEMENT'); }} />
+                        <MenuItem icon="⚠️" label="Quản lý Sự cố" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
+                        <MenuItem icon="📊" label="Cấu hình Benchmark" onClick={() => alert("Tính năng đang phát triển")} />
+                    </>
+                )}
+
+                {/* --- DASHBOARD (Báo Cáo Quản Trị) --- */}
+                {(sysConfig?.featureFlags?.some(f => ['MODULE_DASHBOARD_LEADER', 'MODULE_DASHBOARD_SM', 'MODULE_DASHBOARD_OPS'].includes(f))) && (
+                    <>
+                        <MenuSectionTitle label="Dashboard (Báo cáo Quản trị)" />
+
+                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_LEADER') && ['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                            <MenuItem icon="📊" label="Leader Dashboard" onClick={() => alert('Tính năng Leader Dashboard đang phát triển')} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_SM') && ['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                            <MenuItem icon="📉" label="SM Dashboard (P&L)" onClick={() => alert('Tính năng SM Dashboard đang phát triển')} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_OPS') && ['OPS', 'ADMIN'].includes(user?.role) && (
+                            <MenuItem icon="🌍" label="BOD Overview (Toàn chuỗi)" onClick={() => alert('Tính năng BOD Dashboard đang phát triển')} />
+                        )}
+                    </>
+                )}
+
+                <div style={{ borderTop: '1px solid #F3F4F6', margin: '16px 0' }} />
+
+                <MenuItem icon="📖" label="Hướng Dẫn Sử Dụng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
+                <MenuItem icon="ℹ️" label="Về Hệ Thống (About)" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
+
                 <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
+
                 <MenuItem
                     icon="🚪"
                     label="Đăng xuất"
                     color="#EF4444"
                     onClick={() => setLogoutConfirm(true)}
                 />
-
             </div>
 
             {/* 3. Footer: App Version */}
@@ -241,6 +204,13 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
             }}>
                 Thái Mậu Group App v1.0
             </div>
+        </div>
+    );
+
+    // Section Title
+    const MenuSectionTitle = ({ label }) => (
+        <div style={{ padding: '0 20px', marginBottom: '8px', marginTop: '16px', fontSize: '11px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase' }}>
+            {label}
         </div>
     );
 

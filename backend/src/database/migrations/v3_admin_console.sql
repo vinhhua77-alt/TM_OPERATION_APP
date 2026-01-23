@@ -31,27 +31,72 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     UNIQUE(role_code, perm_key)
 );
 
--- 4. Seed Initial Data (Example)
--- Features
+-- 4. Seed Initial Data (Updated for Real-world Specs)
+
+-- Feature Flags (Modules)
 INSERT INTO system_feature_flags (flag_key, description, is_enabled, enabled_env)
 VALUES 
-('OPS_INTELLIGENCE', 'Advanced AI Analytics', FALSE, '{dev}'),
-('ADMIN_CONSOLE', 'New Admin System', TRUE, '{dev,prod}')
-ON CONFLICT (flag_key) DO NOTHING;
+('MODULE_GAMIFICATION', 'Hệ thống Game (XP, Huy hiệu, Level)', FALSE, '{dev}'), -- Mặc định OFF theo yêu cầu
+('MODULE_CAREER', 'Hồ sơ năng lực & KPI cá nhân', FALSE, '{dev}'), -- Mặc định OFF theo yêu cầu
+('ADMIN_CONSOLE', 'Hệ thống quản trị tập trung', TRUE, '{dev,prod}')
+ON CONFLICT (flag_key) DO UPDATE SET 
+    description = EXCLUDED.description,
+    is_enabled = EXCLUDED.is_enabled;
 
--- Permissions
+-- Permissions List
 INSERT INTO permissions_master (perm_key, module, description)
 VALUES 
-('VIEW_DASHBOARD', 'CORE', 'View personal dashboard'),
-('SUBMIT_SHIFTLOG', 'OPERATION', 'Submit daily shift log'),
-('APPROVE_SHIFTLOG', 'OPERATION', 'Approve staff shift logs'),
-('MANAGE_FLAGS', 'SYSTEM', 'Manage Feature Flags')
-ON CONFLICT (perm_key) DO NOTHING;
+-- Dashboard & Core
+('VIEW_DASHBOARD', 'CORE', 'Xem bảng điều khiển cá nhân'),
+('VIEW_ADMIN_CONSOLE', 'SYSTEM', 'Truy cập Admin Console'),
 
--- Role Matrix (Example defaults)
+-- Operational Submission
+('SUBMIT_SHIFTLOG', 'OPERATION', 'Gửi báo cáo ca làm việc (Staff)'),
+('SUBMIT_LEADER_REPORT', 'OPERATION', 'Gửi báo cáo ca trưởng (Leader)'),
+('SUBMIT_SM_REPORT', 'OPERATION', 'Gửi nhật ký quản lý (SM/OPS)'),
+
+-- Approval & Management
+('APPROVE_SHIFTLOG', 'MANAGEMENT', 'Duyệt báo cáo ca của nhân viên'),
+('MANAGE_STAFF', 'HR', 'Quản lý nhân sự (Thêm/Sửa/Xóa)')
+
+ON CONFLICT (perm_key) DO UPDATE SET description = EXCLUDED.description;
+
+-- Role Matrix Defaults (Seed)
+-- Reset logic: Insert/Update permission matrix based on role logic
+
+-- ADMIN & OPS (Full Power)
 INSERT INTO role_permissions (role_code, perm_key, can_access)
 VALUES
-('ADMIN', 'MANAGE_FLAGS', TRUE),
+('ADMIN', 'VIEW_ADMIN_CONSOLE', TRUE),
+('ADMIN', 'MANAGE_STAFF', TRUE),
+('ADMIN', 'APPROVE_SHIFTLOG', TRUE),
+('OPS', 'VIEW_ADMIN_CONSOLE', TRUE),
+('OPS', 'SUBMIT_SM_REPORT', TRUE),
+('OPS', 'APPROVE_SHIFTLOG', TRUE)
+ON CONFLICT (role_code, perm_key) DO UPDATE SET can_access = EXCLUDED.can_access;
+
+-- SM (Store Manager)
+INSERT INTO role_permissions (role_code, perm_key, can_access)
+VALUES
+('SM', 'SUBMIT_SM_REPORT', TRUE),
+('SM', 'SUBMIT_LEADER_REPORT', TRUE), -- SM can do Leader work
+('SM', 'APPROVE_SHIFTLOG', TRUE),
+('SM', 'MANAGE_STAFF', TRUE),
+('SM', 'VIEW_ADMIN_CONSOLE', FALSE) -- SM cannot see Admin Console
+ON CONFLICT (role_code, perm_key) DO UPDATE SET can_access = EXCLUDED.can_access;
+
+-- LEADER
+INSERT INTO role_permissions (role_code, perm_key, can_access)
+VALUES
+('LEADER', 'SUBMIT_LEADER_REPORT', TRUE),
+('LEADER', 'SUBMIT_SHIFTLOG', TRUE), 
+('LEADER', 'APPROVE_SHIFTLOG', FALSE) -- Leader generally doesn't final approve payroll
+ON CONFLICT (role_code, perm_key) DO UPDATE SET can_access = EXCLUDED.can_access;
+
+-- STAFF
+INSERT INTO role_permissions (role_code, perm_key, can_access)
+VALUES
 ('STAFF', 'SUBMIT_SHIFTLOG', TRUE),
-('LEADER', 'SUBMIT_SHIFTLOG', TRUE)
-ON CONFLICT (role_code, perm_key) DO NOTHING;
+('STAFF', 'SUBMIT_LEADER_REPORT', FALSE),
+('STAFF', 'VIEW_ADMIN_CONSOLE', FALSE)
+ON CONFLICT (role_code, perm_key) DO UPDATE SET can_access = EXCLUDED.can_access;
