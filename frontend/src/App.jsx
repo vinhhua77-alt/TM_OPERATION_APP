@@ -101,6 +101,9 @@ function App() {
       case 'HOME':
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'SHIFT_LOG':
+        if (user?.role === 'LEADER') {
+          return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
+        }
         return <PageShiftLog user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'DASHBOARD':
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;

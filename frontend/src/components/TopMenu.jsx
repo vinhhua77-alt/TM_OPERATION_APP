@@ -90,11 +90,13 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
-                <MenuItem
-                    icon="📝"
-                    label="Nhật ký ca trực"
-                    onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }}
-                />
+                {user?.role !== 'LEADER' && (
+                    <MenuItem
+                        icon="📝"
+                        label="Nhật ký ca trực"
+                        onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }}
+                    />
+                )}
 
                 <MenuItem
                     icon="🏅"

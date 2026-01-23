@@ -141,4 +141,13 @@ export class StaffService {
             throw error;
         }
     }
+    /**
+     * Bảo trì: Đồng bộ hóa status cho staff
+     */
+    static async syncStaffStatus(user) {
+        if (!['ADMIN', 'OPS'].includes(user.role)) {
+            throw new Error('Unauthorized: Only Admin/OPS can sync data');
+        }
+        return await UserRepo.syncStaffStatus();
+    }
 }

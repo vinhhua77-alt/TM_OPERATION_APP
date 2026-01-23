@@ -98,6 +98,11 @@ Before ANY code changes, you MUST:
    - All async routes use try/catch
    - Pass errors to `next(error)`
 
+7. **Documentation-Driven Development (MANDATORY)**
+   - EVERY code change MUST be updated in:
+     - `/docs/v2-supabase/tech-manual/V2_TECH_CORE.md` (Technical details)
+     - `/docs/v2-supabase/user-manual/V2_USER_GUIDE.md` (Operational instructions)
+
 ---
 
 ## 📚 REFERENCE DOCUMENTATION
@@ -205,6 +210,8 @@ Example:
 - [ ] Error handling implemented
 - [ ] Response format standardized
 - [ ] No hardcoded credentials
+- [ ] **Updated `/tech-manual/` for this change**
+- [ ] **Updated `/user-manual/` for this change**
 
 ---
 

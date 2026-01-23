@@ -1,6 +1,6 @@
 {
   "name": "tm-operation-app-backend",
-  "version": "1.0.0",
+  "version": "3.0.0-alpha",
   "description": "Thái Mậu Group Operation App - Backend API",
   "main": "src/server.js",
   "type": "module",

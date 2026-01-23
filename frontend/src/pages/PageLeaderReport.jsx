@@ -225,8 +225,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: formData.startM === '30' ? '#10B981' : '#DDDDDD' }} value={formData.startM || '00'} onChange={(e) => handleInputChange('startM', e.target.value)}>
                         <option value="00">00</option>
+                        <option value="30">30</option>
                     </select>
                 </div>
                 <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
@@ -238,8 +239,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
                     </select>
                     <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', background: '#F1F5F9', color: '#64748B' }} value="00" disabled>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: formData.endM === '30' ? '#10B981' : '#DDDDDD' }} value={formData.endM || '00'} onChange={(e) => handleInputChange('endM', e.target.value)}>
                         <option value="00">00</option>
+                        <option value="30">30</option>
                     </select>
                 </div>
             </div>

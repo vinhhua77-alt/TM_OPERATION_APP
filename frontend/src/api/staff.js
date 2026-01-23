@@ -49,5 +49,13 @@ export const staffAPI = {
         async deactivateStaff(staffId) {
                 const response = await apiClient.post(`/staff/${staffId}/deactivate`);
                 return response; // apiClient already returns response.data
+        },
+
+        /**
+         * Maintenance: Sync staff status
+         */
+        async syncStatus() {
+                const response = await apiClient.post('/staff/maintenance/sync-status');
+                return response;
         }
 };

@@ -197,7 +197,7 @@ export class UserRepo {
         try {
             const { error } = await supabase
                 .from('staff_master')
-                .update({ active: active })
+                .update({ active: active, status: active ? 'ACTIVE' : 'INACTIVE' })
                 .eq('staff_id', staffId.toUpperCase());
 
             if (error) throw error;
@@ -269,7 +269,7 @@ export class UserRepo {
         try {
             const { data, error } = await supabase
                 .from('staff_master')
-                .update({ active: true })
+                .update({ active: true, status: 'ACTIVE' })
                 .in('staff_id', staffIds)
                 .select();
 
@@ -287,7 +287,7 @@ export class UserRepo {
      */
     static async updateStaffInfo(staffId, updates) {
         try {
-            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash'];
+            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash', 'status'];
             const filteredUpdates = {};
 
             // Only allow specific fields to be updated
@@ -295,6 +295,15 @@ export class UserRepo {
                 if (updates[key] !== undefined) {
                     filteredUpdates[key] = updates[key];
                 }
+            }
+
+            // Sync status with active if not explicitly provided
+            if (filteredUpdates.active !== undefined && filteredUpdates.status === undefined) {
+                filteredUpdates.status = filteredUpdates.active ? 'ACTIVE' : 'INACTIVE';
+            }
+            // Sync active with status if not explicitly provided
+            if (filteredUpdates.status !== undefined && filteredUpdates.active === undefined) {
+                filteredUpdates.active = filteredUpdates.status === 'ACTIVE';
             }
 
             const { data, error } = await supabase
@@ -365,6 +374,25 @@ export class UserRepo {
             };
         } catch (error) {
             console.error('UserRepo.getStatistics error:', error);
+            throw error;
+        }
+    }
+    /**
+     * Đồng bộ hóa dữ liệu: Fix các trường hợp active=true nhưng status=PENDING
+     */
+    static async syncStaffStatus() {
+        try {
+            const { data, error } = await supabase
+                .from('staff_master')
+                .update({ status: 'ACTIVE' })
+                .eq('active', true)
+                .eq('status', 'PENDING')
+                .select();
+
+            if (error) throw error;
+            return { updated: data?.length || 0 };
+        } catch (error) {
+            console.error('UserRepo.syncStaffStatus error:', error);
             throw error;
         }
     }

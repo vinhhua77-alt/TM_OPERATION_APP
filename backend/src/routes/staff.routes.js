@@ -16,6 +16,7 @@ const router = express.Router();
  */
 router.get('/', authenticateToken, async (req, res, next) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const { store_code, status, role } = req.query;
     const filters = { store_code, status, role };
 
@@ -36,6 +37,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
  */
 router.get('/statistics', authenticateToken, async (req, res, next) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const stats = await StaffService.getStatistics(req.user);
 
     res.json({
@@ -99,19 +101,16 @@ router.put('/:staff_id', authenticateToken, async (req, res, next) => {
 });
 
 /**
- * POST /api/staff/:staff_id/deactivate
- * Deactivate a staff member
+ * POST /api/staff/maintenance/sync-status
+ * Fix desynchronized staff status (active=true but status=PENDING)
  */
-router.post('/:staff_id/deactivate', authenticateToken, async (req, res, next) => {
+router.post('/maintenance/sync-status', authenticateToken, async (req, res, next) => {
   try {
-    const { staff_id } = req.params;
-
-    const result = await StaffService.deactivateStaff(req.user, staff_id);
-
+    const result = await StaffService.syncStaffStatus(req.user);
     res.json({
       success: true,
       data: result,
-      message: 'Staff deactivated successfully'
+      message: `Synchronized ${result.updated} staff members`
     });
   } catch (error) {
     next(error);

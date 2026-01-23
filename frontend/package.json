@@ -1,6 +1,6 @@
 {
   "name": "tm-operation-app-frontend",
-  "version": "1.0.0",
+  "version": "3.0.0-alpha",
   "type": "module",
   "scripts": {
     "dev": "vite",

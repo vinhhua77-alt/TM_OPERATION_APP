@@ -220,45 +220,49 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                 </select>
             </div>
 
-            {/* TIME SELECTION - Compact */}
-            <div className="grid-2 mt-3" style={{ background: '#F8FAFC', padding: '8px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: form.startH ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
-                        {form.startH ? '✅ GIỜ VÀO' : 'GIỜ VÀO'}
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px', borderColor: form.startH ? '#10B981' : '#DDDDDD' }} value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
-                            <option value="">--</option>
-                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
-                        </select>
-                    </div>
+            {/* THỜI GIAN VÀO/RA - Synced with LeaderReport Style */}
+            <div className="grid-2 mt-5">
+                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: form.startH ? '#10B981' : '#94A3B8' }}>
+                        {form.startH ? '✅ VÀO' : 'VÀO'}
+                    </span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: form.startH ? '#10B981' : '#DDDDDD' }} value={form.startH} onChange={(e) => setForm({ ...form, startH: e.target.value })}>
+                        <option value="">-- GIỜ --</option>
+                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                    </select>
+                    <span style={{ fontWeight: 900 }}>:</span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: form.startM === '30' ? '#10B981' : '#DDDDDD' }} value={form.startM || '00'} onChange={(e) => setForm({ ...form, startM: e.target.value })}>
+                        <option value="00">00</option>
+                        <option value="30">30</option>
+                    </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>
-                    <span style={{ fontSize: '16px', color: '#CBD5E1' }}>➜</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '9px', fontWeight: '800', color: form.endH ? '#10B981' : '#64748B', display: 'block', marginBottom: '2px', textAlign: 'center' }}>
-                        {form.endH ? '✅ GIỜ RA' : 'GIỜ RA'}
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <select className="input-login" style={{ width: '60px', textAlign: 'center', padding: '4px', height: '36px', borderColor: form.endH ? '#10B981' : '#DDDDDD' }} value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
-                            <option value="">--</option>
-                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => <option key={h} value={h}>{h}:00</option>)}
-                        </select>
-                    </div>
+                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 900, color: form.endH ? '#10B981' : '#94A3B8' }}>
+                        {form.endH ? '✅ RA' : 'RA'}
+                    </span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: form.endH ? '#10B981' : '#DDDDDD' }} value={form.endH} onChange={(e) => setForm({ ...form, endH: e.target.value })}>
+                        <option value="">-- GIỜ --</option>
+                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                    </select>
+                    <span style={{ fontWeight: 900 }}>:</span>
+                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: form.endM === '30' ? '#10B981' : '#DDDDDD' }} value={form.endM || '00'} onChange={(e) => setForm({ ...form, endM: e.target.value })}>
+                        <option value="00">00</option>
+                        <option value="30">30</option>
+                    </select>
                 </div>
             </div>
 
+            {/* STATUS BOX - Synced with LeaderReport Style */}
             {shiftInfo && (
-                <div style={{ padding: '8px', borderRadius: '6px', marginTop: '5px', fontSize: '10px', background: shiftInfo.error ? '#FEF2F2' : (shiftInfo.isCorrect ? '#F0FDF4' : '#FFFBEB'), border: shiftInfo.error ? '1px solid #FCA5A5' : (shiftInfo.isCorrect ? '1px solid #86EFAC' : '1px solid #FCD34D') }}>
-                    <div style={{ textAlign: 'center', marginBottom: '4px' }}>
-                        <b>{shiftInfo.error ? `⚠️ ${shiftInfo.error}` : (shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${shiftInfo.duration}h)`)}</b>
+                <div style={{ padding: '8px', fontSize: '10px', borderRadius: '6px', margin: '6px 0', border: '1px solid', borderColor: shiftInfo.isCorrect ? '#86EFAC' : (shiftInfo.error ? '#FCA5A5' : '#FCD34D'), background: shiftInfo.isCorrect ? '#F0FDF4' : (shiftInfo.error ? '#FEF2F2' : '#FFFBEB'), color: shiftInfo.isCorrect ? '#166534' : (shiftInfo.error ? '#B91C1C' : '#B45309') }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <b>{shiftInfo.error ? `⚠️ ${shiftInfo.error}` : (shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${shiftInfo.duration}H)`)}</b>
                     </div>
 
                     {!shiftInfo.isCorrect && !shiftInfo.error && (
                         <div style={{ marginTop: '4px', textAlign: 'center' }}>
                             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', marginBottom: '4px', fontSize: '9px' }}>
-                                <input type="checkbox" checked={form.confirmWrongShift} onChange={e => setForm({ ...form, confirmWrongShift: e.target.checked })} />
+                                <input type="checkbox" checked={form.confirmWrongShift} onChange={(e) => setForm({ ...form, confirmWrongShift: e.target.checked })} />
                                 <span style={{ fontWeight: '700', color: '#B45309' }}>XÁC NHẬN ĐÂY LÀ GIỜ THỰC TẾ</span>
                             </label>
 
@@ -268,7 +272,7 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
                                     className="input-login"
                                     style={{ marginBottom: 0, fontSize: '10px', padding: '4px', borderColor: '#FCA5A5', color: form.shiftErrorReason ? '#B91C1C' : '#999', fontWeight: form.shiftErrorReason ? '700' : 'normal' }}
                                     value={form.shiftErrorReason}
-                                    onChange={e => setForm({ ...form, shiftErrorReason: e.target.value })}
+                                    onChange={(e) => setForm({ ...form, shiftErrorReason: e.target.value })}
                                 >
                                     <option value="">-- CHỌN LÝ DO SAI CA --</option>
                                     {SHIFT_ERROR_REASONS.map(reason => (

@@ -93,10 +93,27 @@ const PageStaffManagement = ({ user, onBack }) => {
             const res = await staffAPI.updateStaff(staffId, { active: true, status: 'ACTIVE' });
             if (res.success) {
                 showMessage('Đã kích hoạt nhân viên', 'success');
+                // Force a full data reload to refresh stats and move the item
                 loadStaffData();
+                setSelectedStaff(prev => prev.filter(id => id !== staffId));
             }
         } catch (error) {
             showMessage('Lỗi: ' + error.message, 'error');
+        }
+    };
+
+    const handleSyncStatus = async () => {
+        setLoading(true);
+        try {
+            const res = await staffAPI.syncStatus();
+            if (res.success) {
+                showMessage(`Đã đồng bộ ${res.data.updated} nhân viên`, 'success');
+                loadStaffData();
+            }
+        } catch (error) {
+            showMessage('Lỗi đồng bộ: ' + error.message, 'error');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -277,7 +294,7 @@ const PageStaffManagement = ({ user, onBack }) => {
                 )}
 
                 {/* Filters */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                     <select
                         className="input-login"
                         style={{ fontSize: '11px' }}
@@ -289,9 +306,6 @@ const PageStaffManagement = ({ user, onBack }) => {
                             <option key={store} value={store}>{store} ({statistics.byStore[store]})</option>
                         ))}
                     </select>
-
-                    {/* Status Select Removed - Using Cards Instead */}
-                    <div />
 
                     <select
                         className="input-login"
@@ -306,6 +320,22 @@ const PageStaffManagement = ({ user, onBack }) => {
                         <option value="LEADER">LEADER</option>
                         <option value="STAFF">STAFF</option>
                     </select>
+
+                    <button
+                        className="btn-login"
+                        style={{ fontSize: '11px', background: '#3B82F6', height: '100%', padding: '0' }}
+                        onClick={loadStaffData}
+                    >
+                        🔄 Làm mới
+                    </button>
+                    <button
+                        className="btn-login"
+                        style={{ fontSize: '11px', background: '#6B7280', height: '100%', padding: '0' }}
+                        onClick={handleSyncStatus}
+                        title="Đồng bộ trạng thái (Fix lỗi hiển thị)"
+                    >
+                        ⚙️ Sync
+                    </button>
                 </div>
 
                 {/* Bulk Actions */}
@@ -368,7 +398,7 @@ const PageStaffManagement = ({ user, onBack }) => {
                                                     color: staff.active ? '#059669' : '#DC2626',
                                                     flexShrink: 0
                                                 }}>
-                                                    {staff.active ? 'ACTIVE' : 'INACTIVE'}
+                                                    {staff.active ? 'ACTIVE' : (staff.status || 'INACTIVE')}
                                                 </span>
                                             </div>
                                             <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }} className="text-truncate">

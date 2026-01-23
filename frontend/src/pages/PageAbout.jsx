@@ -23,8 +23,8 @@ const PageAbout = ({ onBack }) => {
 
                 <div>
                     <h3 style={{ fontSize: '12px', fontWeight: '800', color: '#004AAD', marginBottom: '5px' }}>HỖ TRỢ KỸ THUẬT</h3>
-                    <p style={{ fontSize: '11px', color: '#666' }}>Email: it@thaimaugroup.com</p>
-                    <p style={{ fontSize: '11px', color: '#666' }}>Hotline: 0909 123 456</p>
+                    <p style={{ fontSize: '11px', color: '#666' }}>Email: thaimaugroup@gmail.com</p>
+                    <p style={{ fontSize: '11px', color: '#666' }}>Hotline: 0900 99 88 003 </p>
                 </div>
             </div>
 
