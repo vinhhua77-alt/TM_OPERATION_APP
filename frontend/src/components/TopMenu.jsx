@@ -195,6 +195,12 @@ const TopMenu = ({ user, onNavigate, onLogout, showMenu, onClose }) => {
                                             style={{ paddingLeft: '50px', fontSize: '12px' }}
                                         />
                                         <MenuItem
+                                            icon="🚩"
+                                            label="Quản lý Feature Flags"
+                                            onClick={() => { closeMenu(); onNavigate('FEATURE_MANAGEMENT'); }}
+                                            style={{ paddingLeft: '50px', fontSize: '12px' }}
+                                        />
+                                        <MenuItem
                                             icon="📊"
                                             label="Cấu hình Benchmark"
                                             onClick={() => {

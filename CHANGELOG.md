@@ -10,6 +10,7 @@ Tài liệu ghi lại toàn bộ lịch sử thay đổi của hệ thống TM O
 - **The Outcome Engine**: Module nhập doanh thu và chốt ca (Phase 0).
 - **Competency Matrix**: Hệ thống đánh giá năng lực L1-L4.
 - **Trust Score Engine**: Hệ thống tính điểm uy tín nhân viên.
+- **Feature Flag Management**: Hệ thống quản lý tính năng real-time với Rollout % và Global Kill-Switch.
 - **Documentation-Driven Development**: Toàn bộ hệ thống có Tech Manual & User Manual chi tiết.
 
 ### IMPROVED
