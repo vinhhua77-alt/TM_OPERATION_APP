@@ -34,7 +34,7 @@ Hệ thống được xây dựng theo mô hình **Decoupled Architecture**:
 - **State Management**: React Hooks (useState, useEffect, useContext)
 - **Routing**: React Router
 - **API Client**: Fetch API + Supabase JS Client (Read-only)
-- **Component Design**: Compact Mode, Micro-Widgets (Single-line Chips), Horizontal Scrollable Containers.
+- **Component Design**: Compact Mode, Ultra-Compact Widgets (Vertical Stack), Optimized for Grid 4x1 (Full Row).
 
 ### 2.2. Backend
 - **Runtime**: Node.js

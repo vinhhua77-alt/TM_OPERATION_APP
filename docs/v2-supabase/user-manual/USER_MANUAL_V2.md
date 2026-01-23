@@ -41,7 +41,7 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 **Lưu ý**: Hệ thống chỉ cho phép gửi tối đa 2 báo cáo/ngày và mỗi báo cáo phải cách nhau ít nhất 2 tiếng.
 
 ### 2.2. Xem Bảng Điều Khiển Cá Nhân (Dashboard)
-- Tại trang chủ, các chỉ số thống kê được sắp xếp dạng lưới (Grid 3 cột) gọn gàng.
+- Tại trang chủ, các chỉ số thống kê được sắp xếp dạng lưới (Grid 4 cột) ngang hàng, giúp xem nhanh toàn bộ thông tin quan trọng.
 - Dữ liệu được cập nhật từ bảng `raw_shiftlog` hỗ trợ theo dõi hiệu suất cá nhân theo thời gian thực.
 
 ### 2.3. Hồ Sơ Năng Lực (My Career Center)

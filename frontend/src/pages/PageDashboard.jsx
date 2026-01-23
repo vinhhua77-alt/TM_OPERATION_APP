@@ -155,7 +155,7 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
             <div className="flex justify-between items-end mb-3">
               <div>
                 <h2 className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-0.5">PHÂN TÍCH TẢI CÔNG VIỆC</h2>
-                <div className="font-bold text-slate-700 text-xs">{safeUser.storeCode}</div>
+                {/* Store Code Removed */}
               </div>
               {/* Filter Controls */}
               <div className="flex bg-slate-100 rounded-lg p-0.5">
@@ -171,7 +171,7 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
               </div>
             </div>
 
-            {/* Content */}
+            {/* Content ... */}
             {workloadLoading ? (
               <div className="animate-pulse space-y-2">
                 <div className="h-3 bg-slate-100 w-1/3 rounded"></div>
@@ -212,37 +212,35 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
           </div>
         )}
 
-        {/* 1. STATS STRIP (Horizontal Scroll) */}
-        {/* Negative margin to allow full-bleed scrolling while keeping padding for content */}
-        {/* 1. STATS GRID (3 Columns) */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* 1. STATS GRID (4 Columns - Full Row) */}
+        <div className="grid grid-cols-4 gap-1.5">
           <StatCard
             label="TỔNG CA"
             value={data?.stats?.shift_count || 0}
-            subValue={`${data?.stats?.total_hours || 0}h`}
+            subValue={data?.stats?.total_hours ? `${data.stats.total_hours}h` : '0h'}
             icon="📅"
             color="blue"
             compact={true}
           />
           <StatCard
             label="ĐÁNH GIÁ"
-            value={data?.stats?.avg_rating || "—"}
-            subValue="TB"
+            value={data?.stats?.avg_rating || "-"}
+            subValue=""
             icon="⭐"
             color="yellow"
             compact={true}
           />
           <StatCard
             label="THỜI GIAN"
-            value={`${data?.stats?.avg_duration || 0}h`}
-            subValue="/ca"
+            value={data?.stats?.avg_duration || 0}
+            subValue="h"
             icon="⏱️"
             color="purple"
             compact={true}
           />
           <StatCard
-            label="THU NHẬP"
-            value={data?.stats?.estimated_salary ? `${(data.stats.estimated_salary / 1000).toFixed(0)}k` : "—"}
+            label="LƯƠNG"
+            value={data?.stats?.estimated_salary ? `${(data.stats.estimated_salary / 1000).toFixed(0)}k` : "0"}
             subValue=""
             icon="💰"
             color="green"

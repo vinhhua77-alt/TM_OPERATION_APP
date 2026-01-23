@@ -13,26 +13,27 @@ const StatCard = ({ label, value, subValue, icon, color, isMoney, compact }) => 
 
     const theme = colorStyles[color] || colorStyles.gray;
 
-    // COMPACT GRID MODE: Vertical, very tight
+    // COMPACT GRID MODE: Ultra-dense
     if (compact) {
         return (
-            <div className={`bg-white p-2 rounded-lg shadow-sm border border-slate-100 flex flex-col justify-between h-20`}>
-                <div className="flex justify-between items-start">
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center text-sm ${theme}`}>
-                        {icon}
-                    </div>
+            <div className={`bg-white px-1.5 py-2 rounded-lg shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[70px] text-center`}>
+                <div className={`w-6 h-6 rounded-md flex items-center justify-center text-sm mb-1 ${theme}`}>
+                    {icon}
                 </div>
 
-                <div className="mt-1">
-                    <h3 className={`text-lg font-black leading-none ${isMoney ? 'text-green-600' : 'text-slate-800'}`}>
-                        {value}
-                    </h3>
-                    <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-[9px] text-slate-400 font-bold uppercase whitespace-nowrap overflow-hidden text-ellipsis">
-                            {label}
+                <div className="flex flex-col items-center leading-tight">
+                    {/* Label */}
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
+                        {label}
+                    </span>
+
+                    {/* Value + SubValue Inline */}
+                    <div className="flex items-baseline justify-center gap-0.5 mt-0.5">
+                        <span className={`text-base font-black ${isMoney ? 'text-green-600' : 'text-slate-800'}`}>
+                            {value}
                         </span>
                         {subValue && (
-                            <span className="text-[8px] text-slate-300 font-bold">
+                            <span className="text-[9px] text-slate-400 font-bold">
                                 {subValue}
                             </span>
                         )}
