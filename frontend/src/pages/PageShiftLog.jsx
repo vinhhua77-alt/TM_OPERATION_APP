@@ -112,8 +112,11 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
     const hasNoCheck = Object.values(form.checks).includes('no');
 
     const isReadyToSubmit = useMemo(() => {
-        // Core fields (Lead is now MANDATORY)
+        // Core fields (Lead & SubPos now MANDATORY)
         if (!form.storeId || !form.layout || !form.rating || !form.startH || !form.isCommitted || !form.lead) return false;
+
+        // Sub Position Requirement
+        if (master.layouts?.[form.layout]?.subPositions?.length > 0 && !form.subPos) return false;
 
         // Reason logic: If rating is NOT OK and NO checklist failure, must select reason
         if (!hasNoCheck && form.rating !== 'OK' && form.selectedReasons.length === 0) return false;

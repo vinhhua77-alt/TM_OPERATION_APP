@@ -3,6 +3,7 @@
  * Domain logic for Admin Console (Feature Flags & Permissions)
  */
 import { AccessRepo } from '../../infra/access.repo.js';
+import { AuditRepo } from '../../infra/audit.repo.js';
 
 export class AccessService {
     /**
@@ -50,11 +51,29 @@ export class AccessService {
     /**
      * Update configuration
      */
-    static async updateConfig(type, payload) {
+    static async updateConfig(currentUser, type, payload) {
         if (type === 'FEATURE_FLAG') {
-            return await AccessRepo.updateFeatureFlag(payload.key, payload.enabled);
+            const result = await AccessRepo.updateFeatureFlag(payload.key, payload.enabled);
+            // Log Audit
+            await AuditRepo.log({
+                userId: currentUser.id,
+                action: 'UPDATE_FEATURE_FLAG',
+                resourceType: 'system_config',
+                resourceId: payload.key,
+                details: { newValue: payload.enabled }
+            });
+            return result;
         } else if (type === 'PERMISSION') {
-            return await AccessRepo.updatePermission(payload.roleCode, payload.permKey, payload.canAccess);
+            const result = await AccessRepo.updatePermission(payload.roleCode, payload.permKey, payload.canAccess);
+            // Log Audit
+            await AuditRepo.log({
+                userId: currentUser.id,
+                action: 'UPDATE_PERMISSION',
+                resourceType: 'system_permission',
+                resourceId: `${payload.roleCode}:${payload.permKey}`,
+                details: { newValue: payload.canAccess }
+            });
+            return result;
         }
         throw new Error('Invalid config type');
     }

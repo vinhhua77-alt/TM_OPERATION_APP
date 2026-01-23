@@ -52,3 +52,18 @@ export async function authenticateToken(req, res, next) {
     });
   }
 }
+
+export function requireRole(allowedRoles) {
+  return (req, res, next) => {
+    authenticateToken(req, res, () => {
+      if (!req.user || !allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({
+          success: false,
+          error_code: 'AUTH:FORBIDDEN_ROLE',
+          message: 'Bạn không có quyền truy cập taì nguyên này'
+        });
+      }
+      next();
+    });
+  };
+}

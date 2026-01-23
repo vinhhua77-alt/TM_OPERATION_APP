@@ -35,13 +35,8 @@ const PageAdminConsole = ({ onBack }) => {
         try {
             const newStatus = !currentStatus;
             await adminAPI.updateConfig('FEATURE_FLAG', { key: flagKey, enabled: newStatus });
-            // Optimistic update
-            setData(prev => ({
-                ...prev,
-                featureFlags: prev.featureFlags.map(f =>
-                    f.flag_key === flagKey ? { ...f, is_enabled: newStatus } : f
-                )
-            }));
+            // Refresh all data including logs
+            loadData();
         } catch (error) {
             alert('Update failed: ' + error.message);
         }
@@ -210,22 +205,47 @@ const PageAdminConsole = ({ onBack }) => {
                         <tbody className="divide-y divide-gray-100">
                             {/* Visual Grouping Helper */}
                             {(() => {
-                                const rows = [];
-                                data.permissionMatrix?.forEach((perm, index) => {
-                                    // Simple grouper based on key prefix
-                                    const groupMap = {
-                                        'VIEW': 'System Access',
-                                        'SUBMIT': 'Submission Actions',
-                                        'APPROVE': 'Approval Actions',
-                                        'MANAGE': 'Management',
-                                        'MODULE': 'Module Access'
-                                    };
-                                    const prefix = perm.perm_key.split('_')[0];
-                                    const groupName = groupMap[prefix] || 'Other Permissions';
+                                if (!data.permissionMatrix) return null;
 
-                                    const prevPerm = index > 0 ? data.permissionMatrix[index - 1] : null;
-                                    const prevPrefix = prevPerm ? prevPerm.perm_key.split('_')[0] : null;
-                                    const prevGroup = prevPrefix ? (groupMap[prevPrefix] || 'Other Permissions') : null;
+                                const groupMap = {
+                                    'MANAGE': 'Management',
+                                    'VIEW': 'System Access (View)',
+                                    'SUBMIT': 'Submission Actions',
+                                    'APPROVE': 'Approval & Review',
+                                    'MODULE': 'Module Access'
+                                };
+
+                                const groupOrder = {
+                                    'Management': 1,
+                                    'System Access (View)': 2,
+                                    'Submission Actions': 3,
+                                    'Approval & Review': 4,
+                                    'Module Access': 5,
+                                    'Other Permissions': 99
+                                };
+
+                                const getGroupName = (permKey) => {
+                                    const prefix = permKey.split('_')[0];
+                                    return groupMap[prefix] || 'Other Permissions';
+                                };
+
+                                // SORT the permissions so groups stay together
+                                const sortedPerms = [...data.permissionMatrix].sort((a, b) => {
+                                    const groupA = getGroupName(a.perm_key);
+                                    const groupB = getGroupName(b.perm_key);
+
+                                    if (groupOrder[groupA] !== groupOrder[groupB]) {
+                                        return groupOrder[groupA] - groupOrder[groupB];
+                                    }
+                                    return a.perm_key.localeCompare(b.perm_key);
+                                });
+
+                                const rows = [];
+                                sortedPerms.forEach((perm, index) => {
+                                    const groupName = getGroupName(perm.perm_key);
+
+                                    const prevPerm = index > 0 ? sortedPerms[index - 1] : null;
+                                    const prevGroup = prevPerm ? getGroupName(prevPerm.perm_key) : null;
 
                                     if (groupName !== prevGroup) {
                                         rows.push(
@@ -270,7 +290,15 @@ const PageAdminConsole = ({ onBack }) => {
             {activeTab === 'audit' && (
                 <div className="bg-white rounded-lg shadow border border-gray-200 flex flex-col max-h-[75vh]">
                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase">Recent System Activities</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-xs font-bold text-gray-500 uppercase">Recent System Activities</h3>
+                            <button
+                                onClick={loadData}
+                                className="text-[10px] bg-white border border-gray-300 hover:bg-gray-100 px-2 py-0.5 rounded shadow-sm text-blue-600 font-bold"
+                            >
+                                🔄 Refresh
+                            </button>
+                        </div>
                         <span className="text-[10px] text-gray-400">Last 100 records</span>
                     </div>
                     <div className="overflow-auto flex-1 relative">

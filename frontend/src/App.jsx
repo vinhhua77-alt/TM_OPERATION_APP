@@ -20,6 +20,7 @@ import Breadcrumbs from './components/Breadcrumbs';
 import PageGuide from './pages/PageGuide';
 import PageAbout from './pages/PageAbout';
 import PageAdminConsole from './pages/PageAdminConsole';
+import PageAnalytics from './pages/PageAnalytics';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
@@ -66,7 +67,7 @@ function App() {
 
   const restoreLastPage = () => {
     const lastPage = localStorage.getItem('lastPage');
-    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE'];
+    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE', 'ANALYTICS'];
     setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
   };
 
@@ -147,6 +148,14 @@ function App() {
         return <PageAbout onBack={() => handleNavigate('HOME')} />;
       case 'ADMIN_CONSOLE':
         return <PageAdminConsole user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'ANALYTICS':
+        return <PageAnalytics user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'ANALYTICS_LEADER':
+        return <PageAnalytics user={user} viewMode="leader" onBack={() => handleNavigate('HOME')} />;
+      case 'ANALYTICS_SM':
+        return <PageAnalytics user={user} viewMode="sm" onBack={() => handleNavigate('HOME')} />;
+      case 'ANALYTICS_OPS':
+        return <PageAnalytics user={user} viewMode="ops" onBack={() => handleNavigate('HOME')} />;
       case 'RESET_PASSWORD':
         return <PageResetPassword token={resetTokenInfo?.token} staffId={resetTokenInfo?.staffId} onNavigate={(page) => {
           if (page === 'LOGIN') {

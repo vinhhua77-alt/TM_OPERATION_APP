@@ -37,7 +37,7 @@ router.get('/console', authenticateToken, requireAdminOrOps, async (req, res, ne
 router.post('/config', authenticateToken, requireAdminOrOps, async (req, res, next) => {
     try {
         const { type, payload } = req.body;
-        const result = await AccessService.updateConfig(type, payload);
+        const result = await AccessService.updateConfig(req.user, type, payload);
         res.json({ success: true, data: result });
     } catch (error) {
         next(error);

@@ -13,9 +13,26 @@ const router = express.Router();
 router.use(authenticateToken);
 
 /**
+ * GET /api/dashboard/workload/:storeId
+ * Get workload analytics (Morning vs Evening)
+ * Query Params: period (day/week/month), date (YYYY-MM-DD)
+ */
+router.get('/workload/:storeId', async (req, res, next) => {
+  try {
+    const { storeId } = req.params;
+    const { period, date } = req.query; // Capture query params
+
+    const result = await DashboardService.getStoreWorkload(req.user, storeId, period, date);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/dashboard/:staffId
  * Get employee dashboard statistics
- * Query params: month (optional, format: YYYY-MM)
  */
 router.get('/:staffId', async (req, res, next) => {
   try {
@@ -36,7 +53,6 @@ router.get('/:staffId', async (req, res, next) => {
 
 /**
  * GET /api/dashboard/:staffId/months
- * Get available months for staff member
  */
 router.get('/:staffId/months', async (req, res, next) => {
   try {

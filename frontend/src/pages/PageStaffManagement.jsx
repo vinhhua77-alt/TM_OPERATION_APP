@@ -15,6 +15,17 @@ const PageStaffManagement = ({ user, onBack }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredStaffList = staffList.filter(staff => {
+        const term = searchTerm.toLowerCase();
+        return (
+            (staff.staff_name || '').toLowerCase().includes(term) ||
+            (staff.staff_id || '').toLowerCase().includes(term) ||
+            (staff.gmail || '').toLowerCase().includes(term)
+        );
+    });
+
     useEffect(() => {
         loadStaffData();
     }, [filters]);
@@ -293,7 +304,17 @@ const PageStaffManagement = ({ user, onBack }) => {
                     </div>
                 )}
 
-                {/* Filters */}
+                {/* Search & Filters */}
+                <div style={{ marginBottom: '8px' }}>
+                    <input
+                        className="input-login"
+                        placeholder="🔍 Tìm kiếm nhân viên (Tên, Mã ID, Email)..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', padding: '10px' }}
+                    />
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                     <select
                         className="input-login"
@@ -353,10 +374,12 @@ const PageStaffManagement = ({ user, onBack }) => {
                 <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #DDD', borderRadius: '8px' }}>
                     {loading ? (
                         <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>⌛ Đang tải...</p>
-                    ) : staffList.length === 0 ? (
-                        <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>Không có dữ liệu</p>
+                    ) : filteredStaffList.length === 0 ? (
+                        <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>
+                            {searchTerm ? 'Không tìm thấy kết quả phù hợp' : 'Không có dữ liệu'}
+                        </p>
                     ) : (
-                        staffList.map(staff => (
+                        filteredStaffList.map(staff => (
                             <div
                                 key={staff.staff_id}
                                 className="checklist-item"

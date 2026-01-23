@@ -14,6 +14,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import cookieParser from 'cookie-parser';
 
 // Routes
+// Routes
 import authRoutes from './routes/auth.routes.js';
 import passwordResetRoutes from './routes/password-reset.routes.js';
 import shiftRoutes from './routes/shift.routes.js';
@@ -26,7 +27,10 @@ import masterDataRoutes from './routes/master-data.routes.js';
 import announcementRoutes from './routes/announcement.routes.js';
 import gamificationRoutes from './routes/gamification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import { AnalyticsCronJob } from './jobs/analytics.cron.js';
+import analyticsRoutes from './routes/analytics.routes.js'; // [NEW]
+
+import cron from 'node-cron'; // [NEW]
+import analyticsService from './domain/analytics/analytics.service.js'; // [NEW]
 
 dotenv.config();
 
@@ -142,6 +146,7 @@ app.use('/api/master-data', masterDataRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes); // [NEW]
 
 // Error handling
 app.use(errorHandler);
@@ -162,8 +167,11 @@ app.listen(PORT, () => {
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📧 Email User: ${process.env.EMAIL_USER || 'NOT SET'}`);
 
-  // Start analytics cron job
-  AnalyticsCronJob.start();
+  // Schedule Cron Job (00:00 Daily)
+  cron.schedule('0 0 * * *', async () => {
+    console.log('[CRON] Running Daily Analytics Aggregation...');
+    await analyticsService.aggregateDailyMetrics();
+  });
 });
 
 export default app;

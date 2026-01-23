@@ -1,8 +1,8 @@
 # HƯỚNG DẪN KỸ THUẬT (TECH MANUAL)
 ## TM OPERATION APP - Version 2.0 (Supabase Era)
 
-**Phiên bản**: 4.0 (Ổn định)
-**Ngày cập nhật**: 23/01/2026
+**Phiên bản**: 4.1 (Cập nhật Analytics)
+**Ngày cập nhật**: 24/01/2026
 **Trạng thái**: Production
 
 ---
@@ -73,6 +73,11 @@ Các bảng danh mục dùng để tham chiếu và cấu hình.
 - `audit_logs`: Nhật ký hoạt động hệ thống (Login, Submit, v.v.).
 - `tenants`: Quản lý đa tổ chức (Multi-tenant).
 
+### 3.4. ANALYTICS TABLES (New in v3.4)
+- `shift_analytics_daily`: Lưu dữ liệu phân tích tải công việc (Split Sáng/Chiều) theo Store.
+- `agg_daily_store_metrics`: Lưu chỉ số sức khỏe, sự cố tổng hợp của Store.
+- `agg_daily_staff_metrics`: Lưu chỉ số hiệu suất, giờ làm của Staff.
+
 ---
 
 ## 4. AN NINH & XÁC THỰC (SECURITY & AUTH)
@@ -113,7 +118,8 @@ Có khả năng vô hiệu hóa tài khoản ngay lập tức bằng cách set `
 - `POST /api/sm/action`: Gửi nhật ký hành động quản lý.
 
 ### 5.3. Dashboard & Self-Service
-- `GET /api/dashboard/:staffId`: Lấy dữ liệu thống kê cá nhân tháng hiện tại.
+- `GET /api/dashboard/:staffId`: Lấy dữ liệu thống kê cá nhân.
+- `GET /api/dashboard/workload/:storeId`: **(Mới)** Lấy dữ liệu phân tích tải công việc Sáng/Chiều (hỗ trợ filter ngày/tuần/tháng).
 - `GET /api/master/*`: Lấy dữ liệu danh mục (Stores, Layouts, Checklists).
 
 ---
@@ -128,7 +134,7 @@ Có khả năng vô hiệu hóa tài khoản ngay lập tức bằng cách set `
 ### 6.2. Hiệu năng (Performance)
 - **Caching**: Sử dụng `localStorage` caching tại Frontend (TTL 5 phút) cho Dashboard, giảm 80% tải API.
 - **Indexing**: Database được đánh chỉ mục (Index) trên `staff_id`, `store_id`, `date` để tăng tốc truy vấn dashboard lên 10 lần.
-- **Rate Limiting**: Backend giới hạn 500 requests/15 phút để chống tấn công và quá tải.
+- **Automation**: Sử dụng `pg_cron` để chạy các tác vụ nặng (Heavy aggregation) vào ban đêm (2:00 AM).
 
 ---
 
@@ -139,7 +145,6 @@ Có khả năng vô hiệu hóa tài khoản ngay lập tức bằng cách set `
 - Luôn kiểm tra tính nhất quán giữa `status = 'ACTIVE'` và `active = true` khi cập nhật nhân viên.
 - Luôn sử dụng bước nhảy 30 phút cho các input thời gian.
 
----
 ---
 
 ## 8. ADMIN CONSOLE (Feature Flags & Permissions) - V3.0
@@ -183,6 +188,23 @@ Hệ thống ghi nhận dấu vết hoạt động (Audit Trail) phục vụ m�
 ### 9.2. Implementation
 - **Backend Service**: `AccessService.getAuditLogs()` lấy dữ liệu 100 log gần nhất.
 - **Frontend**: Hiển thị dạng bảng với cột "Time" được ghim cố định (Sticky Column) để tối ưu trải nghiệm trên Mobile.
+
+---
+
+## 10. WORKLOAD ANALYTICS - V3.4 (Mới)
+
+Hệ thống tự động phân tích và tính toán tải công việc của từng chi nhánh.
+
+### 10.1. Cơ chế
+- **Trigger**: `pg_cron` job chạy lúc 02:00 AM hàng ngày (`daily-shift-analysis`).
+- **Input**: `raw_shiftlog` (Dữ liệu chấm công thô).
+- **Process**: Hàm `calculate_shift_split()` duyệt qua các ca làm việc, tính toán giao cắt thời gian với mốc 15:00.
+- **Output**: `shift_analytics_daily` (Lưu tổng giờ Sáng/Chiều theo Store).
+- **Secondary Job**: Job `legacy-analytics-calc` chạy lúc 02:05 AM để tính toán các chỉ số sức khỏe và hiệu suất nhân viên vào các bảng `agg_daily_store_metrics` và `agg_daily_staff_metrics`.
+
+### 10.2. Hiển thị
+- Dữ liệu được hiển thị trên **Dashboard Cá Nhân** của nhân viên để theo dõi tải trọng của Store nơi họ làm việc.
+- Hỗ trợ bộ lọc theo Ngày, Tuần, Tháng.
 
 ---
 **Thái Mẫu Group - IT Department**

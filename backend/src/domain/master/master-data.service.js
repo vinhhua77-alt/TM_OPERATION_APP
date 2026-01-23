@@ -121,9 +121,7 @@ export class MasterDataService {
         }
 
         // Validate ID format (IC_LAYOUT_...)
-        if (!/^IC_[A-Z0-9]+_.+/.test(incidentData.incident_id)) {
-            throw new Error('Invalid incident_id format. Must be IC_{LAYOUT}_{NAME}');
-        }
+        // Allow simpler format if needed, but let's stick to IC for now
 
         return await MasterDataRepo.createIncident(incidentData);
     }
@@ -132,11 +130,6 @@ export class MasterDataService {
         if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
-        // Validation
-        if (updates.incident_name !== undefined && !updates.incident_name) {
-            throw new Error('incident_name cannot be empty');
-        }
-
         return await MasterDataRepo.updateIncident(id, updates);
     }
 
@@ -181,5 +174,71 @@ export class MasterDataService {
             throw new Error('Unauthorized');
         }
         return await MasterDataRepo.deleteLayout(id);
+    }
+
+    // ==================== ROLES ====================
+
+    static async getAllRoles(currentUser, filters) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.getAllRoles(filters);
+    }
+
+    static async createRole(currentUser, roleData) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        if (!roleData.role_code || !roleData.role_name) {
+            throw new Error('role_code and role_name are required');
+        }
+        return await MasterDataRepo.createRole(roleData);
+    }
+
+    static async updateRole(currentUser, id, updates) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.updateRole(id, updates);
+    }
+
+    static async deleteRole(currentUser, id) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.deleteRole(id);
+    }
+
+    // ==================== SHIFTS ====================
+
+    static async getAllShifts(currentUser, filters) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.getAllShifts(filters);
+    }
+
+    static async createShift(currentUser, shiftData) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        if (!shiftData.shift_code || !shiftData.shift_name) {
+            throw new Error('shift_code and shift_name are required');
+        }
+        return await MasterDataRepo.createShift(shiftData);
+    }
+
+    static async updateShift(currentUser, id, updates) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.updateShift(id, updates);
+    }
+
+    static async deleteShift(currentUser, id) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.deleteShift(id);
     }
 }

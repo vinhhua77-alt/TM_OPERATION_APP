@@ -11,11 +11,12 @@ const PRIORITY_COLORS = {
 const AnnouncementBadge = ({ user }) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [showPopup, setShowPopup] = useState(false);
-    const [recentAnnouncements, setRecentAnnouncements] = useState([]);
+    const [allAnnouncements, setAllAnnouncements] = useState([]);
+    const [showAll, setShowAll] = useState(false);
+    const [expandedIds, setExpandedIds] = useState([]); // Allow multiple expanded
 
     useEffect(() => {
         loadUnreadCount();
-        // Refresh every 30 seconds
         const interval = setInterval(loadUnreadCount, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -31,26 +32,41 @@ const AnnouncementBadge = ({ user }) => {
         }
     };
 
-    const loadRecentAnnouncements = async () => {
+    const loadAnnouncements = async () => {
         try {
             const res = await announcementAPI.getMyAnnouncements();
             if (res.success && res.data) {
-                // Get 5 most recent
-                setRecentAnnouncements(res.data.slice(0, 5));
+                setAllAnnouncements(res.data);
             }
         } catch (error) {
-            console.error('Error loading recent announcements:', error);
+            console.error('Error loading announcements:', error);
         }
     };
 
     const handleBadgeClick = () => {
         if (!showPopup) {
-            loadRecentAnnouncements();
+            loadAnnouncements();
         }
         setShowPopup(!showPopup);
     };
 
-    // Always render, just change appearance if 0
+    const handleItemClick = async (ann) => {
+        // Toggle expand
+        if (expandedIds.includes(ann.id)) {
+            setExpandedIds(prev => prev.filter(id => id !== ann.id));
+        } else {
+            setExpandedIds(prev => [...prev, ann.id]);
+            // Mark as read only if expanding
+            try {
+                await announcementAPI.markAsRead(ann.id);
+                loadUnreadCount();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    };
+
+    const visibleList = showAll ? allAnnouncements : allAnnouncements.slice(0, 5);
 
     return (
         <>
@@ -58,7 +74,7 @@ const AnnouncementBadge = ({ user }) => {
                 onClick={handleBadgeClick}
                 style={{
                     position: 'relative',
-                    background: unreadCount > 0 ? '#DC2626' : 'rgba(255, 255, 255, 0.2)', // Red if unread, transparent white if read
+                    background: unreadCount > 0 ? '#DC2626' : 'rgba(255, 255, 255, 0.2)',
                     color: '#FFF',
                     borderRadius: '20px',
                     padding: '6px 10px',
@@ -80,7 +96,6 @@ const AnnouncementBadge = ({ user }) => {
 
             {showPopup && (
                 <>
-                    {/* Overlay */}
                     <div
                         onClick={() => setShowPopup(false)}
                         style={{
@@ -94,7 +109,6 @@ const AnnouncementBadge = ({ user }) => {
                         }}
                     />
 
-                    {/* Popup */}
                     <div style={{
                         position: 'fixed',
                         top: '60px',
@@ -105,7 +119,9 @@ const AnnouncementBadge = ({ user }) => {
                         borderRadius: '12px',
                         boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
                         zIndex: 10000,
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
                         <div style={{
                             padding: '12px',
@@ -115,9 +131,10 @@ const AnnouncementBadge = ({ user }) => {
                             fontWeight: '800',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            flexShrink: 0
                         }}>
-                            <span>📢 Thông báo gần đây</span>
+                            <span>📢 Thông báo {showAll ? '(Tất cả)' : '(Gần đây)'}</span>
                             <button
                                 onClick={() => setShowPopup(false)}
                                 style={{
@@ -131,47 +148,63 @@ const AnnouncementBadge = ({ user }) => {
                         </div>
 
                         <div style={{
-                            maxHeight: '440px',
+                            flex: 1,
                             overflowY: 'auto',
                             padding: '8px'
                         }}>
-                            {recentAnnouncements.length === 0 ? (
+                            {allAnnouncements.length === 0 ? (
                                 <div style={{ padding: '20px', textAlign: 'center', color: '#666', fontSize: '11px' }}>
                                     Không có thông báo
                                 </div>
                             ) : (
-                                recentAnnouncements.map(ann => {
+                                visibleList.map(ann => {
                                     const color = PRIORITY_COLORS[ann.priority] || PRIORITY_COLORS.LOW;
+                                    const isExpanded = expandedIds.includes(ann.id);
+
                                     return (
                                         <div
                                             key={ann.id}
+                                            onClick={() => handleItemClick(ann)}
                                             style={{
                                                 padding: '10px',
                                                 marginBottom: '8px',
                                                 borderRadius: '8px',
                                                 border: `2px solid ${color.border}`,
-                                                background: color.bg
+                                                background: color.bg,
+                                                cursor: 'pointer',
+                                                transition: 'transform 0.1s'
                                             }}
+                                            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+                                            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                                         >
                                             <div style={{
                                                 fontSize: '11px',
                                                 fontWeight: '800',
                                                 color: '#000',
-                                                marginBottom: '4px'
+                                                marginBottom: '4px',
+                                                display: 'flex',
+                                                justifyContent: 'space-between'
                                             }}>
-                                                {ann.title}
+                                                <span>{ann.title}</span>
+                                                {/* Dot indicator if unread/new? Logic complex, skip for now */}
                                             </div>
+
                                             <div style={{
                                                 fontSize: '10px',
-                                                color: '#666',
-                                                marginBottom: '6px'
+                                                color: '#333',
+                                                marginBottom: '6px',
+                                                whiteSpace: isExpanded ? 'pre-wrap' : 'nowrap',
+                                                overflow: isExpanded ? 'visible' : 'hidden',
+                                                textOverflow: 'ellipsis'
                                             }}>
-                                                {ann.content.slice(0, 80)}...
+                                                {isExpanded ? ann.content : (ann.content.slice(0, 60) + '...')}
                                             </div>
+
                                             <div style={{
                                                 display: 'flex',
                                                 gap: '6px',
-                                                fontSize: '9px'
+                                                fontSize: '9px',
+                                                alignItems: 'center'
                                             }}>
                                                 <span style={{
                                                     padding: '2px 6px',
@@ -185,12 +218,38 @@ const AnnouncementBadge = ({ user }) => {
                                                 <span style={{ color: '#666' }}>
                                                     {new Date(ann.start_date).toLocaleDateString('vi-VN')}
                                                 </span>
+                                                {isExpanded && <span style={{ marginLeft: 'auto', color: '#059669' }}>✓ Đã đọc</span>}
                                             </div>
                                         </div>
                                     );
                                 })
                             )}
                         </div>
+
+                        {/* Footer Button */}
+                        {allAnnouncements.length > 5 && (
+                            <div style={{
+                                padding: '8px',
+                                borderTop: '1px solid #EEE',
+                                textAlign: 'center',
+                                background: '#F9FAFB'
+                            }}>
+                                <button
+                                    onClick={() => setShowAll(!showAll)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: '#004AAD',
+                                        fontSize: '11px',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline'
+                                    }}
+                                >
+                                    {showAll ? 'Thu gọn' : `Xem tất cả (${allAnnouncements.length})`}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </>
             )}

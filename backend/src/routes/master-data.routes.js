@@ -199,4 +199,80 @@ router.delete('/layouts/:id', authenticateToken, async (req, res, next) => {
     }
 });
 
+// ==================== ROLES ROUTES ====================
+
+router.get('/roles', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.getAllRoles(req.user, req.query);
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/roles', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.createRole(req.user, req.body);
+        res.json({ success: true, data, message: 'Role created' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/roles/:id', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.updateRole(req.user, req.params.id, req.body);
+        res.json({ success: true, data, message: 'Role updated' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete('/roles/:id', authenticateToken, async (req, res, next) => {
+    try {
+        await MasterDataService.deleteRole(req.user, req.params.id);
+        res.json({ success: true, message: 'Role deleted' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ==================== SHIFTS ROUTES ====================
+
+router.get('/shifts', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.getAllShifts(req.user, req.query);
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/shifts', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.createShift(req.user, req.body);
+        res.json({ success: true, data, message: 'Shift created' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/shifts/:id', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.updateShift(req.user, req.params.id, req.body);
+        res.json({ success: true, data, message: 'Shift updated' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete('/shifts/:id', authenticateToken, async (req, res, next) => {
+    try {
+        await MasterDataService.deleteShift(req.user, req.params.id);
+        res.json({ success: true, message: 'Shift deleted' });
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;

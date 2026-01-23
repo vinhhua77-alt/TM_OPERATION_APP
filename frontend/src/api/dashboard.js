@@ -18,9 +18,20 @@ export const dashboardAPI = {
 
     /**
      * Get available months for staff member
-     * @param {string} staffId - Staff ID
      */
     async getAvailableMonths(staffId) {
         return await apiClient.get(`/dashboard/${staffId}/months`);
+    },
+
+    /**
+     * Get Store Workload Analytics
+     * @param {string} storeId 
+     * @param {string} period 'day' | 'week' | 'month' (default 'day')
+     * @param {string} date 'YYYY-MM-DD' (optional)
+     */
+    async getWorkload(storeId, period = 'day', date = null) {
+        let qs = `?period=${period}`;
+        if (date) qs += `&date=${date}`;
+        return await apiClient.get(`/dashboard/workload/${storeId}${qs}`);
     }
 };

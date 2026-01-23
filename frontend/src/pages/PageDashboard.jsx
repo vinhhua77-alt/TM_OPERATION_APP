@@ -1,294 +1,287 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI } from '../api/dashboard';
-import { staffAPI } from '../api/staff';
+import StatCard from '../components/StatCard';
+import RecentShifts from '../components/RecentShifts';
+import MoodChart from '../components/MoodChart';
+import BottomNav from '../components/BottomNav';
 
 const PageDashboard = ({ user, onNavigate, onLogout }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+  const [months, setMonths] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState('');
-  const [availableMonths, setAvailableMonths] = useState([]);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+
+  // Workload State
+  const [workload, setWorkload] = useState(null); // { total_hours, morning_hours, ... }
+  const [workloadLoading, setWorkloadLoading] = useState(false);
+  const [workloadPeriod, setWorkloadPeriod] = useState('day'); // 'day', 'week', 'month'
+  // Default Workload Date = Yesterday (since analytics runs at 2AM for previous day)
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const [workloadDate, setWorkloadDate] = useState(yesterday.toISOString().split('T')[0]);
 
   useEffect(() => {
-    if (user?.id && !isInitialized) {
-      console.log('Loading available months for user:', user.id);
-      loadAvailableMonths();
-      // Load pending approvals for authorized roles
-      if (['SM', 'ADMIN', 'OPS', 'BOD'].includes(user?.role)) {
-        loadPendingApprovals();
-      }
-      setIsInitialized(true);
+    if (user?.id) {
+      loadInitialData();
     }
-  }, [user?.id, isInitialized]);
+  }, [user]);
 
+  // Helper: Get safe user properties
+  const getSafeUser = (u) => ({
+    ...u,
+    storeCode: u?.storeCode || u?.store_code,
+    name: u?.name || u?.staff_name || 'User'
+  });
+
+  const safeUser = user ? getSafeUser(user) : null;
+
+  // Effect to load workload when filter changes
   useEffect(() => {
-    if (user?.id && selectedMonth && isInitialized) {
-      console.log('Loading dashboard for month:', selectedMonth);
-      loadDashboard();
+    if (safeUser?.storeCode) {
+      loadWorkload();
     }
-  }, [selectedMonth]);
+  }, [safeUser?.storeCode, workloadPeriod, workloadDate]);
 
-  const loadAvailableMonths = async () => {
-    try {
-      console.log('Fetching available months...');
-      const res = await dashboardAPI.getAvailableMonths(user.id);
-      console.log('Available months response:', res);
-
-      if (res.success && res.data?.length > 0) {
-        setAvailableMonths(res.data);
-        // Set current month as default
-        const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        setSelectedMonth(currentMonth);
-      } else {
-        // No shifts yet, set current month only
-        const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        setSelectedMonth(currentMonth);
-        setAvailableMonths([currentMonth]);
-      }
-    } catch (error) {
-      console.error('Error loading months:', error);
-      setError('Không thể tải danh sách tháng');
-      // Fallback to current month only
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      setSelectedMonth(currentMonth);
-      setAvailableMonths([currentMonth]);
-    }
-  };
-
-  const loadDashboard = async () => {
+  const loadInitialData = async () => {
     setLoading(true);
-    setError(null);
     try {
-      console.log('Fetching dashboard data...');
-      const res = await dashboardAPI.getDashboard(user.id, selectedMonth);
-      console.log('Dashboard response:', res);
+      // 1. Load Months
+      const monthsRes = await dashboardAPI.getAvailableMonths(user.id);
+      if (monthsRes.success && monthsRes.data.length > 0) {
+        setMonths(monthsRes.data);
+        // Default to current month or first available
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const hasCurrent = monthsRes.data.find(m => m.month === currentMonth);
+        const initialMonth = hasCurrent ? currentMonth : monthsRes.data[0].month;
 
-      if (res.success) {
-        setDashboardData(res.data);
+        setSelectedMonth(initialMonth);
+        await loadDashboardData(initialMonth);
       } else {
-        setError(res.error || 'Không thể tải dữ liệu');
+        // No months, just try loading current
+        await loadDashboardData();
       }
     } catch (error) {
-      console.error('Error loading dashboard:', error);
-      setError('Lỗi kết nối: ' + error.message);
+      console.error("Init Error", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadPendingApprovals = async () => {
+  const loadDashboardData = async (month) => {
     try {
-      const res = await staffAPI.getStatistics();
-      if (res.success && res.data) {
-        setPendingCount(res.data.pending || 0);
+      const res = await dashboardAPI.getDashboard(user.id, month);
+      if (res.success) {
+        setData(res.data);
       }
-    } catch (error) {
-      console.error('Error loading pending approvals:', error);
+    } catch (e) { console.error(e); }
+  };
+
+  const loadWorkload = async () => {
+    if (!safeUser?.storeCode) return;
+    setWorkloadLoading(true);
+    try {
+      const res = await dashboardAPI.getWorkload(safeUser.storeCode, workloadPeriod, workloadDate);
+      if (res.success) {
+        setWorkload(res.data);
+      } else {
+        setWorkload(null);
+      }
+    } catch (e) {
+      console.error("Workload Error", e);
+    } finally {
+      // Add small delay for visual smoothness? No
+      setWorkloadLoading(false);
     }
   };
 
-  const formatMonthDisplay = (yearMonth) => {
-    if (!yearMonth) return '';
-    const [year, month] = yearMonth.split('-');
-    const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
-    const monthIndex = parseInt(month, 10) - 1;
-    return `${monthNames[monthIndex]} ${year}`;
+  const handleMonthChange = (e) => {
+    const m = e.target.value;
+    setSelectedMonth(m);
+    loadDashboardData(m);
   };
 
-  const getFeelingIcon = (feeling) => {
-    const icons = { OK: '🟢', BUSY: '🟡', FIXED: '🟠', OPEN: '🔴', OVER: '⚫' };
-    return icons[feeling] || '⚪';
-  };
-
-  const getFeelingLabel = (feeling) => {
-    const labels = { OK: 'Ổn', BUSY: 'Bận', FIXED: 'Đã xử lý', OPEN: 'Cần hỗ trợ', OVER: 'Quá tải' };
-    return labels[feeling] || feeling;
-  };
-
-
+  // --- SKELETON ---
+  if (loading) {
+    return (
+      <div className="p-4 fade-in">
+        <div className="skeleton h-12 w-3/4 mb-6 rounded-lg"></div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="skeleton h-32 rounded-2xl"></div>
+          <div className="skeleton h-32 rounded-2xl"></div>
+        </div>
+        <div className="skeleton h-64 w-full rounded-2xl"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fade-in">
-      {/* Header */}
-      {/* Header Compact */}
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <p style={{ fontSize: '16px', fontWeight: '800', color: '#004AAD' }}>Xin chào, {user?.name || 'Bạn'}! 👋</p>
-          <p style={{ fontSize: '11px', color: '#6B7280' }}>Chúc bạn một ngày làm việc hiệu quả.</p>
+    <div className="min-h-screen bg-slate-50 pb-20 fade-in">
+      {/* HEADER */}
+      <div className="bg-white px-5 pt-6 pb-2 mb-4 sticky top-0 z-10 shadow-sm">
+        <div className="flex justify-between items-center mb-1">
+          <div>
+            <div className="text-slate-400 text-xs font-bold tracking-wider mb-1">DASHBOARD CÁ NHÂN</div>
+            <h1 className="text-2xl font-black text-slate-800">
+              Xin chào, <span className="text-blue-600">{safeUser?.name?.split(' ').pop()}!</span> 👋
+            </h1>
+          </div>
+          <div
+            onClick={onLogout}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </div>
         </div>
-        <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Đăng xuất</button>
-      </div>
 
-      {/* Current Month Display */}
-      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-        <div style={{
-          fontSize: '13px',
-          fontWeight: '700',
-          color: '#004AAD',
-          padding: '10px',
-          background: '#F3F4F6',
-          borderRadius: '8px',
-          border: '2px solid #E5E7EB'
-        }}>
-          📅 {formatMonthDisplay(selectedMonth)}
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div style={{ background: '#FEE2E2', color: '#DC2626', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '11px', fontWeight: '600' }}>
-          ⚠️ {error}
-        </div>
-      )}
-
-      {/* Pending Approvals Alert (for SM/Admin/OPS/BOD) */}
-      {['SM', 'ADMIN', 'OPS', 'BOD'].includes(user?.role) && pendingCount > 0 && (
-        <div
-          onClick={() => onNavigate('STAFF_MANAGEMENT')}
-          style={{
-            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-            border: '1px solid #F59E0B',
-            padding: '12px',
-            borderRadius: '12px',
-            marginBottom: '16px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        {/* Month Selector for Personal Stats */}
+        <select
+          value={selectedMonth}
+          onChange={handleMonthChange}
+          className="w-full mt-2 bg-slate-50 border-none text-slate-600 font-bold text-sm py-2 px-3 rounded-lg focus:ring-0"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ fontSize: '24px' }}>⚠️</div> {/* Smaller icon */}
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#92400E', marginBottom: '2px' }}>
-                Cần duyệt: {pendingCount} nhân viên
-              </div>
-              <div style={{ fontSize: '10px', color: '#B45309' }}>
-                Nhấn để xem ngay
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          {months.map(m => (
+            <option key={m.month} value={m.month}>Tháng {m.month} ({m.completed_shifts}/{m.total_shifts} ca)</option>
+          ))}
+          {months.length === 0 && <option>Tháng này</option>}
+        </select>
+      </div>
 
-      {loading ? (
-        // SKELETON LOADING STATE - Prevents Layout Shift
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            {[1, 2, 3, 4].map(k => (
-              <div key={k} style={{ height: '80px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
-            ))}
-          </div>
-          <div style={{ height: '150px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
-          <div style={{ height: '100px', background: '#F3F4F6', borderRadius: '12px', animation: 'pulse 1.5s infinite' }}></div>
-          <style>{`
-            @keyframes pulse {
-              0% { opacity: 0.6; }
-              50% { opacity: 1; }
-              100% { opacity: 0.6; }
-            }
-          `}</style>
-        </div>
-      ) : dashboardData ? (
-        <>
-          {/* Statistics Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
-            <StatCard label="Số ca" value={dashboardData.stats.totalShifts} icon="📅" color="#4F46E5" />
-            <StatCard label="Tổng giờ" value={`${dashboardData.stats.totalHours} h`} icon="⏰" color="#059669" />
-            <StatCard label="TB/Ca" value={`${dashboardData.stats.avgDuration} h`} icon="📊" color="#F59E0B" />
-            <StatCard label="Đánh giá" value={`${dashboardData.stats.avgRating}⭐`} icon="🌟" color="#EF4444" />
-          </div>
+      <div className="px-4 space-y-5">
 
-          {/* Feelings Distribution */}
-          {dashboardData.stats.totalShifts > 0 && (
-            <div style={{ background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '800', marginBottom: '12px', color: '#111' }}>🎯 Cảm nhận gần đây</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {Object.entries(dashboardData.feelings).map(([feeling, percentage]) => (
-                  percentage > 0 && (
-                    <div key={feeling} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '16px' }}>{getFeelingIcon(feeling)}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: '600' }}>{getFeelingLabel(feeling)}</span>
-                          <span style={{ fontSize: '11px', fontWeight: '700', color: '#004AAD' }}>{percentage}%</span>
-                        </div>
-                        <div style={{ height: '6px', background: '#E5E7EB', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${percentage}% `, background: '#004AAD', borderRadius: '3px', transition: 'width 0.3s' }} />
-                        </div>
-                      </div>
-                    </div>
-                  )
+        {/* === SECTION: TẢI CÔNG VIỆC STORE === */}
+        {safeUser?.storeCode && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h2 className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">PHÂN TÍCH TẢI CÔNG VIỆC</h2>
+                <div className="font-bold text-slate-700 text-sm">{safeUser.storeCode}</div>
+              </div>
+              {/* Filter Controls */}
+              <div className="flex bg-slate-100 rounded-lg p-1">
+                {['day', 'week', 'month'].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setWorkloadPeriod(p)}
+                    className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${workloadPeriod === p ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                  >
+                    {p === 'day' ? 'NGÀY' : p === 'week' ? 'TUẦN' : 'THÁNG'}
+                  </button>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Recent Shifts */}
-          {dashboardData.recentShifts?.length > 0 && (
-            <div style={{ background: 'white', borderRadius: '12px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '800', marginBottom: '12px', color: '#111' }}>📝 Ca làm gần đây</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {dashboardData.recentShifts.map((shift, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: '#F9FAFB', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#666' }}>{shift.date}</span>
-                      <span style={{ fontSize: '10px', background: '#E5E7EB', padding: '2px 6px', borderRadius: '4px', fontWeight: '600' }}>{shift.layout}</span>
+            {/* Content */}
+            {workloadLoading ? (
+              <div className="animate-pulse space-y-3">
+                <div className="h-4 bg-slate-100 w-1/3 rounded"></div>
+                <div className="h-8 bg-slate-100 w-full rounded-lg"></div>
+              </div>
+            ) : workload ? (
+              <div>
+                {/* Total Hours */}
+                <div className="flex items-baseline mb-3">
+                  <div className="text-3xl font-black text-slate-800 mr-2">{workload.total_hours}h</div>
+                  <div className="text-xs text-slate-400 font-bold">Tổng giờ công</div>
+                </div>
+
+                {/* Split Bar */}
+                <div className="space-y-3">
+                  <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100">
+                    <div style={{ width: `${(workload.morning_hours / workload.total_hours) * 100}%` }} className="bg-blue-400"></div>
+                    <div style={{ width: `${(workload.evening_hours / workload.total_hours) * 100}%` }} className="bg-orange-400"></div>
+                  </div>
+
+                  <div className="flex justify-between text-xs font-bold">
+                    <div className="text-blue-500">
+                      <span className="block text-[10px] text-slate-400">CA SÁNG</span>
+                      {workload.morning_hours}h
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '600' }}>{shift.duration}h</span>
-                      <span style={{ fontSize: '14px' }}>{getFeelingIcon(shift.rating)}</span>
+                    <div className="text-right text-orange-500">
+                      <span className="block text-[10px] text-slate-400">CA CHIỀU</span>
+                      {workload.evening_hours}h
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
+            ) : (
+              <div className="text-center py-4 text-slate-400 text-xs italic">
+                Chưa có dữ liệu phân tích cho {workloadPeriod === 'day' ? 'hôm qua' : 'giai đoạn này'}.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 1. STATS GRID (Personal) */}
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard
+            label="TỔNG CA"
+            value={data?.stats?.shift_count || 0}
+            subValue={`${data?.stats?.total_hours || 0}h`}
+            icon="📅"
+            color="blue"
+          />
+          <StatCard
+            label="ĐÁNH GIÁ"
+            value={data?.stats?.avg_rating || "—"}
+            subValue="Trung bình"
+            icon="⭐"
+            color="yellow"
+          />
+          <StatCard
+            label="TB THỜI GIAN"
+            value={`${data?.stats?.avg_duration || 0}h`}
+            subValue="Mỗi ca"
+            icon="⏱️"
+            color="purple"
+          />
+          <StatCard
+            label="THU NHẬP (ƯỚC TÍNH)"
+            value={data?.stats?.estimated_salary ? `${(data.stats.estimated_salary / 1000).toFixed(0)}k` : "—"}
+            subValue="VND"
+            icon="💰"
+            color="green"
+            isMoney
+          />
+        </div>
+
+        {/* 2. RECENT SHIFTS */}
+        <div>
+          <h2 className="text-slate-800 font-bold text-lg mb-3 flex items-center">
+            <span className="bg-blue-100 text-blue-600 p-1 rounded mr-2 text-sm">📋</span>
+            Nhật Ký Gần Đây
+          </h2>
+          {data?.recent_shifts?.length > 0 ? (
+            <RecentShifts shifts={data.recent_shifts} />
+          ) : (
+            <div className="text-center py-8 bg-white rounded-2xl border border-dashed border-slate-300">
+              <div className="text-4xl mb-2">📭</div>
+              <div className="text-slate-400 text-sm">Chưa có nhật ký nào trong tháng này</div>
             </div>
           )}
+        </div>
 
-          {/* No Data Message */}
-          {dashboardData.stats.totalShifts === 0 && (
-            <div style={{ background: '#F3F4F6', borderRadius: '12px', padding: '20px', marginBottom: '20px', textAlign: 'center', borderLeft: '4px solid #4F46E5' }}>
-              <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-                Chưa có dữ liệu cho tháng này. Hãy bắt đầu báo cáo ca làm việc! 🚀
-              </p>
+        {/* 3. MOOD CHART */}
+        {data?.chart_data?.length > 0 && (
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-slate-800 font-bold flex items-center">
+                <span className="bg-rose-100 text-rose-500 p-1 rounded mr-2 text-xs">❤️</span>
+                Biểu Đồ Cảm Xúc
+              </h2>
             </div>
-          )}
-        </>
-      ) : null}
+            <div className="h-40">
+              <MoodChart data={data.chart_data} />
+            </div>
+          </div>
+        )}
 
-
-
-      {/* Footer */}
-      <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#9CA3AF' }}>
-        TM Operation App v2.0<br />
-        Developed by Vinh Gà - 2026
       </div>
+
+      <BottomNav active="HOME" onNavigate={onNavigate} />
     </div>
   );
 };
-
-// Stat Card Component
-const StatCard = ({ label, value, icon, color }) => (
-  <div style={{
-    background: 'white',
-    borderRadius: '12px',
-    padding: '16px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    borderLeft: `4px solid ${color} `
-  }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-      <span style={{ fontSize: '11px', color: '#666', fontWeight: '600' }}>{label}</span>
-      <span style={{ fontSize: '20px' }}>{icon}</span>
-    </div>
-    <div style={{ fontSize: '24px', fontWeight: '800', color: color }}>{value}</div>
-  </div>
-);
 
 export default PageDashboard;

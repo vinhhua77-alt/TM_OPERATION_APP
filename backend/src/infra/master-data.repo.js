@@ -1,6 +1,6 @@
 /**
  * MASTER DATA REPOSITORY
- * CRUD operations for all master tables (store, checklist, positions, incidents)
+ * CRUD operations for all master tables (store, checklist, positions, incidents, roles, shifts)
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -75,20 +75,13 @@ export class MasterDataRepo {
         if (filters.layout) {
             query = query.eq('layout', filters.layout);
         }
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
 
         const { data, error } = await query;
         if (error) throw error;
         return data || [];
-    }
-
-    static async getChecklist(id) {
-        const { data, error } = await supabase
-            .from('checklist_master')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
     }
 
     static async createChecklist(checklistData) {
@@ -132,20 +125,13 @@ export class MasterDataRepo {
         if (filters.layout) {
             query = query.eq('layout', filters.layout);
         }
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
 
         const { data, error } = await query;
         if (error) throw error;
         return data || [];
-    }
-
-    static async getPosition(id) {
-        const { data, error } = await supabase
-            .from('sub_position_master')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
     }
 
     static async createPosition(positionData) {
@@ -189,20 +175,13 @@ export class MasterDataRepo {
         if (filters.layout) {
             query = query.eq('layout', filters.layout);
         }
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
 
         const { data, error } = await query;
         if (error) throw error;
         return data || [];
-    }
-
-    static async getIncident(id) {
-        const { data, error } = await supabase
-            .from('incident_master')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
     }
 
     static async createIncident(incidentData) {
@@ -246,20 +225,13 @@ export class MasterDataRepo {
         if (filters.active !== undefined) {
             query = query.eq('active', filters.active);
         }
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
 
         const { data, error } = await query;
         if (error) throw error;
         return data || [];
-    }
-
-    static async getLayout(id) {
-        const { data, error } = await supabase
-            .from('layout_master')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
     }
 
     static async createLayout(layoutData) {
@@ -286,6 +258,100 @@ export class MasterDataRepo {
     static async deleteLayout(id) {
         const { error } = await supabase
             .from('layout_master')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    }
+
+    // ==================== ROLE_MASTER ====================
+
+    static async getAllRoles(filters = {}) {
+        let query = supabase
+            .from('role_master')
+            .select('*')
+            .order('role_name', { ascending: true });
+
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+    }
+
+    static async createRole(roleData) {
+        const { data, error } = await supabase
+            .from('role_master')
+            .insert([roleData])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
+    static async updateRole(id, updates) {
+        const { data, error } = await supabase
+            .from('role_master')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
+    static async deleteRole(id) {
+        const { error } = await supabase
+            .from('role_master')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
+        return { success: true };
+    }
+
+    // ==================== SHIFT_MASTER ====================
+
+    static async getAllShifts(filters = {}) {
+        let query = supabase
+            .from('shift_master')
+            .select('*')
+            .order('start_time', { ascending: true });
+
+        if (filters.store_code) {
+            query = query.eq('store_code', filters.store_code);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+    }
+
+    static async createShift(shiftData) {
+        const { data, error } = await supabase
+            .from('shift_master')
+            .insert([shiftData])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
+    static async updateShift(id, updates) {
+        const { data, error } = await supabase
+            .from('shift_master')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
+    static async deleteShift(id) {
+        const { error } = await supabase
+            .from('shift_master')
             .delete()
             .eq('id', id);
         if (error) throw error;

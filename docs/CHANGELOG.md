@@ -1,8 +1,6 @@
-# CHANGELOG - DOCS v1 → v2 Migration
-
-**Date**: 2026-01-22  
+**Date**: 2026-01-24  
 **Migration**: Google Apps Script → Supabase  
-**Current Version**: v3.0
+**Current Version**: v3.4
 
 ---
 
@@ -248,6 +246,20 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 ---
 
+## Detailed Changes - 2026-01-24
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-24 | **Refactored Incident Management UI** | Match Store Management style (Folders, FAB, Modal) (User Request) |
+| 2026-01-24 | **Admin Console: Permission Sorting** | Grouped permissions by category for better UX |
+| 2026-01-24 | **Admin Console: Audit Refresh** | Added refresh button and fixed backend logging logic |
+| 2026-01-24 | **Dashboard: Restored Workload Analysis** | Restored Workload section position and fixed display conditions |
+| 2026-01-24 | **Dashboard: Safe Data Access** | Handled `storeCode`/`store_code` variations robustly |
+| 2026-01-24 | **StatCard Component Fix** | Fixed React console warnings about nested components |
+| 2026-01-24 | **Added FAB Component** | Reusable Floating Action Button component |
+
+---
+
 ## Detailed Changes - 2026-01-23
 
 | Date | Change | Reason |
@@ -331,6 +343,6 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 **Migration Status**: ✅ **COMPLETE**
 
-**Current Version**: v3.0 (Supabase + Enhancements)
+**Current Version**: v3.4 (Supabase + Enhancements)
 
-**Last Updated**: 2026-01-22
+**Last Updated**: 2026-01-24

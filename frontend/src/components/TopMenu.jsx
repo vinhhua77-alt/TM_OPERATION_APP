@@ -4,14 +4,53 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
     const [expandedConfigs, setExpandedConfigs] = useState(false);
     const [logoutConfirm, setLogoutConfirm] = useState(false);
 
+    // State for collapsible sections
+    const [openSections, setOpenSections] = useState({
+        dailyTask: true,
+        dailyReport: true,
+        bgQt: true,
+        advanced: false, // Default collapsed
+        management: true, // User focused on this right now
+        config: false // Default collapsed
+    });
+
+    const toggleSection = (section) => {
+        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+
     // Sidebar styling constants
     const sidebarWidth = '280px';
-    const primaryColor = '#004AAD';
 
     // Close menu helper
     const closeMenu = () => {
         onClose();
     };
+
+    // Helper: Collapsible Section Header
+    const MenuSectionHeader = ({ label, isOpen, onToggle }) => (
+        <div
+            onClick={onToggle}
+            style={{
+                padding: '0 20px',
+                marginBottom: '4px',
+                marginTop: '16px',
+                fontSize: '11px',
+                fontWeight: '700',
+                color: '#9CA3AF',
+                textTransform: 'uppercase',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                userSelect: 'none'
+            }}
+        >
+            <span>{label}</span>
+            <span style={{ fontSize: '10px', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                ▼
+            </span>
+        </div>
+    );
 
     // Menu content component
     const MenuContent = () => (
@@ -88,48 +127,108 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                 {/* --- DAILY TASK --- */}
                 {(sysConfig?.featureFlags?.some(f => ['MODULE_5S', 'MODULE_CASHIER', 'MODULE_WASTE', 'MODULE_INVENTORY'].includes(f))) && (
                     <>
-                        <MenuSectionTitle label="Daily Task" />
-
-                        {sysConfig?.featureFlags?.includes('MODULE_5S') && (
-                            <MenuItem icon="🧹" label="Báo cáo 5S" onClick={() => alert('Tính năng Báo cáo 5S đang phát triển')} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_CASHIER') && (
-                            <MenuItem icon="💰" label="Báo cáo Thu Ngân" onClick={() => alert('Tính năng Báo cáo Thu Ngân đang phát triển')} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_WASTE') && (
-                            <MenuItem icon="🗑️" label="Báo cáo Hàng Hủy" onClick={() => alert('Tính năng Báo cáo Hàng Hủy đang phát triển')} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_INVENTORY') && (
-                            <MenuItem icon="📦" label="Báo cáo Kho cuối ngày" onClick={() => alert('Tính năng Báo cáo Kho đang phát triển')} />
+                        <MenuSectionHeader
+                            label="Daily Task"
+                            isOpen={openSections.dailyTask}
+                            onToggle={() => toggleSection('dailyTask')}
+                        />
+                        {openSections.dailyTask && (
+                            <div className="fade-in">
+                                {sysConfig?.featureFlags?.includes('MODULE_5S') && (
+                                    <MenuItem icon="🧹" label="Báo cáo 5S" onClick={() => alert('Tính năng Báo cáo 5S đang phát triển')} />
+                                )}
+                                {sysConfig?.featureFlags?.includes('MODULE_CASHIER') && (
+                                    <MenuItem icon="💰" label="Báo cáo Thu Ngân" onClick={() => alert('Tính năng Báo cáo Thu Ngân đang phát triển')} />
+                                )}
+                                {sysConfig?.featureFlags?.includes('MODULE_WASTE') && (
+                                    <MenuItem icon="🗑️" label="Báo cáo Hàng Hủy" onClick={() => alert('Tính năng Báo cáo Hàng Hủy đang phát triển')} />
+                                )}
+                                {sysConfig?.featureFlags?.includes('MODULE_INVENTORY') && (
+                                    <MenuItem icon="📦" label="Báo cáo Kho cuối ngày" onClick={() => alert('Tính năng Báo cáo Kho đang phát triển')} />
+                                )}
+                            </div>
                         )}
                     </>
                 )}
 
-                {/* --- REPORT --- */}
-                <MenuSectionTitle label="Report" />
+                {/* ---DAILY REPORT --- */}
+                <MenuSectionHeader
+                    label="Daily Report"
+                    isOpen={openSections.dailyReport}
+                    onToggle={() => toggleSection('dailyReport')}
+                />
+                {openSections.dailyReport && (
+                    <div className="fade-in">
+                        {user?.role !== 'LEADER' && (
+                            <MenuItem icon="📝" label="Nhật ký ca trực - Staff" onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }} />
+                        )}
 
-                {user?.role !== 'LEADER' && (
-                    <MenuItem icon="📝" label="Nhật ký ca trực - Staff" onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }} />
+                        {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                            <MenuItem icon="📈" label="Báo Cáo Ca - Leader" onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }} />
+                        )}
+
+                        {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                            <MenuItem icon="📋" label="Báo Cáo Ngày - SM" onClick={() => alert('Tính năng đang phát triển: Nhật ký quản lý (SM Report)')} />
+                        )}
+                    </div>
                 )}
 
+                {/* --- DASHBOARD (Báo Cáo Quản Trị) --- */}
                 {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                    <MenuItem icon="📈" label="Leader Report" onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }} />
-                )}
+                    <>
+                        <MenuSectionHeader
+                            label="Báo cáo Quản trị"
+                            isOpen={openSections.bgQt}
+                            onToggle={() => toggleSection('bgQt')}
+                        />
+                        {openSections.bgQt && (
+                            <div className="fade-in">
+                                <MenuItem
+                                    icon="📊"
+                                    label="Leader Dashboard (Ngày)"
+                                    onClick={() => { closeMenu(); onNavigate('ANALYTICS_LEADER'); }}
+                                    style={{ color: '#004AAD' }}
+                                />
 
-                {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                    <MenuItem icon="📋" label="SM Report" onClick={() => alert('Tính năng đang phát triển: Nhật ký quản lý (SM Report)')} />
+                                {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
+                                    <MenuItem
+                                        icon="📈"
+                                        label="SM Dashboard (Tuần)"
+                                        onClick={() => { closeMenu(); onNavigate('ANALYTICS_SM'); }}
+                                        style={{ color: '#059669' }}
+                                    />
+                                )}
+
+                                {['OPS', 'ADMIN', 'BOD'].includes(user?.role) && (
+                                    <MenuItem
+                                        icon="🌍"
+                                        label="OPS Dashboard (Chuỗi)"
+                                        onClick={() => { closeMenu(); onNavigate('ANALYTICS_OPS'); }}
+                                        style={{ color: '#7C3AED', fontWeight: 'bold' }}
+                                    />
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* --- TÍNH NĂNG NÂNG CAO --- */}
                 {(sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') || sysConfig?.featureFlags?.includes('MODULE_CAREER')) && (
                     <>
-                        <MenuSectionTitle label="Tính Năng Nâng Cao" />
-
-                        {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
-                            <MenuItem icon="🏅" label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
-                            <MenuItem icon="🏆" label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
+                        <MenuSectionHeader
+                            label="Tính Năng Nâng Cao"
+                            isOpen={openSections.advanced}
+                            onToggle={() => toggleSection('advanced')}
+                        />
+                        {openSections.advanced && (
+                            <div className="fade-in">
+                                {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
+                                    <MenuItem icon="🏅" label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
+                                )}
+                                {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
+                                    <MenuItem icon="🏆" label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
+                                )}
+                            </div>
                         )}
                     </>
                 )}
@@ -137,44 +236,41 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                 {/* --- QUẢN LÝ --- */}
                 {['ADMIN', 'MANAGER', 'SM', 'OPS'].includes(user?.role) && (
                     <>
-                        <MenuSectionTitle label="Quản Lý" />
-
-                        <MenuItem icon="👥" label="Quản lý Nhân sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
-                        <MenuItem icon="📢" label="Quản lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                        <MenuSectionHeader
+                            label="Quản Lý"
+                            isOpen={openSections.management}
+                            onToggle={() => toggleSection('management')}
+                        />
+                        {openSections.management && (
+                            <div className="fade-in">
+                                <MenuItem icon="👥" label="Quản lý Nhân sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
+                                <MenuItem icon="🏪" label="Quản lý Cửa hàng" onClick={() => { closeMenu(); onNavigate('STORE_MANAGEMENT'); }} />
+                                <MenuItem icon="📢" label="Quản lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                                <MenuItem icon="⚠️" label="Quản lý Sự cố" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
+                            </div>
+                        )}
                     </>
                 )}
 
                 {/* --- CẤU HÌNH HỆ THỐNG --- */}
                 {['ADMIN', 'OPS'].includes(user?.role) && (
                     <>
-                        <MenuSectionTitle label="Cấu Hình Hệ Thống" />
-
-                        <MenuItem
-                            icon="🛡️"
-                            label="Admin Console"
-                            onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
-                            style={{ color: '#7C3AED', fontWeight: 'bold' }}
+                        <MenuSectionHeader
+                            label="Cấu Hình Hệ Thống"
+                            isOpen={openSections.config}
+                            onToggle={() => toggleSection('config')}
                         />
+                        {openSections.config && (
+                            <div className="fade-in">
+                                <MenuItem
+                                    icon="🛡️"
+                                    label="Admin Console"
+                                    onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
+                                    style={{ color: '#7C3AED', fontWeight: 'bold' }}
+                                />
 
-                        <MenuItem icon="🏪" label="Quản lý Cửa hàng" onClick={() => { closeMenu(); onNavigate('STORE_MANAGEMENT'); }} />
-                        <MenuItem icon="⚠️" label="Quản lý Sự cố" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
-                        <MenuItem icon="📊" label="Cấu hình Benchmark" onClick={() => alert("Tính năng đang phát triển")} />
-                    </>
-                )}
-
-                {/* --- DASHBOARD (Báo Cáo Quản Trị) --- */}
-                {(sysConfig?.featureFlags?.some(f => ['MODULE_DASHBOARD_LEADER', 'MODULE_DASHBOARD_SM', 'MODULE_DASHBOARD_OPS'].includes(f))) && (
-                    <>
-                        <MenuSectionTitle label="Dashboard (Báo cáo Quản trị)" />
-
-                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_LEADER') && ['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                            <MenuItem icon="📊" label="Leader Dashboard" onClick={() => alert('Tính năng Leader Dashboard đang phát triển')} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_SM') && ['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
-                            <MenuItem icon="📉" label="SM Dashboard (P&L)" onClick={() => alert('Tính năng SM Dashboard đang phát triển')} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_DASHBOARD_OPS') && ['OPS', 'ADMIN'].includes(user?.role) && (
-                            <MenuItem icon="🌍" label="BOD Overview (Toàn chuỗi)" onClick={() => alert('Tính năng BOD Dashboard đang phát triển')} />
+                                <MenuItem icon="📊" label="Cấu hình Benchmark" onClick={() => alert("Tính năng đang phát triển")} />
+                            </div>
                         )}
                     </>
                 )}
@@ -182,7 +278,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                 <div style={{ borderTop: '1px solid #F3F4F6', margin: '16px 0' }} />
 
                 <MenuItem icon="📖" label="Hướng Dẫn Sử Dụng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
-                <MenuItem icon="ℹ️" label="Về Hệ Thống (About)" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
+                <MenuItem icon="ℹ️" label="About" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
 
                 <div style={{ borderTop: '1px solid #F3F4F6', margin: '12px 0' }} />
 
@@ -202,7 +298,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                 fontSize: '10px',
                 color: '#9CA3AF'
             }}>
-                Thái Mậu Group App v1.0
+                Thái Mậu Group App v2.0
             </div>
         </div>
     );
