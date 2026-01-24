@@ -1,9 +1,4 @@
 import { useState } from 'react';
-import {
-    Home, FileEdit, ClipboardList, BarChart3, TrendingUp, Globe,
-    Gamepad2, Award, Users, Store, Megaphone, AlertTriangle,
-    Settings, BookOpen, Info, LogOut, ChevronDown, ChevronRight, X
-} from 'lucide-react';
 
 const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) => {
     const [logoutConfirm, setLogoutConfirm] = useState(false);
@@ -13,6 +8,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
         reports: true,
         analytics: true,
         management: false,
+        store: false,
         system: false
     });
 
@@ -29,28 +25,27 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
     const SectionHeader = ({ label, isOpen, onClick }) => (
         <div
             onClick={onClick}
-            className="flex items-center justify-between px-6 py-3 mt-2 cursor-pointer group select-none"
+            className="flex items-center justify-between px-5 py-2 mt-2 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
         >
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-600 transition-colors">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-600">
                 {label}
             </span>
-            {isOpen ?
-                <ChevronDown size={14} className="text-slate-300 group-hover:text-slate-500" /> :
-                <ChevronRight size={14} className="text-slate-300 group-hover:text-slate-500" />
-            }
+            <span className={`text-[10px] text-slate-300 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                ▼
+            </span>
         </div>
     );
 
-    const MenuItem = ({ icon: Icon, label, onClick, active = false, colorClass = "text-slate-600" }) => (
+    const MenuItem = ({ icon, label, onClick, active = false }) => (
         <div
             onClick={onClick}
             className={`
-                flex items-center gap-4 px-6 py-3 cursor-pointer transition-all border-l-4
-                ${active ? 'bg-blue-50 border-blue-500' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'}
+                flex items-center gap-3.5 px-5 py-2.5 cursor-pointer transition-all border-l-[3px]
+                ${active ? 'bg-blue-50/50 border-[#004AAD]' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'}
             `}
         >
-            <Icon size={20} className={active ? "text-blue-600" : colorClass} strokeWidth={2} />
-            <span className={`text-sm font-medium ${active ? 'text-blue-700' : 'text-slate-700'}`}>
+            <span className="text-lg w-6 text-center">{icon}</span>
+            <span className={`text-[13px] font-semibold ${active ? 'text-[#004AAD]' : 'text-slate-700'}`}>
                 {label}
             </span>
         </div>
@@ -59,37 +54,37 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
     // --- MENU CONTENT ---
     const MenuContent = () => (
         <div className={`
-            fixed top-0 left-0 h-full w-[280px] bg-white z-[1001] shadow-2xl flex flex-col
+            fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white z-[1001] shadow-2xl flex flex-col
             transform transition-transform duration-300 ease-out
             ${showMenu ? 'translate-x-0' : '-translate-x-full'}
         `}>
-            {/* 1. HEADER */}
-            <div className="relative h-40 bg-slate-900 flex flex-col justify-end p-6 border-b border-slate-100 overflow-hidden">
+            {/* 1. HEADER (Compact Blue/White) */}
+            <div className="relative bg-[#004AAD] flex flex-col justify-end p-5 pt-12 border-b border-[#003d8f] overflow-hidden shrink-0">
                 {/* Decorative Circles */}
-                <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-blue-500 rounded-full opacity-20 blur-xl"></div>
-                <div className="absolute top-[20px] left-[-10px] w-16 h-16 bg-purple-500 rounded-full opacity-20 blur-xl"></div>
+                <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-white rounded-full opacity-5 blur-2xl"></div>
+                <div className="absolute bottom-[-10px] left-[-10px] w-20 h-20 bg-blue-400 rounded-full opacity-20 blur-xl"></div>
 
-                {/* Close Button (Mobile convenience) */}
+                {/* Close Button */}
                 <button
                     onClick={closeMenu}
-                    className="absolute top-4 right-4 p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition"
+                    className="absolute top-3 right-3 p-1.5 bg-black/10 rounded-full text-white/80 hover:bg-black/20 transition backdrop-blur-sm"
                 >
-                    <X size={18} />
+                    ✕
                 </button>
 
                 <div className="relative z-10 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white/20">
+                    <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg shadow-inner border border-white/30 backdrop-blur-md">
                         {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                        <div className="text-white font-bold text-lg leading-tight">
+                        <div className="text-white font-bold text-base leading-tight truncate max-w-[160px]">
                             {user?.name || 'Guest'}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm">
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className="px-1.5 py-[2px] rounded text-[9px] font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10">
                                 {user?.role || 'Guest'}
                             </span>
-                            <span className="text-xs text-slate-300 font-medium">#{user?.store_code || 'TMG'}</span>
+                            <span className="text-[10px] text-blue-100 font-medium opacity-90">#{user?.store_code || 'TMG'}</span>
                         </div>
                     </div>
                 </div>
@@ -100,14 +95,14 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
 
                 {/* GLOBAL */}
                 <MenuItem
-                    icon={Home}
+                    icon="🏠"
                     label="Trang chủ"
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
                 {/* --- DAILY OPERATIONS --- */}
                 <SectionHeader
-                    label="Vận Hành Hàng Ngày"
+                    label="Vận Hành"
                     isOpen={expandedSections.reports}
                     onClick={() => toggleSection('reports')}
                 />
@@ -116,25 +111,22 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                     <div className="animate-in slide-in-from-left-2 duration-200">
                         {user?.role !== 'LEADER' && (
                             <MenuItem
-                                icon={FileEdit}
+                                icon="📝"
                                 label="Gửi Báo Cáo Ca"
-                                colorClass="text-blue-600"
                                 onClick={() => { closeMenu(); onNavigate('SHIFT_LOG'); }}
                             />
                         )}
 
                         {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
                             <MenuItem
-                                icon={ClipboardList}
+                                icon="📋"
                                 label="Báo Cáo Ca Trưởng"
-                                colorClass="text-indigo-600"
                                 onClick={() => { closeMenu(); onNavigate('LEADER_REPORT'); }}
                             />
                         )}
 
-                        {/* Feature Flags for Task Modules */}
                         {sysConfig?.featureFlags?.includes('MODULE_5S') && (
-                            <MenuItem icon={Award} label="Chấm điểm 5S" onClick={() => alert('Đang phát triển')} />
+                            <MenuItem icon="🧹" label="Chấm điểm 5S" onClick={() => alert('Đang phát triển')} />
                         )}
                     </div>
                 )}
@@ -143,30 +135,28 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                 {['LEADER', 'SM', 'OPS', 'ADMIN'].includes(user?.role) && (
                     <>
                         <SectionHeader
-                            label="Báo Cáo Quản Trị"
+                            label="Báo Cáo"
                             isOpen={expandedSections.analytics}
                             onClick={() => toggleSection('analytics')}
                         />
                         {expandedSections.analytics && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
                                 <MenuItem
-                                    icon={BarChart3}
+                                    icon="📊"
                                     label="Leader Dashboard"
                                     onClick={() => { closeMenu(); onNavigate('ANALYTICS_LEADER'); }}
                                 />
                                 {['SM', 'OPS', 'ADMIN'].includes(user?.role) && (
                                     <MenuItem
-                                        icon={TrendingUp}
+                                        icon="📈"
                                         label="SM Dashboard"
-                                        colorClass="text-emerald-600"
                                         onClick={() => { closeMenu(); onNavigate('ANALYTICS_SM'); }}
                                     />
                                 )}
                                 {['OPS', 'ADMIN', 'BOD'].includes(user?.role) && (
                                     <MenuItem
-                                        icon={Globe}
+                                        icon="🌍"
                                         label="OPS Dashboard Chain"
-                                        colorClass="text-purple-600"
                                         onClick={() => { closeMenu(); onNavigate('ANALYTICS_OPS'); }}
                                     />
                                 )}
@@ -175,56 +165,40 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                     </>
                 )}
 
-                {/* --- ADVANCED FEATURES --- */}
-                {(sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') || sysConfig?.featureFlags?.includes('MODULE_CAREER')) && (
-                    <>
-                        <SectionHeader label="Phát Triển & Game" isOpen={true} onClick={() => { }} />
-                        {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
-                            <MenuItem icon={Gamepad2} label="Thành tích Game" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
-                        )}
-                        {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
-                            <MenuItem icon={Award} label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
-                        )}
-                    </>
-                )}
-
-
-                {/* --- MANAGEMENT (ADMIN ONLY) --- */}
+                {/* --- MANAGEMENT --- */}
                 {['ADMIN', 'MANAGER', 'SM', 'OPS'].includes(user?.role) && (
                     <>
-                        {/* 1. STORE MANAGEMENT SUB-SECTION */}
                         <SectionHeader
                             label="Quản Lý Cửa Hàng"
                             isOpen={expandedSections.store}
                             onClick={() => toggleSection('store')}
                         />
                         {expandedSections.store && (
-                            <div className="animate-in slide-in-from-left-2 duration-200 border-l-2 border-slate-100 ml-6 my-1">
-                                <MenuItem icon={Store} label="Thông tin Tiệm" onClick={() => { closeMenu(); onNavigate('STORE_STORES'); }} />
-                                <MenuItem icon={Users} label="Ca Làm Việc" onClick={() => { closeMenu(); onNavigate('STORE_SHIFTS'); }} />
-                                <MenuItem icon={ClipboardList} label="Checklist Mẫu" onClick={() => { closeMenu(); onNavigate('STORE_CHECKLIST'); }} />
-                                <MenuItem icon={Award} label="Vai Trò (Role)" onClick={() => { closeMenu(); onNavigate('STORE_ROLES'); }} />
-                                <MenuItem icon={Users} label="Vị Trí (Position)" onClick={() => { closeMenu(); onNavigate('STORE_POSITIONS'); }} />
-                                <MenuItem icon={AlertTriangle} label="Loại Sự Cố" onClick={() => { closeMenu(); onNavigate('STORE_INCIDENTS'); }} />
-                                <MenuItem icon={Settings} label="Layout/Khu vưc" onClick={() => { closeMenu(); onNavigate('STORE_LAYOUTS'); }} />
+                            <div className="animate-in slide-in-from-left-2 duration-200 border-l border-slate-100 ml-6 my-1 pl-1">
+                                <MenuItem icon="🏪" label="Hồ sơ Cửa Hàng" onClick={() => { closeMenu(); onNavigate('STORE_STORES'); }} />
+                                <MenuItem icon="👥" label="Ca & Lịch Trực" onClick={() => { closeMenu(); onNavigate('STORE_SHIFTS'); }} />
+                                <MenuItem icon="📋" label="Bộ Checklist" onClick={() => { closeMenu(); onNavigate('STORE_CHECKLIST'); }} />
+                                <MenuItem icon="🛡️" label="Vai Trò" onClick={() => { closeMenu(); onNavigate('STORE_ROLES'); }} />
+                                <MenuItem icon="📍" label="Vị Trí" onClick={() => { closeMenu(); onNavigate('STORE_POSITIONS'); }} />
+                                <MenuItem icon="⚠️" label="Loại Sự Cố" onClick={() => { closeMenu(); onNavigate('STORE_INCIDENTS'); }} />
+                                <MenuItem icon="🏗️" label="Sơ đồ Khu vưc" onClick={() => { closeMenu(); onNavigate('STORE_LAYOUTS'); }} />
                             </div>
                         )}
 
                         <SectionHeader
-                            label="Quản Lý Hệ Thống"
+                            label="Hệ Thống"
                             isOpen={expandedSections.management}
                             onClick={() => toggleSection('management')}
                         />
                         {expandedSections.management && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
-                                <MenuItem icon={Users} label="Nhân Sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
-                                <MenuItem icon={Megaphone} label="Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
-                                <MenuItem icon={AlertTriangle} label="Sự Cố (Logs)" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
+                                <MenuItem icon="👥" label="Nhân Sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
+                                <MenuItem icon="📢" label="Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                                <MenuItem icon="⚠️" label="Nhật ký Sự Cố" onClick={() => { closeMenu(); onNavigate('INCIDENT_MANAGEMENT'); }} />
                                 {['ADMIN', 'OPS'].includes(user?.role) && (
                                     <MenuItem
-                                        icon={Settings}
+                                        icon="⚙️"
                                         label="Admin Console"
-                                        colorClass="text-rose-600"
                                         onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }}
                                     />
                                 )}
@@ -233,23 +207,36 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                     </>
                 )}
 
-                <div className="my-4 border-t border-slate-100 mx-6"></div>
+                {/* --- GAME & CAREER --- */}
+                {(sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') || sysConfig?.featureFlags?.includes('MODULE_CAREER')) && (
+                    <>
+                        <SectionHeader label="Phát Triển" isOpen={true} onClick={() => { }} />
+                        {sysConfig?.featureFlags?.includes('MODULE_GAMIFICATION') && (
+                            <MenuItem icon="🎮" label="Game & Thưởng" onClick={() => { closeMenu(); onNavigate('GAMIFICATION'); }} />
+                        )}
+                        {sysConfig?.featureFlags?.includes('MODULE_CAREER') && (
+                            <MenuItem icon="🏆" label="Hồ sơ năng lực" onClick={() => { closeMenu(); onNavigate('CAREER'); }} />
+                        )}
+                    </>
+                )}
 
-                <MenuItem icon={BookOpen} label="Hướng Dẫn" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
-                <MenuItem icon={Info} label="Giới Thiệu" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
+                <div className="my-3 border-t border-slate-100 mx-5 opacity-50"></div>
+
+                <MenuItem icon="📖" label="Hướng Dẫn" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
+                <MenuItem icon="ℹ️" label="Giới Thiệu" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
             </div>
 
             {/* 3. FOOTER */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50">
+            <div className="p-3 border-t border-slate-100 bg-slate-50/80">
                 <button
                     onClick={() => setLogoutConfirm(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-[0.98]"
                 >
-                    <LogOut size={16} />
+                    <span>🚪</span>
                     <span>Đăng xuất</span>
                 </button>
-                <div className="text-center mt-2 text-[10px] text-slate-400 font-mono">
-                    System v2.0 • Supabase
+                <div className="text-center mt-2 text-[9px] text-slate-400 font-mono tracking-wider opacity-60">
+                    TMG v2.0 • Supabase
                 </div>
             </div>
         </div>
@@ -271,23 +258,23 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
             {/* LOGOUT MODAL */}
             {logoutConfirm && (
                 <div className="fixed inset-0 z-[10002] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in zoom-in-95 duration-200">
-                    <div className="bg-white p-6 rounded-2xl w-full max-w-xs shadow-2xl text-center">
-                        <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <div className="bg-white p-5 rounded-2xl w-full max-w-[280px] shadow-2xl text-center">
+                        <div className="w-12 h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                             🚪
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2">Đăng xuất ngay?</h3>
-                        <p className="text-sm text-slate-500 mb-6">Bạn sẽ cần đăng nhập lại để tiếp tục công việc.</p>
+                        <h3 className="text-base font-bold text-slate-800 mb-1">Đăng xuất?</h3>
+                        <p className="text-xs text-slate-500 mb-5 leading-relaxed">Bạn sẽ cần đăng nhập lại để tiếp tục.</p>
 
-                        <div className="flex gap-3">
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => setLogoutConfirm(false)}
-                                className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50"
+                                className="flex-1 py-2 rounded-xl border border-slate-200 font-bold text-xs text-slate-600 hover:bg-slate-50"
                             >
                                 Hủy
                             </button>
                             <button
                                 onClick={() => { setLogoutConfirm(false); closeMenu(); onLogout(); }}
-                                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 shadow-lg shadow-rose-200"
+                                className="flex-1 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shadow-md shadow-rose-200"
                             >
                                 Đồng ý
                             </button>
@@ -298,5 +285,4 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
         </>
     );
 };
-
 export default TopMenu;

@@ -31,7 +31,6 @@ Hệ thống được xây dựng theo mô hình **Decoupled Architecture**:
 - **Framework**: React 18
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS (Mobile-First, Compact Design System)
-- **Icons**: Lucide React (Premium SVG Icons)
 - **State Management**: React Hooks (useState, useEffect, useContext)
 - **Routing**: React Router
 - **API Client**: Fetch API + Supabase JS Client (Read-only)
