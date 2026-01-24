@@ -6,6 +6,7 @@
 import express from 'express';
 import { supabase } from '../infra/supabase.client.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { SignalService } from '../domain/decision/signal.service.js';
 
 const router = express.Router();
 
@@ -66,6 +67,26 @@ router.post('/submit', async (req, res, next) => {
             console.error('Supabase Error:', error);
             throw new Error(error.message);
         }
+
+        // --- V3 DECISION ENGINE INTEGRATION ---
+        try {
+            const reportData = data[0];
+            // 1. Log Raw Event
+            const rawEvent = await SignalService.logRawEvent(
+                'LEADER_REPORT',
+                reportData,
+                payload.leaderId,
+                payload.store_id
+            );
+
+            if (rawEvent) {
+                // 2. Extract Signals
+                await SignalService.extractFromLeaderReport(rawEvent.id, reportData);
+            }
+        } catch (v3Error) {
+            console.error('V3 Decision Engine Integration Error (Non-blocking):', v3Error);
+        }
+        // --------------------------------------
 
         res.json({
             success: true,

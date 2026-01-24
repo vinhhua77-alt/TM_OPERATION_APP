@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { masterAPI } from '../api/master';
 import { leaderAPI } from '../api/leader';
 
-const PageLeaderReport = ({ user, onNavigate }) => {
+const PageLeaderReport = ({ user, onBack, onNavigate }) => {
     // 1. MASTER DATA STATE
     const [master, setMaster] = useState({
         checklist: [], incidents: [], staff: [], areas: [], shifts: [], stores: [],
@@ -10,13 +10,14 @@ const PageLeaderReport = ({ user, onNavigate }) => {
     });
 
     // 2. FORM STATE
+    // 2. FORM STATE
     const [formData, setFormData] = useState({
+        store_id: user?.storeCode || user?.store_code || '',
         area_code: '',
         startH: '',
         startM: '00',
-        startM: '00',
         endH: '',
-        endM: '',
+        endM: '00',
         has_peak: false,
         has_out_of_stock: false,
         has_customer_issue: false,
@@ -32,11 +33,11 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         next_shift_note: '',
         confirm_all: false,
         shiftErrorReason: '',
-        confirmWrongShift: false, // New confirm for unknown shift
+        confirmWrongShift: false,
         isOvernightShift: false
     });
 
-    const [loading, setLoading] = useState(false); // OPTIMIZED: Non-blocking (was true)
+    const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -46,7 +47,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
         setFormData(prev => ({
             ...prev,
             endH: now.getHours().toString().padStart(2, '0'),
-            endM: '00' // Enforce hourly
+            endM: '00'
         }));
 
         loadMasterData();
@@ -60,7 +61,9 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
                 // Initialize checklist
                 const initialChecklist = {};
-                (response.data.leaderChecklist || []).forEach(item => initialChecklist[item] = null);
+                (response.data.leaderChecklist || []).forEach(item => {
+                    initialChecklist[item] = null;
+                });
                 setFormData(prev => ({ ...prev, checklist: initialChecklist }));
             }
         } catch (error) {
@@ -70,32 +73,24 @@ const PageLeaderReport = ({ user, onNavigate }) => {
     };
 
     const filteredStaff = useMemo(() => {
-        // Filter staff by store if store is selected, else show all or empty
         if (!formData.store_id) return master.staff || [];
-
         const targetStore = String(formData.store_id).trim().toUpperCase();
-
         return (master.staff || []).filter(s => {
-            // Robust check: handle 'store' vs 'store_code' key, casing, and type
             const sCode = String(s.store || s.store_code || '').trim().toUpperCase();
             return sCode === targetStore;
         });
     }, [formData.store_id, master.staff]);
 
     const shiftStatus = useMemo(() => {
-        if (!master.shifts) return { type: 'loading', text: '...' };
-        if (!formData.endH) return { type: 'loading', text: '...' };
+        if (!master.shifts || !formData.startH || !formData.endH) return { type: 'loading', text: '---' };
 
-        const startTotal = parseInt(formData.startH) * 60 + parseInt(formData.startM);
-        const endTotal = parseInt(formData.endH) * 60 + parseInt(formData.endM);
+        const startTotal = parseInt(formData.startH) * 60 + parseInt(formData.startM || 0);
+        const endTotal = parseInt(formData.endH) * 60 + parseInt(formData.endM || 0);
 
-        if (endTotal === startTotal) return { type: 'error', text: '⚠️ GIờ RA PHẢI KHÁC GIờ VÀO' };
+        if (endTotal === startTotal) return { type: 'error', text: '⚠️ GIỜ RA PHẢI KHÁC GIỜ VÀO' };
 
         let duration = (endTotal - startTotal) / 60;
-
-        if (duration <= 0) {
-            return { type: 'error', text: '⚠️ GIỜ RA PHẢI LỚN HƠN GIỜ VÀO' };
-        }
+        if (duration < 0) duration += 24;
 
         const sApp = `${formData.startH}:${formData.startM}`;
         const eApp = `${formData.endH}:${formData.endM}`;
@@ -104,28 +99,21 @@ const PageLeaderReport = ({ user, onNavigate }) => {
 
         if (match) return { type: 'ok', text: `✔️ KHỚP CA: ${match.name}` };
 
-        // Unknown shift but valid times
         return { type: 'warning', text: `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${duration.toFixed(1)}H).`, showConfirm: true };
     }, [formData.startH, formData.startM, formData.endH, formData.endM, master.shifts]);
 
     const hasIncidentTrigger = useMemo(() => {
-        // LOGIC CHANGE: Top buttons (peak/stock/customer) do NOT trigger incident form automatically
-        // Only trigger if a checklist item is marked "false" (Không)
         return Object.values(formData.checklist).includes(false);
     }, [formData.checklist]);
 
     const isReadyToSubmit = useMemo(() => {
         const coreOk = formData.store_id && formData.area_code && formData.confirm_all;
-        // Check if all checklist items are answered (not null)
         const checklistDone = master.leaderChecklist?.length > 0 &&
             master.leaderChecklist.every(item => formData.checklist[item] !== null && formData.checklist[item] !== undefined);
 
         let shiftOk = false;
         if (shiftStatus.type === 'ok') shiftOk = true;
-        if (shiftStatus.type === 'warning') {
-            // Require confirmation and reason
-            if (formData.confirmWrongShift && formData.shiftErrorReason) shiftOk = true;
-        }
+        if (shiftStatus.type === 'warning' && formData.confirmWrongShift && formData.shiftErrorReason) shiftOk = true;
         const incidentOk = !hasIncidentTrigger || (formData.observed_issue_code && formData.observed_note && formData.observed_note.trim().length >= 5);
         const moodOk = formData.mood > 0; // Require mood selection
         const riskOk = formData.next_shift_risk !== ''; // Require risk selection
@@ -172,7 +160,7 @@ const PageLeaderReport = ({ user, onNavigate }) => {
                 ];
                 const randomMessage = messages[Math.floor(Math.random() * messages.length)];
                 alert(randomMessage);
-                onNavigate('HOME');
+                onBack();
             } else {
                 setError("❌ LỖI: " + (res.message || "Unknown error"));
             }
@@ -188,210 +176,234 @@ const PageLeaderReport = ({ user, onNavigate }) => {
     // if (loading) return <div className="p-4 text-center">Đang tải dữ liệu...</div>;
 
     return (
-        <div style={{ position: 'relative' }} className="fade-in">
-            {/* Header matches PageShiftLog */}
-            <div className="header">
-                <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" />
-                <h2 className="brand-title">BÁO CÁO LEAD CA</h2>
-                <div className="sub-title-dev">{user?.name || user?.username || 'User'} - {user?.role || 'Staff'}</div>
-            </div>
-
-            {master.announcement && (
-                <div style={{ background: '#FFFBEB', border: '1px solid #FEF3C7', padding: '6px 10px', borderRadius: '6px', display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px' }}>📢</span><div style={{ fontSize: '10px', color: '#B45309', fontWeight: '600' }}>{master.announcement}</div>
-                </div>
-            )}
-
-            {/* CHI NHÁNH & KHU VỰC */}
-            <div className="grid-2 mt-10">
-                <select className="input-login" value={formData.store_id} onChange={(e) => handleInputChange('store_id', e.target.value)}>
-                    <option value="">-- CHI NHÁNH --</option>
-                    {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.name || s.store_name}</option>)}
-                </select>
-                <select className="input-login" value={formData.area_code} onChange={(e) => handleInputChange('area_code', e.target.value)}>
-                    <option value="">-- KHU VỰC --</option>
-                    {master.areas?.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
-            </div>
-
-            {/* THỜI GIAN VÀO/RA */}
-            <div className="grid-2 mt-5">
-                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: formData.startH ? '#10B981' : '#94A3B8' }}>
-                        {formData.startH ? '✅ VÀO' : 'VÀO'}
-                    </span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: formData.startH ? '#10B981' : '#DDDDDD' }} value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
-                        <option value="">-- GIỜ --</option>
-                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                    </select>
-                    <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: formData.startM === '30' ? '#10B981' : '#DDDDDD' }} value={formData.startM || '00'} onChange={(e) => handleInputChange('startM', e.target.value)}>
-                        <option value="00">00</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: formData.endH ? '#10B981' : '#94A3B8' }}>
-                        {formData.endH ? '✅ RA' : 'RA'}
-                    </span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: formData.endH ? '#10B981' : '#DDDDDD' }} value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
-                        <option value="">-- GIỜ --</option>
-                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                    </select>
-                    <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: formData.endM === '30' ? '#10B981' : '#DDDDDD' }} value={formData.endM || '00'} onChange={(e) => handleInputChange('endM', e.target.value)}>
-                        <option value="00">00</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* STATUS BOX */}
-            <div style={{ padding: '8px', fontSize: '10px', borderRadius: '6px', margin: '6px 0', border: '1px solid', borderColor: shiftStatus.type === 'ok' ? '#86EFAC' : (shiftStatus.type === 'error' ? '#FCA5A5' : '#FCD34D'), background: shiftStatus.type === 'ok' ? '#F0FDF4' : (shiftStatus.type === 'error' ? '#FEF2F2' : '#FFFBEB'), color: shiftStatus.type === 'ok' ? '#166534' : (shiftStatus.type === 'error' ? '#B91C1C' : '#B45309') }}>
-                <div style={{ textAlign: 'center' }}>
-                    <b>{shiftStatus.text}</b>
-                </div>
-
-                {/* Show Confirm & Dropdown ONLY if Warning (Unknown Shift) */}
-                {shiftStatus.type === 'warning' && (
-                    <div style={{ marginTop: '4px', textAlign: 'center' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', marginBottom: '4px', fontSize: '9px' }}>
-                            <input type="checkbox" checked={formData.confirmWrongShift} onChange={(e) => handleInputChange('confirmWrongShift', e.target.checked)} />
-                            <span style={{ fontWeight: '700', color: '#B45309' }}>XÁC NHẬN ĐÂY LÀ GIỜ THỰC TẾ</span>
-                        </label>
-
-                        {/* Show Dropdown ONLY after confirming */}
-                        {formData.confirmWrongShift && (
-                            <select
-                                className="input-login"
-                                style={{ marginBottom: 0, fontSize: '10px', padding: '4px', borderColor: '#FCA5A5', color: formData.shiftErrorReason ? '#B91C1C' : '#999', fontWeight: formData.shiftErrorReason ? '700' : 'normal' }}
-                                value={formData.shiftErrorReason}
-                                onChange={(e) => handleInputChange('shiftErrorReason', e.target.value)}
-                            >
-                                <option value="">-- CHỌN LÝ DO --</option>
-                                <option value="ĐỔI CA">ĐỔI CA</option>
-                                <option value="ĐI TRỄ">ĐI TRỄ</option>
-                                <option value="VỀ SỚM">VỀ SỚM</option>
-                                <option value="TĂNG CA">TĂNG CA</option>
-                                <option value="CA GÃY">CA GÃY</option>
-                                <option value="KHẨN CẤP">KHẨN CẤP</option>
-                                <option value="HỖ TRỢ CHI NHÁNH">HỖ TRỢ CHI NHÁNH</option>
-                                <option value="ĐIỀU CHỈNH LỊCH">ĐIỀU CHỈNH LỊCH</option>
-                            </select>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* TRẠNG THÁI VẬN HÀNH */}
-            <div className="section-title" style={{ color: (formData.has_peak || formData.has_out_of_stock || formData.has_customer_issue) ? '#10B981' : '#004AAD' }}>
-                {(formData.has_peak || formData.has_out_of_stock || formData.has_customer_issue) ? '✅ TRẠNG THÁI VẬN HÀNH' : 'TRẠNG THÁI VẬN HÀNH'}
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '6px' }}>
-                {[{ id: 'has_peak', l: 'CA ĐÔNG' }, { id: 'has_out_of_stock', l: 'HẾT MÓN' }, { id: 'has_customer_issue', l: 'PHÀN NÀN' }].map(b => (
-                    <button key={b.id} className={`btn-login ${formData[b.id] ? '' : 'btn-outline'}`}
-                        style={{ flex: 1, padding: '8px 2px', fontSize: '10px', background: formData[b.id] ? '#004AAD' : '' }}
-                        onClick={() => handleInputChange(b.id, !formData[b.id])}>{b.l}</button>
-                ))}
-            </div>
-
-            {/* CHECKLIST */}
-            <div style={{ marginBottom: '10px' }}>
-                {master.leaderChecklist?.map(item => (
-                    <div key={item} className="checklist-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
-                        <span style={{ fontWeight: 600, fontSize: '11px', color: '#475569' }}>{item}</span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                            <button className={`btn-login ${formData.checklist[item] === true ? '' : 'btn-outline'}`}
-                                style={{ padding: '4px 10px', fontSize: '10px', width: 'auto', background: formData.checklist[item] === true ? '#10B981' : '' }}
-                                onClick={() => toggleChecklist(item, true)}>CÓ</button>
-                            <button className={`btn-login ${formData.checklist[item] === false ? '' : 'btn-outline'}`}
-                                style={{ padding: '4px 10px', fontSize: '10px', width: 'auto', background: formData.checklist[item] === false ? '#EF4444' : '' }}
-                                onClick={() => toggleChecklist(item, false)}>KHÔNG</button>
+        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
+            {/* LEADER HEADER */}
+            <div className={`shrink-0 bg-gradient-to-br from-emerald-600 to-teal-700 p-5 pb-10 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
+                <div className="relative z-10">
+                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-4 active:scale-95">
+                        ← Báo cáo ngày
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2 leading-none">
+                            📋
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black uppercase tracking-tight leading-none mb-0.5">LEADER LOG</h1>
+                            <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                                {user?.name} - {user?.role}
+                            </p>
                         </div>
                     </div>
-                ))}
-            </div>
-
-            {/* TRUY VẾT SỰ CỐ */}
-            {hasIncidentTrigger && (
-                <div style={{ padding: '8px', background: '#FFF1F2', borderRadius: '8px', border: '1px solid #FECACA', margin: '8px 0' }}>
-                    <div style={{ fontSize: '9px', fontWeight: 800, color: '#DC2626', marginBottom: '4px' }}>CHI TIẾT SỰ CỐ *</div>
-                    <select className="input-login" style={{ borderColor: '#FCA5A5', marginBottom: '4px', fontSize: '11px' }} value={formData.observed_issue_code} onChange={(e) => handleInputChange('observed_issue_code', e.target.value)}>
-                        <option value="">-- CHỌN LOẠI SỰ CỐ --</option>
-                        {master.leaderIncidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
-                    </select>
-                    <textarea className="input-login" style={{ height: '40px', borderColor: '#FCA5A5', marginBottom: 0, fontSize: '11px' }} placeholder="Mô tả & hướng giải quyết (min 5 ký tự)..." value={formData.observed_note} onChange={(e) => handleInputChange('observed_note', e.target.value)}></textarea>
                 </div>
-            )}
-
-            {/* CẢM NHẬN NHÂN SỰ */}
-            <div className="section-title" style={{ marginTop: '10px', color: formData.mood > 0 ? '#10B981' : '#004AAD' }}>
-                {formData.mood > 0 ? '✅ CA LÀM VIỆC HÔM NAY THẾ NÀO?' : 'CA LÀM VIỆC HÔM NAY THẾ NÀO?'}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: '#F8FAFC', borderRadius: '10px', marginBottom: '8px', border: '1px solid #E2E8F0' }}>
-                {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
-                    <span key={i} style={{ fontSize: '24px', cursor: 'pointer', opacity: formData.mood === (i + 1) ? 1 : 0.3, transform: formData.mood === (i + 1) ? 'scale(1.2)' : 'scale(1)', transition: '0.2s' }} onClick={() => handleInputChange('mood', i + 1)}>{m}</span>
-                ))}
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
+                <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-black/5 rounded-full blur-[60px]"></div>
             </div>
 
-            {/* GHI NHẬN NHÂN SỰ */}
-            <div className="section-title" style={{ color: (formData.khen_emp || formData.nhac_emp) ? '#10B981' : '#004AAD' }}>
-                {(formData.khen_emp || formData.nhac_emp) ? '✅ GHI NHẬN NHÂN SỰ' : 'GHI NHẬN NHÂN SỰ'}
+            {/* FORM AREA */}
+            <div className="flex-1 px-4 -mt-6 relative z-20 space-y-4">
+
+                {/* 1. STORE & AREA CARD */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chi nhánh & Khu vực</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <select
+                            className="bg-slate-50 border-none text-[11px] font-black text-slate-700 p-2.5 rounded-xl focus:ring-2 ring-emerald-500/20"
+                            value={formData.store_id}
+                            onChange={(e) => handleInputChange('store_id', e.target.value)}
+                        >
+                            <option value="">-- CHI NHÁNH --</option>
+                            {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.name || s.store_name}</option>)}
+                        </select>
+
+                        <select
+                            className="bg-slate-50 border-none text-[11px] font-black text-slate-700 p-2.5 rounded-xl focus:ring-2 ring-emerald-500/20"
+                            value={formData.area_code}
+                            onChange={(e) => handleInputChange('area_code', e.target.value)}
+                        >
+                            <option value="">-- KHU VỰC --</option>
+                            {master.areas?.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                {/* 2. TIME CARD */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian ca làm</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[8px] font-black text-slate-400 ml-1">GIỜ VÀO</label>
+                            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
+                                    <option value="">HH</option>
+                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                                </select>
+                                <span className="font-black text-slate-300">:</span>
+                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.startM || '00'} onChange={(e) => handleInputChange('startM', e.target.value)}>
+                                    <option value="00">00</option>
+                                    <option value="30">30</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[8px] font-black text-slate-400 ml-1">GIỜ RA</label>
+                            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
+                                    <option value="">HH</option>
+                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                                </select>
+                                <span className="font-black text-slate-300">:</span>
+                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.endM || '00'} onChange={(e) => handleInputChange('endM', e.target.value)}>
+                                    <option value="00">00</option>
+                                    <option value="30">30</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {shiftStatus && (
+                        <div className={`mt-3 p-2 rounded-xl text-[9px] font-black text-center ${shiftStatus.type === 'ok' ? 'bg-emerald-50 text-emerald-600' : (shiftStatus.type === 'error' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600')}`}>
+                            {shiftStatus.text}
+                            {shiftStatus.type === 'warning' && (
+                                <div className="mt-2 space-y-2">
+                                    <label className="flex items-center justify-center gap-2 cursor-pointer">
+                                        <input type="checkbox" className="rounded-md border-amber-300" checked={formData.confirmWrongShift} onChange={(e) => handleInputChange('confirmWrongShift', e.target.checked)} />
+                                        <span>XÁC NHẬN GIỜ THỰC TẾ</span>
+                                    </label>
+                                    {formData.confirmWrongShift && (
+                                        <select className="w-full bg-white border-none text-[9px] p-1.5 rounded-lg shadow-inner mt-1" value={formData.shiftErrorReason} onChange={(e) => handleInputChange('shiftErrorReason', e.target.value)}>
+                                            <option value="">-- CHỌN LÝ DO --</option>
+                                            <option value="ĐỔI CA">ĐỔI CA</option><option value="ĐI TRỄ">ĐI TRỄ</option><option value="VỀ SỚM">VỀ SỚM</option><option value="TĂNG CA">TĂNG CA</option>
+                                        </select>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. OPERATIONAL STATUS */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái vận hành</span>
+                    </div>
+                    <div className="flex gap-2">
+                        {[{ id: 'has_peak', l: 'CA ĐÔNG', icon: '🔥' }, { id: 'has_out_of_stock', l: 'HẾT MÓN', icon: '📦' }, { id: 'has_customer_issue', l: 'PHÀN NÀN', icon: '👤' }].map(b => (
+                            <button
+                                key={b.id}
+                                onClick={() => handleInputChange(b.id, !formData[b.id])}
+                                className={`flex-1 py-2.5 rounded-xl text-[9px] font-black transition-all active:scale-90 border shadow-sm ${formData[b.id] ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                            >
+                                <div className="text-xs mb-0.5">{b.icon}</div>
+                                {b.l}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="mt-4 space-y-1">
+                        {master.leaderChecklist?.map(item => (
+                            <div key={item} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
+                                <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{item}</span>
+                                <div className="flex bg-slate-100 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
+                                    <button onClick={() => toggleChecklist(item, true)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${formData.checklist[item] === true ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400 opacity-40'}`}>CÓ</button>
+                                    <button onClick={() => toggleChecklist(item, false)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${formData.checklist[item] === false ? 'bg-white text-rose-500 shadow-lg' : 'text-slate-400 opacity-40'}`}>KHÔNG</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {hasIncidentTrigger && (
+                        <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 space-y-2 animate-in zoom-in-95">
+                            <div className="text-[9px] font-black text-rose-500 uppercase tracking-tighter">🔒 BẮT BUỘC: CHI TIẾT SỰ CỐ</div>
+                            <select className="w-full bg-white border-none text-[10px] font-bold p-2 rounded-xl shadow-sm" value={formData.observed_issue_code} onChange={(e) => handleInputChange('observed_issue_code', e.target.value)}>
+                                <option value="">-- LOẠI SỰ CỐ --</option>
+                                {master.leaderIncidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
+                            </select>
+                            <textarea className="w-full bg-white border-none text-[11px] p-3 rounded-xl shadow-sm min-h-[50px] focus:ring-0" placeholder="Mô tả & hướng giải quyết..." value={formData.observed_note} onChange={(e) => handleInputChange('observed_note', e.target.value)} />
+                        </div>
+                    )}
+                </div>
+
+                {/* 4. MOOD & STAFF FEEDBACK */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
+                    </div>
+                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100">
+                        {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
+                            <span
+                                key={i}
+                                onClick={() => handleInputChange('mood', i + 1)}
+                                className={`text-2xl cursor-pointer transition-all active:scale-125 ${formData.mood === (i + 1) ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}
+                            >
+                                {m}
+                            </span>
+                        ))}
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ghi nhận nhân sự</span>
+                        </div>
+                        {/* KHEN */}
+                        <div className="grid grid-cols-3 gap-2 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
+                            <div className="text-[8px] font-black text-emerald-600 flex items-center justify-center bg-white rounded-lg shadow-sm">👍 KHEN</div>
+                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.khen_emp} onChange={(e) => handleInputChange('khen_emp', e.target.value)}>
+                                <option value="">Nhân viên</option>
+                                {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.khen_topic} onChange={(e) => handleInputChange('khen_topic', e.target.value)}>
+                                <option value="">Chủ đề</option><option>Thái độ</option><option>Tốc độ</option>
+                            </select>
+                        </div>
+                        {/* NHẮC */}
+                        <div className="grid grid-cols-3 gap-2 bg-rose-50/50 p-2 rounded-2xl border border-rose-100">
+                            <div className="text-[8px] font-black text-rose-500 flex items-center justify-center bg-white rounded-lg shadow-sm">⚠️ NHẮC</div>
+                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.nhac_emp} onChange={(e) => handleInputChange('nhac_emp', e.target.value)}>
+                                <option value="">Nhân viên</option>
+                                {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.nhac_topic} onChange={(e) => handleInputChange('nhac_topic', e.target.value)}>
+                                <option value="">Chủ đề</option><option>Sai SOP</option><option>Vệ sinh</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 5. HANDOVER & SUBMIT */}
+                <div className="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                        <select className="bg-slate-50 border-none text-[10px] font-black p-2.5 rounded-xl text-slate-700" value={formData.next_shift_risk} onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}>
+                            <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
+                        </select>
+                        <textarea className="bg-slate-50 border-none text-[10px] p-2.5 rounded-xl min-h-[40px] focus:ring-0" placeholder="Dặn dò ca sau..." value={formData.next_shift_note} onChange={(e) => handleInputChange('next_shift_note', e.target.value)} />
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-slate-100/50 rounded-2xl border border-slate-100">
+                        <input type="checkbox" className="rounded-md border-slate-300 w-5 h-5 text-emerald-600 focus:ring-emerald-500" checked={formData.confirm_all} onChange={(e) => handleInputChange('confirm_all', e.target.checked)} />
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter leading-tight">Cam kết các dữ liệu trên là đúng.</span>
+                    </div>
+
+                    {error && <p className="text-rose-500 text-[9px] font-black text-center animate-bounce">{error}</p>}
+
+                    <button
+                        className={`w-full py-4 rounded-[24px] font-black text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 ${!isReadyToSubmit ? 'bg-slate-200 text-slate-400' : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:shadow-emerald-200'}`}
+                        onClick={handleSubmit}
+                        disabled={submitting || !isReadyToSubmit}
+                    >
+                        {submitting ? 'ĐANG GỬI...' : 'GỬI BÁO CÁO VẬN HÀNH 🏆'}
+                    </button>
+
+                    <button onClick={onBack} className="w-full text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-emerald-600 transition-colors">
+                        QUAY LẠI TRUNG TÂM BÁO CÁO
+                    </button>
+                </div>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1fr', gap: '4px', marginBottom: '4px' }}>
-                <div style={{ fontSize: '8px', fontWeight: 900, color: '#10B981', border: '1px solid #BBF7D0', padding: '6px', borderRadius: '6px', textAlign: 'center', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👍 KHEN</div>
-                <select className="input-login" style={{ marginBottom: 0, fontSize: '10px', padding: '4px', height: '32px' }} value={formData.khen_emp} onChange={(e) => handleInputChange('khen_emp', e.target.value)}>
-                    <option value="">Nhân viên</option>
-                    {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                <select className="input-login" style={{ marginBottom: 0, fontSize: '10px', padding: '4px', height: '32px' }} value={formData.khen_topic} onChange={(e) => handleInputChange('khen_topic', e.target.value)}>
-                    <option value="">Chủ đề</option><option>Thái độ tốt</option><option>Tốc độ nhanh</option>
-                </select>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1fr', gap: '4px', marginBottom: '6px' }}>
-                <div style={{ fontSize: '8px', fontWeight: 900, color: '#EF4444', border: '1px solid #FCA5A5', padding: '6px', borderRadius: '6px', textAlign: 'center', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚠️ NHẮC</div>
-                <select className="input-login" style={{ marginBottom: 0, fontSize: '10px', padding: '4px', height: '32px' }} value={formData.nhac_emp} onChange={(e) => handleInputChange('nhac_emp', e.target.value)}>
-                    <option value="">Nhân viên</option>
-                    {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                <select className="input-login" style={{ marginBottom: 0, fontSize: '10px', padding: '4px', height: '32px' }} value={formData.nhac_topic} onChange={(e) => handleInputChange('nhac_topic', e.target.value)}>
-                    <option value="">Chủ đề</option><option>Sai SOP</option><option>Vệ sinh kém</option>
-                </select>
-            </div>
-
-            {/* BÀN GIAO & RỦI RO */}
-            <div className="grid-2 mt-5">
-                <select className="input-login" style={{ fontWeight: 800, color: formData.next_shift_risk ? '#004AAD' : '#999', fontSize: '10px' }} value={formData.next_shift_risk} onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}>
-                    <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
-                </select>
-                <textarea className="input-login" style={{ height: '38px', marginBottom: 0, fontSize: '10px' }} placeholder="Dặn dò ca sau..." value={formData.next_shift_note} onChange={(e) => handleInputChange('next_shift_note', e.target.value)}></textarea>
-            </div>
-
-            {/* CAM KẾT & GỬI */}
-            <div className="mt-10" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                <input type="checkbox" checked={formData.confirm_all} style={{ width: '18px', height: '18px', cursor: 'pointer' }} onChange={(e) => handleInputChange('confirm_all', e.target.checked)} />
-                <span style={{ fontSize: '9px', fontWeight: 800, color: '#004AAD' }}>TÔI CAM KẾT CÁC DỮ LIỆU TRÊN LÀ ĐÚNG</span>
-            </div>
-
-            {error && <p style={{ color: '#EF4444', fontSize: '10px', fontWeight: '800', textAlign: 'center', margin: '8px 0' }}>{error}</p>}
-
-            <button
-                className="btn-login mt-10"
-                style={{ height: '50px', background: !isReadyToSubmit ? '#CBD5E1' : (submitting ? '#CCC' : '#004AAD'), cursor: isReadyToSubmit ? 'pointer' : 'not-allowed' }}
-                onClick={handleSubmit}
-                disabled={submitting || !isReadyToSubmit}
-            >
-                {submitting ? 'ĐANG GỬI...' : 'GỬI BÁO CÁO VẬN HÀNH'}
-            </button>
-
-            <div className="text-center mt-5">
-                <button onClick={() => onNavigate('HOME')} className="sub-title-dev" style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD' }}>
-                    QUAY LẠI TRANG CHỦ
-                </button>
-            </div>
-
         </div>
     );
 };

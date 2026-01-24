@@ -281,6 +281,18 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
         )}
 
       </div>
+
+      {/* FLOATING ACTION BUTTON FOR REPORTING */}
+      <button
+        onClick={() => onNavigate('SHIFT_LOG')}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-xl flex items-center justify-center text-2xl active:scale-95 transition-all z-[100] border border-white/20"
+      >
+        📝
+        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+        </span>
+      </button>
     </div>
   );
 };

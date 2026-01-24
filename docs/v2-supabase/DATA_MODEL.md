@@ -97,6 +97,7 @@ The data model follows these **immutable principles**:
 | store_code | TEXT | FK → store_list.store_code |
 | active | BOOLEAN | Active status |
 | tenant_id | TEXT | FK → tenants.tenant_id |
+| responsibility | JSONB | List of store_codes managed by user (for AM/OPS) |
 | created_at | TIMESTAMPTZ | Creation timestamp |
 | updated_at | TIMESTAMPTZ | Last update timestamp |
 
@@ -117,6 +118,8 @@ The data model follows these **immutable principles**:
 | shift_name | TEXT | Display name |
 | start_hour | TEXT | Start time (HH:MM format) |
 | end_hour | TEXT | End time (HH:MM format) |
+| type | TEXT | Classification (FT, PT, GÃY, OT) - Auto-calculated |
+| time_slot | TEXT | Time slot (SÁNG, CHIỀU) - Auto-calculated |
 | active | BOOLEAN | Active status |
 | created_at | TIMESTAMPTZ | Creation timestamp |
 | updated_at | TIMESTAMPTZ | Last update timestamp |

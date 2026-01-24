@@ -79,6 +79,13 @@ export class AccessService {
     }
 
     /**
+     * Get system summary counts
+     */
+    static async getSystemSummary() {
+        return await AccessRepo.getSystemSummary();
+    }
+
+    /**
      * Get System Audit Logs
      */
     static async getAuditLogs(limit = 100) {

@@ -30,6 +30,19 @@ router.get('/console', authenticateToken, requireAdminOrOps, async (req, res, ne
 });
 
 /**
+ * GET /api/admin/summary
+ * Get system-wide counts (Tenants, Brands, Stores, Staff)
+ */
+router.get('/summary', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+    try {
+        const data = await AccessService.getSystemSummary();
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * POST /api/admin/config
  * Update Feature Flag or Permission
  * Payload: { type: 'FEATURE_FLAG' | 'PERMISSION', ...data }

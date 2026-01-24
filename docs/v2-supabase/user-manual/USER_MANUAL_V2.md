@@ -55,6 +55,15 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 3. **Bộ sưu tập Huy hiệu**: Các danh hiệu ghi nhận nỗ lực đặc biệt của bạn (VD: Thần tốc, Người hùng).
 4. **Gửi cảm nghĩ (+50 XP)**: Mỗi ngày bạn có thể chia sẻ cảm nghĩ để nhận thêm điểm XP.
 
+### 2.4. Lộ trình Tập sự Quản lý (💎 Trainee Mode)
+Nếu bạn đang trong lộ trình phát triển năng lực:
+1. Tại trang **Gửi Báo Cáo**, bật nút gạt **💎 TẬP SỰ QUẢN LÝ**.
+2. Chọn vị trí bạn đang tập sự (hệ thống tự lọc theo cấp bậc hiện tại):
+   - **Đối với Staff**: Tập sự Thu Ngân hoặc Tập sự Leader.
+   - **Đối với Leader**: Trợ lý SM hoặc Tập sự AM (Area Manager).
+3. Hệ thống sẽ mở khóa giao diện quản lý tương ứng (Checklist Quản trị V8, Sáng kiến cải tiến).
+4. Dữ liệu tập sự được Decision Engine ghi nhận riêng để đánh giá thăng tiến.
+
 ---
 
 ## 3. DÀNH CHO CA TRƯỞNG (LEADER)
@@ -98,6 +107,13 @@ Tính năng quản trị nâng cao giúp kiểm soát hệ thống:
     - Dành cho bộ phận Kiểm soát.
     - Xem lại toàn bộ lịch sử hoạt động hệ thống: Ai làm gì, Khi nào, Thay đổi giá trị từ A sang B.
     - Cột "Time" và tiêu đề luôn được cố định để dễ tra cứu khi danh sách dài.
+
+### 4.4. Quản lý Vùng (AM Assignment)
+Dành cho OPS/Admin để gán cửa hàng cho Area Manager (AM):
+1. Truy cập **Setup Center** > Chọn Tab **QUẢN LÝ VÙNG (👔)**.
+2. Danh sách các AM sẽ hiện ra cùng với Ma trận cửa hàng.
+3. Muốn AM nào quản lý store nào, chỉ cần **Tick chọn** vào mã cửa hàng tương ứng.
+4. Hệ thống tự động cập nhật quyền truy cập dữ liệu và báo cáo cho AM đó ngay lập tức.
 
 ---
 

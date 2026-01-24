@@ -9,10 +9,16 @@ export class MasterDataService {
     // ==================== STORE ====================
 
     static async getAllStores(currentUser) {
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+        if (!['ADMIN', 'OPS', 'AM'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
-        return await MasterDataRepo.getAllStores();
+
+        const filters = {};
+        if (currentUser.responsibility && Array.isArray(currentUser.responsibility) && currentUser.responsibility.length > 0) {
+            filters.store_codes = currentUser.responsibility;
+        }
+
+        return await MasterDataRepo.getAllStores(filters);
     }
 
     static async createStore(currentUser, storeData) {
@@ -240,5 +246,69 @@ export class MasterDataService {
             throw new Error('Unauthorized');
         }
         return await MasterDataRepo.deleteShift(id);
+    }
+
+    // ==================== TENANTS ====================
+    static async getAllTenants(currentUser) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.getAllTenants();
+    }
+
+    static async createTenant(currentUser, tenantData) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        if (!tenantData.tenant_id || !tenantData.tenant_name) {
+            throw new Error('tenant_id and tenant_name are required');
+        }
+        return await MasterDataRepo.createTenant(tenantData);
+    }
+
+    static async updateTenant(currentUser, id, updates) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.updateTenant(id, updates);
+    }
+
+    static async deleteTenant(currentUser, id) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.deleteTenant(id);
+    }
+
+    // ==================== BRANDS ====================
+    static async getAllBrands(currentUser) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.getAllBrands();
+    }
+
+    static async createBrand(currentUser, brandData) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        if (!brandData.brand_code || !brandData.brand_name || !brandData.tenant_id) {
+            throw new Error('brand_code, brand_name and tenant_id are required');
+        }
+        return await MasterDataRepo.createBrand(brandData);
+    }
+
+    static async updateBrand(currentUser, id, updates) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.updateBrand(id, updates);
+    }
+
+    static async deleteBrand(currentUser, id) {
+        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await MasterDataRepo.deleteBrand(id);
     }
 }

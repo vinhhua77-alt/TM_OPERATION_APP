@@ -10,10 +10,23 @@ export class StaffService {
     /**
      * Get all staff with filters (admin only)
      */
-    static async getAllStaff(currentUser, filters) {
-        // Permission check: Only ADMIN and OPS can access
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
-            throw new Error('Unauthorized: Only ADMIN or OPS can access staff management');
+    static async getAllStaff(currentUser, filters = {}) {
+        // Permission check: SM, OPS, ADMIN, LEADER, AM
+        const authorizedRoles = ['ADMIN', 'OPS', 'SM', 'LEADER', 'AM'];
+        if (!authorizedRoles.includes(currentUser.role)) {
+            throw new Error('Unauthorized: No access to staff management');
+        }
+
+        // 1. Isolation logic for SM & LEADER (Store level)
+        if (currentUser.role === 'SM' || currentUser.role === 'LEADER') {
+            filters.store_code = currentUser.storeCode || currentUser.store_code;
+        }
+
+        // 2. Responsibility logic for OPS & AM (Area level)
+        // If they have a responsibility list, we filter by it
+        // If responsibility is empty and role is OPS/ADMIN, they see everything (ALL)
+        if (currentUser.responsibility && Array.isArray(currentUser.responsibility) && currentUser.responsibility.length > 0) {
+            filters.store_codes = currentUser.responsibility;
         }
 
         try {
@@ -30,12 +43,14 @@ export class StaffService {
      */
     static async getStatistics(currentUser) {
         // Permission check
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
-            throw new Error('Unauthorized: Only ADMIN or OPS can access statistics');
+        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+            throw new Error('Unauthorized: No access to statistics');
         }
 
         try {
-            const stats = await UserRepo.getStatistics();
+            // SM gets stats filtered by their store
+            const storeCode = currentUser.role === 'SM' ? (currentUser.storeCode || currentUser.store_code) : null;
+            const stats = await UserRepo.getStatistics(storeCode);
             return stats;
         } catch (error) {
             console.error('StaffService.getStatistics error:', error);
@@ -48,16 +63,25 @@ export class StaffService {
      */
     static async bulkActivate(currentUser, staffIds) {
         // Permission check
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
-            throw new Error('Unauthorized: Only ADMIN or OPS can activate staff');
+        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+            throw new Error('Unauthorized: No permission to activate staff');
         }
 
-        // Input validation
         if (!Array.isArray(staffIds) || staffIds.length === 0) {
             throw new Error('Invalid input: staffIds must be a non-empty array');
         }
 
         try {
+            // If SM, verify staff belong to their store
+            if (currentUser.role === 'SM') {
+                const targetStaff = await UserRepo.getAllStaff({ ids: staffIds });
+                const storeCode = currentUser.storeCode || currentUser.store_code;
+                const unauthorized = targetStaff.some(s => s.store_code !== storeCode);
+                if (unauthorized) {
+                    throw new Error('Unauthorized: You can only activate staff from your own store');
+                }
+            }
+
             const result = await UserRepo.bulkActivate(staffIds);
             return {
                 activated: result.length,
@@ -89,7 +113,7 @@ export class StaffService {
 
         // Validate role if being updated
         if (updates.role) {
-            const validRoles = ['ADMIN', 'OPS', 'SM', 'LEADER', 'STAFF'];
+            const validRoles = ['ADMIN', 'BOD', 'OPS', 'AM', 'SM', 'LEADER', 'STAFF'];
             if (!validRoles.includes(updates.role)) {
                 throw new Error(`Invalid role: ${updates.role}`);
             }

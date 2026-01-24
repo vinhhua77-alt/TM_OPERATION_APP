@@ -609,7 +609,35 @@ Ensure staff status (PENDING/ACTIVE) and `active` flag (true/false) are synchron
 
 ---
 
-## 15. RELATED DOCUMENTATION
+## 15. FLOW 14 – AM ASSIGNMENT (AM-STORE MAPPING)
+**Version**: 1.0 (2026-01-25)
+
+### 15.1. Business Flow
+OPS or Admin assigns a list of stores to an Area Manager (AM).
+
+### 15.2. Technical Flow
+```
+1. Admin opens Setup Center > Tab "QUẢN LÝ VÙNG"
+2. Frontend loads all AMs: GET /api/staff?role=AM
+3. Admin clicks store_code buttons for an AM
+4. Frontend: PUT /api/staff/:staff_id { responsibility: ["ST001", "ST002"] }
+5. Backend: StaffService.updateStaff()
+   - Cleans payload (UI fields)
+   - Performs update in staff_master.responsibility
+6. Effect: Next time AM loads dashboard settings, they can view these stores.
+```
+
+### 15.3. Code Mapping
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Frontend | `PageStoreSetup.jsx` | Assignment Matrix UI |
+| API Client | `api/staff.js` | GET /api/staff, PUT /api/staff/:id |
+| Domain | `StaffService.js` | Update logic & payload cleaning |
+| Repository | `UserRepo.js` | DB UPDATE responsibility |
+
+---
+
+## 16. RELATED DOCUMENTATION
 
 - [ANTIGRAVITY_RULES.md](./ANTIGRAVITY_RULES.md) - Rules 02, 03, 09
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture

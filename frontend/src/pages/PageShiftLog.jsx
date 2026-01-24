@@ -1,42 +1,46 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { masterAPI } from '../api/master';
 import { shiftAPI } from '../api/shift';
-// REMOVED: import BottomNav from '../components/BottomNav';
+import { leaderAPI } from '../api/leader';
 
-const PageShiftLog = ({ user, onNavigate, onLogout }) => {
-    const [master, setMaster] = useState({ stores: [], layouts: {}, leaders: [], shifts: [] });
-    const [loading, setLoading] = useState(false); // Non-blocking
-    const [photo, setPhoto] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
+const PageShiftLog = ({ user, onBack }) => {
+    // 1. Phân quyền và Logic Role
+    const isLeader = useMemo(() => ['LEADER', 'SM', 'ADMIN', 'OPS', 'BOD'].includes(user?.role), [user?.role]);
+
+    const [master, setMaster] = useState({
+        stores: [], layouts: {}, leaders: [], shifts: [],
+        staff: [], areas: [], leaderChecklist: [], leaderIncidents: []
+    });
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showSuccess, setShowSuccess] = useState(false); // New success state
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showMoodModal, setShowMoodModal] = useState(false);
+    const [activePhrase, setActivePhrase] = useState("");
 
-    const FEELINGS = [
-        { id: 'OK', label: '🔥 CHÁY HẾT MÌNH - NĂNG LƯỢNG FULL', icon: '🟢', color: '#10B981' },
-        { id: 'BUSY', label: '💪 HƠI RUSH NHƯNG VẪN CHIẾN', icon: '🟡', color: '#EAB308' },
-        { id: 'FIXED', label: '⚡ CÓ DRAMA NHƯNG ĐÃ XONG', icon: '🟠', color: '#F97316' },
-        { id: 'OPEN', label: '😰 CÓ VẤN ĐỀ - CẦN SUPPORT', icon: '🔴', color: '#EF4444' },
-        { id: 'OVER', label: '🆘 QUÁ TẢI - KHÔNG HANDLE NỔI', icon: '⚫', color: '#333' }
-    ];
-    const REASONS = ["NHÂN SỰ", "KHÁCH HÀNG", "THIẾT BỊ", "QUY TRÌNH", "DỊCH VỤ", "KHÁC"];
-    const SHIFT_ERROR_REASONS = [
-        "ĐỔI CA",
-        "ĐI TRỄ",
-        "VỀ SỚM",
-        "TĂNG CA",
-        "CA GÃY",
-        "KHẨN CẤP",
-        "HỖ TRỢ CHI NHÁNH",
-        "ĐIỀU CHỈNH LỊCH"
+    const MOOD_CONFIG = {
+        OK: { icon: '😊', modalBg: 'bg-emerald-900/90', phrases: ["Hết nước chấm", "Đỉnh của chóp", "Mướt mải luôn", "10 điểm không có nhưng", "Hệ chiến", "Out trình"] },
+        BUSY: { icon: '💪', modalBg: 'bg-blue-900/90', phrases: ["Vẫn ổn áp", "Trộm vía nha", "Vẫn chiến tốt", "Level up", "Khá là oke", "Mượt mà"] },
+        FIXED: { icon: '⚡', modalBg: 'bg-amber-900/90', phrases: ["Tới công chuyện", "Drama quá trời", "Úi giời ơi", "Lật kèo phút chót", "Sóng gió"] },
+        OPEN: { icon: '😰', modalBg: 'bg-rose-900/90', phrases: ["Ét ô ét", "Dối lòng quá", "Hơi biến biến", "Cần support gấp", "Muốn gục ngã"] },
+        OVER: { icon: '💀', modalBg: 'bg-slate-950/95', phrases: ["Xu cà na", "Ra chuồng gà", "Toang thật sự", "Game over", "Hết ơi rồi"] }
+    };
+
+    const REASONS = [
+        { id: 'SOP', label: 'QUY TRÌNH', icon: '📋' },
+        { id: 'EQUIP', label: 'THIẾT BỊ', icon: '⚙️' },
+        { id: 'TEAM', label: 'ĐỒNG ĐỘI', icon: '🤝' },
+        { id: 'GUEST', label: 'KHÁCH HÀNG', icon: '👤' },
+        { id: 'VIBE', label: 'MÔI TRƯỜNG', icon: '✨' },
+        { id: 'STOCK', label: 'HÀNG HÓA', icon: '📦' }
     ];
 
     const [form, setForm] = useState({
-        storeId: user?.storeCode || '',
-        lead: '', // Default empty to force selection or confirmation
+        storeId: user?.store_code || user?.storeCode || '',
+        lead: '',
         startH: '',
         startM: '00',
         endH: new Date().getHours().toString().padStart(2, '0'),
-        endM: '00', // Enforce hourly
+        endM: '00',
         layout: '',
         subPos: '',
         checks: {},
@@ -46,395 +50,448 @@ const PageShiftLog = ({ user, onNavigate, onLogout }) => {
         selectedReasons: [],
         isCommitted: false,
         shiftErrorReason: '',
-        confirmWrongShift: false, // New confirm for unknown shift
-        confirmOvernightShift: false
+        confirmWrongShift: false,
+        hasPeak: false,
+        hasOutOfStock: false,
+        hasCustomerIssue: false,
+        khenEmp: '', khenTopic: '', nhacEmp: '', nhacTopic: '',
+        nextShiftRisk: '', nextShiftNote: '', improvementNote: '',
+        // Trainee Mode Fields
+        isTraineeMode: false, traineePos: ''
     });
 
-    useEffect(() => {
-        loadMasterData();
-    }, []);
-
-    // Auto-select user's store after master data loads
-    useEffect(() => {
-        if (master.stores?.length > 0 && user?.storeCode && !form.storeId) {
-            const userStore = master.stores.find(s => s.store_code === user.storeCode);
-            if (userStore) {
-                // Keep lead empty when auto-selecting store
-                setForm(prev => ({ ...prev, storeId: user.storeCode }));
-            }
-        }
-    }, [master.stores, user?.storeCode]);
+    useEffect(() => { loadMasterData(); }, []);
 
     const loadMasterData = async () => {
         try {
             const response = await masterAPI.getMasterData();
-            if (response.success && response.data) {
-                setMaster(response.data);
-            }
-        } catch (error) {
-            console.error('Error loading master data:', error);
-            setError('Không thể tải dữ liệu hệ thống');
-        }
+            if (response.success && response.data) setMaster(response.data);
+        } catch (error) { setError('Không thể tải dữ liệu hệ thống'); }
     };
 
-
-    useEffect(() => { if (error) setError(''); }, [form, photo]);
-
     const filteredLeaders = useMemo(() => {
-        if (!form.storeId) return [];
-        return (master.leaders || []).filter(l => String(l.store_code).trim().toUpperCase() === String(form.storeId).trim().toUpperCase());
+        const targetStore = (form.storeId || '').toString().trim().toUpperCase();
+        if (!targetStore) return [];
+        return (master.leaders || []).filter(l => String(l.store_code || '').trim().toUpperCase() === targetStore);
     }, [form.storeId, master.leaders]);
+
+    const filteredStaff = useMemo(() => {
+        const targetStore = (form.storeId || '').toString().trim().toUpperCase();
+        if (!targetStore) return master.staff || [];
+        return (master.staff || []).filter(s => String(s.store || s.store_code || '').trim().toUpperCase() === targetStore);
+    }, [form.storeId, master.staff]);
 
     const shiftInfo = useMemo(() => {
         if (!form.startH || !form.endH) return null;
         const sApp = `${form.startH}:${form.startM}`;
         const eApp = `${form.endH}:${form.endM}`;
-
         const startTotal = parseInt(form.startH) * 60 + parseInt(form.startM);
         const endTotal = parseInt(form.endH) * 60 + parseInt(form.endM);
-
         let duration = (endTotal - startTotal) / 60;
-
-        if (duration <= 0) {
-            return { match: null, duration: 0, isCorrect: false, error: 'GIỜ RA PHẢI LỚN HƠN GIỜ VÀO' };
-        }
-
+        if (duration < 0) duration += 24;
+        if (duration === 0) return { error: 'GIỜ RA PHẢI KHÁC GIỜ VÀO' };
         const match = master.shifts?.find(s => s.start === sApp && s.end === eApp);
-
-        return {
-            match,
-            duration: duration.toFixed(1),
-            isCorrect: !!match,
-            showConfirm: !match, // Show confirmation controls if no match
-        };
+        return { match, duration: duration.toFixed(1), isCorrect: !!match };
     }, [form.startH, form.startM, form.endH, form.endM, master.shifts]);
 
-    const hasNoCheck = Object.values(form.checks).includes('no');
+    const hasNoCheck = useMemo(() => Object.values(form.checks).includes('no'), [form.checks]);
 
     const isReadyToSubmit = useMemo(() => {
-        // Core fields (Lead & SubPos now MANDATORY)
-        if (!form.storeId || !form.layout || !form.rating || !form.startH || !form.isCommitted || !form.lead) return false;
+        const isActingLeader = isLeader || form.isTraineeMode;
 
-        // Sub Position Requirement
-        if (master.layouts?.[form.layout]?.subPositions?.length > 0 && !form.subPos) return false;
+        if (!form.storeId || !form.rating || !form.startH || !form.isCommitted) return false;
+        if (!form.layout) return false;
+        if (isActingLeader && !form.nextShiftRisk) return false;
+        if (!isActingLeader && (!form.lead || form.selectedReasons.length === 0)) return false;
+        if (!isActingLeader && master.layouts[form.layout]?.subPositions?.length > 0 && !form.subPos) return false;
+        if (hasNoCheck && (!form.incidentType || !form.incidentNote || form.incidentNote.trim().length < 5)) return false;
+        if (shiftInfo?.error || (shiftInfo && !shiftInfo.isCorrect && (!form.confirmWrongShift || !form.shiftErrorReason))) return false;
 
-        // Reason logic: If rating is NOT OK and NO checklist failure, must select reason
-        if (!hasNoCheck && form.rating !== 'OK' && form.selectedReasons.length === 0) return false;
-
-        // Incident logic: If checklist has 'no', must have incident type & note
-        if (hasNoCheck) {
-            if (!form.incidentType || !form.incidentNote || form.incidentNote.trim().length < 5) return false;
-        }
-
-        // Shift logic: Must not have time error (Start > End)
-        // If "Unknown Shift" (!isCorrect), MUST confirm wrong shift AND select reason.
-        if (shiftInfo) {
-            if (shiftInfo.error) return false;
-            if (!shiftInfo.isCorrect) {
-                // Unknown shift: must confirm AND provide reason
-                if (!form.confirmWrongShift || !form.shiftErrorReason) return false;
-            }
-        }
-
-        return true;
-    }, [form, hasNoCheck, shiftInfo]);
-
-    const leadSelectRef = React.useRef(null);
-
-    const handleCheckBeforeSubmit = () => {
-        // Validation handled by isReadyToSubmit (button disabled if invalid)
-        executeSubmit();
-    };
+        const areaCheckCount = master.layouts[form.layout]?.checklist?.length || 0;
+        const leadCheckCount = isActingLeader ? (master.layouts['LEAD']?.checklist?.length || 0) : 0;
+        return Object.keys(form.checks).length >= (areaCheckCount + leadCheckCount);
+    }, [form, master, hasNoCheck, shiftInfo, isLeader]);
 
     const executeSubmit = async () => {
         setLoading(true);
-        let photoUrl = "";
-        if (photo) {
-            setIsUploading(true);
-            setIsUploading(false); // Mock for now
-        }
-
         try {
             const payload = {
                 ...form,
-                photoUrl,
                 startTime: `${form.startH}:${form.startM}`,
                 endTime: `${form.endH}:${form.endM}`,
                 duration: shiftInfo?.duration,
-                staffId: user?.id,
-                staffName: user?.name,
-                role: user?.role
+                staffId: user?.id || user?.staff_id,
+                staffName: user?.name || user?.staff_name,
+                role: user?.role,
+                is_training: form.isTraineeMode,
+                training_position: form.traineePos
             };
 
-            const res = await shiftAPI.submit(payload);
+            const isActingLeader = isLeader || form.isTraineeMode;
 
-            setLoading(false); setIsUploading(false);
-            if (res.success) {
-                setShowSuccess(true); // Show success popup
-            } else {
-                setError("❌ LỖI: " + (res.message || "Unknown error"));
-            }
-        } catch (e) {
-            setLoading(false);
-            setError("Lỗi kết nối máy chủ");
-        }
+            let res;
+            if (isActingLeader) {
+                res = await leaderAPI.submitReport({
+                    ...payload,
+                    leaderId: payload.staffId, leaderName: payload.staffName,
+                    area_code: form.layout,
+                    report_data: {
+                        shift_code: shiftInfo?.match?.name || 'CUSTOM',
+                        is_training: form.isTraineeMode,
+                        training_position: form.traineePos,
+                        has_peak: form.hasPeak, has_out_of_stock: form.hasOutOfStock, has_customer_issue: form.hasCustomerIssue,
+                        observed_issue_code: form.incidentType, observed_note: form.incidentNote,
+                        khen_emp: form.khenEmp, khen_topic: form.khenTopic, nhac_emp: form.nhacEmp, nhac_topic: form.nhacTopic,
+                        next_shift_risk: form.nextShiftRisk, next_shift_note: form.nextShiftNote,
+                        improvement_initiative: form.improvementNote
+                    }
+                });
+            } else { res = await shiftAPI.submit(payload); }
+            if (res.success) setShowSuccess(true);
+            else setError("Lỗi: " + res.message);
+        } catch (e) { setError("Lỗi kết nối máy chủ"); }
+        setLoading(false);
     };
 
-    // --- SUCCESS MODAL ---
     if (showSuccess) {
         return (
-            <div className="fade-in" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ background: 'white', width: '90%', maxWidth: '350px', padding: '20px', borderRadius: '15px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-                    <div style={{ fontSize: '50px', marginBottom: '10px' }}>🎉</div>
-                    <h2 style={{ color: '#004AAD', margin: '0 0 10px 0', fontSize: '20px', fontWeight: '900' }}>CẬP NHẬT THÀNH CÔNG!</h2>
-                    <p style={{ color: '#475569', fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>
-                        Cảm ơn bạn đã vất vả cả ca!<br />
-                        Chúc bạn xuống ca vui vẻ, nạp lại năng lượng nhé! 🚀💖
-                    </p>
-                    <button
-                        onClick={() => onNavigate('HOME')}
-                        className="btn-login"
-                        style={{ background: '#004AAD', width: '100%', height: '45px', fontSize: '14px', borderRadius: '10px' }}
-                    >
-                        VỀ TRANG CHỦ
-                    </button>
-                    <div style={{ marginTop: '15px', fontSize: '11px', color: '#94A3B8' }}>Thái Mậu Group Operation App</div>
-                </div>
+            <div className="flex flex-col items-center justify-center h-screen bg-white p-10 text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-5xl mb-6 animate-bounce">✨</div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Báo cáo thành công!</h2>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-8">Dữ liệu đã được nạp vào Decision Engine.</p>
+                <button onClick={onBack} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95">Quay lại Dashboard</button>
             </div>
         );
     }
 
     return (
-        <div style={{ position: 'relative' }} className="fade-in">
-            {/* Header Removed */}
-            <div style={{ marginTop: '10px' }} />
-
-            {/* STORE & LEAD */}
-            <div className="grid-2 mt-4">
-                <select className="input-login" style={{ fontSize: '11px', fontWeight: '700', height: '40px' }} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
-                    <option value="">-- CHỌN NHÀ HÀNG --</option>
-                    {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.store_name || s.name}</option>)}
-                </select>
-
-                <select ref={leadSelectRef} className="input-login" style={{ fontSize: '11px', fontWeight: '700', height: '40px', color: form.lead === 'KHÔNG CÓ LEAD CA' ? '#EF4444' : 'inherit' }} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
-                    <option value="">-- LEAD CA --</option>
-                    <option value="KHÔNG CÓ LEAD CA" style={{ color: '#EF4444' }}>⚠️ KHÔNG CÓ LEAD CA</option>
-                    {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
-                </select>
+        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
+            {/* HEADER */}
+            <div className={`shrink-0 ${isLeader ? 'bg-emerald-600' : 'bg-blue-600'} p-5 pb-10 text-white relative overflow-hidden shadow-lg`}>
+                <div className="relative z-10 flex flex-col gap-4">
+                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full border border-white/5 uppercase tracking-tighter w-fit">← Dashboard</button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2">
+                            {isLeader ? '👑' : '👷'}
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black uppercase tracking-tighter leading-none">{isLeader ? 'LEADER LOG' : 'NHẬT KÝ CA'}</h1>
+                            <p className="text-[8px] font-black opacity-60 uppercase mt-1 tracking-widest italic">{user?.name} | {user?.role}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
             </div>
 
-            {/* THỜI GIAN VÀO/RA - Synced with LeaderReport Style */}
-            <div className="grid-2 mt-5">
-                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: form.startH ? '#10B981' : '#94A3B8' }}>
-                        {form.startH ? '✅ VÀO' : 'VÀO'}
-                    </span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: form.startH ? '#10B981' : '#DDDDDD' }} value={form.startH} onChange={(e) => setForm({ ...form, startH: e.target.value })}>
-                        <option value="">-- GIỜ --</option>
-                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                    </select>
-                    <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: form.startM === '30' ? '#10B981' : '#DDDDDD' }} value={form.startM || '00'} onChange={(e) => setForm({ ...form, startM: e.target.value })}>
-                        <option value="00">00</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-                <div className="grid-2" style={{ background: '#F1F5F9', padding: '4px', borderRadius: '8px', border: '1px solid #E2E8F0', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: form.endH ? '#10B981' : '#94A3B8' }}>
-                        {form.endH ? '✅ RA' : 'RA'}
-                    </span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '200px', textAlign: 'center', borderColor: form.endH ? '#10B981' : '#DDDDDD' }} value={form.endH} onChange={(e) => setForm({ ...form, endH: e.target.value })}>
-                        <option value="">-- GIỜ --</option>
-                        {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                    </select>
-                    <span style={{ fontWeight: 900 }}>:</span>
-                    <select className="input-login" style={{ marginBottom: 0, padding: '2px', width: '90px', textAlign: 'center', borderColor: form.endM === '30' ? '#10B981' : '#DDDDDD' }} value={form.endM || '00'} onChange={(e) => setForm({ ...form, endM: e.target.value })}>
-                        <option value="00">00</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-            </div>
+            <div className="flex-1 px-3 -mt-6 relative z-20 space-y-3">
+                {/* 0. TRAINEE TOGGLE (STAFF & LEADER) */}
+                {['STAFF', 'LEADER'].includes(user?.role) && (
+                    <div className={`p-4 rounded-[28px] border transition-all duration-500 shadow-sm ${form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-slate-400 border-slate-100'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${form.isTraineeMode ? 'text-indigo-200' : 'text-slate-400'}`}>Lộ trình thăng tiến</span>
+                                <span className={`text-[12px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>💎 TẬP SỰ QUẢN LÝ</span>
+                            </div>
+                            <button onClick={() => {
+                                const options = user.role === 'STAFF' ? ['CASHIER', 'LEADER'] : ['SM', 'AM'];
+                                setForm({ ...form, isTraineeMode: !form.isTraineeMode, traineePos: !form.isTraineeMode ? options[0] : '' });
+                            }} className={`w-14 h-7 rounded-full relative transition-all duration-300 shadow-inner ${form.isTraineeMode ? 'bg-indigo-400' : 'bg-slate-200'}`}>
+                                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${form.isTraineeMode ? 'left-8' : 'left-1'}`}></div>
+                            </button>
+                        </div>
+                        {form.isTraineeMode && (
+                            <div className="mt-3 grid grid-cols-2 gap-2 animate-in zoom-in duration-300">
+                                {(user.role === 'STAFF' ? [
+                                    { id: 'CASHIER', label: '💎 TS THU NGÂN' },
+                                    { id: 'LEADER', label: '💎 TS LEADER' }
+                                ] : [
+                                    { id: 'SM', label: '💎 TRỢ LÝ SM' },
+                                    { id: 'AM', label: '💎 TS AM' }
+                                ]).map(opt => (
+                                    <button key={opt.id} onClick={() => setForm({ ...form, traineePos: opt.id })} className={`py-2 rounded-xl text-[9px] font-black border transition-all ${form.traineePos === opt.id ? 'bg-white text-indigo-600 border-white shadow-lg' : 'bg-indigo-500/30 text-indigo-100 border-indigo-400/30'}`}>
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* 1. STORE & TIME */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                    {(isLeader || form.isTraineeMode) ? (
+                        <div className="grid grid-cols-2 gap-2">
+                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                                <option value="">-- CHI NHÁNH --</option>
+                                {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
+                            </select>
 
-            {/* STATUS BOX - Synced with LeaderReport Style */}
-            {shiftInfo && (
-                <div style={{ padding: '8px', fontSize: '10px', borderRadius: '6px', margin: '6px 0', border: '1px solid', borderColor: shiftInfo.isCorrect ? '#86EFAC' : (shiftInfo.error ? '#FCA5A5' : '#FCD34D'), background: shiftInfo.isCorrect ? '#F0FDF4' : (shiftInfo.error ? '#FEF2F2' : '#FFFBEB'), color: shiftInfo.isCorrect ? '#166534' : (shiftInfo.error ? '#B91C1C' : '#B45309') }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <b>{shiftInfo.error ? `⚠️ ${shiftInfo.error}` : (shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${shiftInfo.duration}H)`)}</b>
+                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.layout} onChange={e => setForm({ ...form, layout: e.target.value, subPos: form.isTraineeMode ? `${form.traineePos}_TRAINEE` : 'LEADER', checks: {} })}>
+                                <option value="">-- KHU VỰC CẮM CHỐT --</option>
+                                {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(k => <option key={k} value={k}>{master.layouts[k].name || k}</option>)}
+                            </select>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-2">
+                            <select className="bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20" value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                                <option value="">-- CHI NHÁNH --</option>
+                                {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
+                            </select>
+                        </div>
+                    )}
+
+                    {!isLeader && (
+                        <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20 ${form.lead === 'KHÔNG CÓ LEAD CA' ? 'text-rose-500' : ''}`} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
+                            <option value="">-- LEAD CA --</option>
+                            <option value="KHÔNG CÓ LEAD CA" className="text-rose-500 font-black italic">⚠ KHÔNG CÓ LEAD</option>
+                            {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                        </select>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className={`p-2.5 rounded-xl border flex items-center justify-between ${(isLeader || form.isTraineeMode) ? 'bg-emerald-50/5 border-emerald-100' : 'bg-blue-50/5 border-blue-100'}`}>
+                            <span className={`text-[8px] font-black uppercase ${(isLeader || form.isTraineeMode) ? 'text-emerald-600' : 'text-blue-600'}`}>VÀO</span>
+                            <div className="flex items-center gap-1">
+                                <select className="bg-transparent border-none text-[12px] font-black p-0 focus:ring-0" value={form.startH} onChange={e => setForm({ ...form, startH: e.target.value })}>
+                                    <option value="">HH</option>
+                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                                </select>
+                                <span className="font-black opacity-20">:</span>
+                                <select className="bg-transparent border-none text-[12px] font-black p-0 focus:ring-0" value={form.startM} onChange={e => setForm({ ...form, startM: e.target.value })}>
+                                    <option value="00">00</option><option value="30">30</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className={`p-2.5 rounded-xl border flex items-center justify-between ${(isLeader || form.isTraineeMode) ? 'bg-emerald-50/5 border-emerald-100' : 'bg-blue-50/5 border-blue-100'}`}>
+                            <span className={`text-[8px] font-black uppercase ${(isLeader || form.isTraineeMode) ? 'text-emerald-600' : 'text-blue-600'}`}>RA</span>
+                            <div className="flex items-center gap-1">
+                                <select className="bg-transparent border-none text-[12px] font-black p-0 focus:ring-0" value={form.endH} onChange={e => setForm({ ...form, endH: e.target.value })}>
+                                    <option value="">HH</option>
+                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
+                                </select>
+                                <span className="font-black opacity-20">:</span>
+                                <select className="bg-transparent border-none text-[12px] font-black p-0 focus:ring-0" value={form.endM} onChange={e => setForm({ ...form, endM: e.target.value })}>
+                                    <option value="00">00</option><option value="30">30</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    {!shiftInfo.isCorrect && !shiftInfo.error && (
-                        <div style={{ marginTop: '4px', textAlign: 'center' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', marginBottom: '4px', fontSize: '9px' }}>
-                                <input type="checkbox" checked={form.confirmWrongShift} onChange={(e) => setForm({ ...form, confirmWrongShift: e.target.checked })} />
-                                <span style={{ fontWeight: '700', color: '#B45309' }}>XÁC NHẬN ĐÂY LÀ GIỜ THỰC TẾ</span>
-                            </label>
-
-                            {/* Show Dropdown ONLY after confirming */}
-                            {form.confirmWrongShift && (
-                                <select
-                                    className="input-login"
-                                    style={{ marginBottom: 0, fontSize: '10px', padding: '4px', borderColor: '#FCA5A5', color: form.shiftErrorReason ? '#B91C1C' : '#999', fontWeight: form.shiftErrorReason ? '700' : 'normal' }}
-                                    value={form.shiftErrorReason}
-                                    onChange={(e) => setForm({ ...form, shiftErrorReason: e.target.value })}
-                                >
-                                    <option value="">-- CHỌN LÝ DO SAI CA --</option>
-                                    {SHIFT_ERROR_REASONS.map(reason => (
-                                        <option key={reason} value={reason}>{reason}</option>
-                                    ))}
-                                </select>
+                    {shiftInfo && (
+                        <div className={`p-2.5 rounded-xl text-[9px] font-black text-center ${shiftInfo.error ? 'bg-rose-50 text-rose-500' : (shiftInfo.isCorrect ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600')}`}>
+                            {shiftInfo.error || (shiftInfo.isCorrect ? `✔️ KHỚP CA: ${shiftInfo.match.name}` : `⚠️ CA KHÔNG KHỚP (${shiftInfo.duration}H)`)}
+                            {shiftInfo && !shiftInfo.isCorrect && !shiftInfo.error && (
+                                <div className="mt-2 pt-2 border-t border-amber-100 flex flex-col gap-2">
+                                    <label className="flex items-center justify-center gap-2 cursor-pointer">
+                                        <input type="checkbox" className="rounded-sm" checked={form.confirmWrongShift} onChange={e => setForm({ ...form, confirmWrongShift: e.target.checked })} />
+                                        <span>XÁC NHẬN GIỜ THỰC TẾ</span>
+                                    </label>
+                                    {form.confirmWrongShift && (
+                                        <select className="bg-white border-none p-1.5 rounded-lg text-[8px]" value={form.shiftErrorReason} onChange={e => setForm({ ...form, shiftErrorReason: e.target.value })}>
+                                            <option value="">-- LÝ DO SAI CA --</option>
+                                            <option value="ĐỔI CA">ĐỔI CA</option><option value="ĐI TRỄ">ĐI TRỄ</option><option value="VỀ SỚM">VỀ SỚM</option><option value="TĂNG CA">TĂNG CA</option>
+                                        </select>
+                                    )}
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
-            )}
 
-            {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
-            {/* KHU VỰC & VỊ TRÍ - ALWAYS VISIBLE LOGIC */}
-            <div className="section-title" style={{ marginTop: '16px', marginBottom: '8px', color: form.layout ? '#10B981' : '#004AAD', borderColor: form.layout ? '#10B981' : '#004AAD' }}>
-                {form.layout ? '✅ KHU VỰC LÀM VIỆC' : 'KHU VỰC LÀM VIỆC'}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                {Object.keys(master.layouts || {}).map(key => (
-                    <button key={key} className={`btn-login`}
-                        style={{
-                            padding: '10px 2px',
-                            fontSize: '10px',
-                            fontWeight: '800',
-                            background: form.layout === key ? '#004AAD' : '#F1F5F9',
-                            color: form.layout === key ? 'white' : '#64748B',
-                            border: form.layout === key ? 'none' : '1px solid #E2E8F0',
-                            borderRadius: '8px',
-                            boxShadow: form.layout === key ? '0 2px 4px rgba(0,74,173,0.3)' : 'none',
-                            transform: form.layout === key ? 'scale(1.02)' : 'scale(1)',
-                            transition: 'all 0.2s'
-                        }}
-                        onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {}, incidentType: '' })}>
-                        {master.layouts[key].name}
-                    </button>
-                ))}
-            </div>
-
-            {/* SUB-POSITIONS - VISIBLE IF LAYOUT SELECTED */}
-            {form.layout && master.layouts[form.layout]?.subPositions?.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '8px' }}>
-                    {master.layouts[form.layout].subPositions.map(sp => (
-                        <button key={sp} className={`btn-login`}
-                            style={{
-                                padding: '8px 2px',
-                                fontSize: '10px',
-                                borderRadius: '8px',
-                                backgroundColor: form.subPos === sp ? '#475569' : '#fff',
-                                color: form.subPos === sp ? 'white' : '#475569',
-                                border: form.subPos === sp ? 'none' : '1px dashed #CBD5E1'
-                            }}
-                            onClick={() => setForm({ ...form, subPos: sp })}>
-                            {sp}
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            {/* CHECKLIST - VISIBLE IF LAYOUT SELECTED */}
-            {form.layout && (
-                <div style={{ marginTop: '10px' }}>
-                    {master.layouts[form.layout]?.checklist?.map(item => (
-                        <div key={item.id} className="checklist-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', padding: '8px 0' }}>
-                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#334155' }}>{item.text}</span>
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                                <button className={`btn-login`}
-                                    style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'yes' ? '#004AAD' : 'white', color: form.checks[item.id] === 'yes' ? 'white' : '#004AAD', border: '1px solid #004AAD' }}
-                                    onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'yes' } })}>CÓ</button>
-                                <button className={`btn-login`}
-                                    style={{ padding: '4px 10px', fontSize: '9px', width: 'auto', background: form.checks[item.id] === 'no' ? '#EF4444' : 'white', color: form.checks[item.id] === 'no' ? 'white' : '#EF4444', border: '1px solid #EF4444' }}
-                                    onClick={() => setForm({ ...form, checks: { ...form.checks, [item.id]: 'no' } })}>KHÔNG</button>
+                {/* 2. LEADER STATUS */}
+                {(isLeader || form.isTraineeMode) && (
+                    <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vận hành sảnh & khu vực</span>
+                        </div>
+                        <div className="flex gap-2">
+                            {[{ id: 'hasPeak', l: 'CA ĐÔNG', icon: '🔥' }, { id: 'hasOutOfStock', l: 'HẾT MÓN', icon: '📦' }, { id: 'hasCustomerIssue', l: 'PHÀN NÀN', icon: '👤' }].map(b => (
+                                <button key={b.id} onClick={() => setForm({ ...form, [b.id]: !form[b.id] })} className={`flex-1 py-3 rounded-xl text-[9px] font-black transition-all border shadow-sm ${form[b.id] ? (form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-emerald-600 text-white border-emerald-600') : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                    <div className="text-sm mb-0.5">{b.icon}</div>{b.l}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-3 gap-2 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
+                                <span className="text-[8px] font-black text-emerald-600 flex items-center justify-center bg-white rounded-lg">👍 KHEN</span>
+                                <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={form.khenEmp} onChange={e => setForm({ ...form, khenEmp: e.target.value })}>
+                                    <option value="">Nhân viên</option>
+                                    {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name || s.staff_name}</option>)}
+                                </select>
+                                <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={form.khenTopic} onChange={e => setForm({ ...form, khenTopic: e.target.value })}>
+                                    <option value="">Chủ đề</option><option>Thái độ</option><option>Tốc độ</option><option>Vệ sinh</option>
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 bg-rose-50/50 p-2 rounded-2xl border border-rose-100">
+                                <span className="text-[8px] font-black text-rose-500 flex items-center justify-center bg-white rounded-lg">⚠️ NHẮC</span>
+                                <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={form.nhacEmp} onChange={e => setForm({ ...form, nhacEmp: e.target.value })}>
+                                    <option value="">Nhân viên</option>
+                                    {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name || s.staff_name}</option>)}
+                                </select>
+                                <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={form.nhacTopic} onChange={e => setForm({ ...form, nhacTopic: e.target.value })}>
+                                    <option value="">Chủ đề</option><option>Sai SOP</option><option>Vệ sinh</option><option>Thái độ</option>
+                                </select>
                             </div>
                         </div>
-                    ))}
+                    </div>
+                )}
+
+                {/* 3. LAYOUT & CHECKLIST - STAFF UI ONLY */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                    {!(isLeader || form.isTraineeMode) ? (
+                        <>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block text-left">KHU VỰC LÀM VIỆC</span>
+                            <div className="grid grid-cols-4 gap-1.5">
+                                {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(key => (
+                                    <button key={key} onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {} })} className={`py-2.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-sm ${form.layout === key ? 'bg-blue-600 text-white active:scale-95' : 'bg-slate-50 text-slate-400'}`}>
+                                        {master.layouts[key].name || key}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <div className={`${form.isTraineeMode ? 'bg-indigo-50 border-indigo-100' : 'bg-emerald-50 border-emerald-100'} p-3 rounded-xl border flex items-center justify-between mb-2`}>
+                            <span className={`text-[10px] font-black uppercase ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>Vai trò {form.isTraineeMode ? 'TẬP SỰ' : 'BÁO CÁO'}:</span>
+                            <span className={`text-[10px] font-black text-white px-3 py-1 rounded-lg ${form.isTraineeMode ? 'bg-indigo-600' : 'bg-emerald-600'}`}>{form.isTraineeMode ? form.traineePos : 'LEADER'} {form.layout && `• ${master.layouts[form.layout]?.name || form.layout}`}</span>
+                        </div>
+                    )}
+
+                    {/* SUB-POSITION LOGIC */}
+                    {form.layout && (
+                        <div className="animate-in fade-in duration-300 space-y-3">
+                            {(isLeader || form.isTraineeMode) ? (
+                                <div className={`${form.isTraineeMode ? 'bg-indigo-50 border-indigo-100' : 'bg-emerald-50 border-emerald-100'} p-3 rounded-xl border flex items-center justify-between`}>
+                                    <span className={`text-[10px] font-black uppercase ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>Vị trí mặc định:</span>
+                                    <span className={`text-[10px] font-black text-white px-3 py-1 rounded-lg ${form.isTraineeMode ? 'bg-indigo-600' : 'bg-emerald-600'}`}>{form.isTraineeMode ? `${form.traineePos}_TRAINEE` : 'LEADER'}</span>
+                                </div>
+                            ) : (
+                                master.layouts[form.layout]?.subPositions?.length > 0 && (
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {master.layouts[form.layout].subPositions.map(sp => (
+                                            <button key={sp} onClick={() => setForm({ ...form, subPos: sp })} className={`py-2 rounded-lg text-[9px] font-black transition-all ${form.subPos === sp ? 'bg-slate-700 text-white shadow-md' : 'bg-slate-50 text-slate-400 border border-dashed border-slate-200'}`}>
+                                                {sp}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )
+                            )}
+
+                            {/* CHECKLISTS COMPOSITE */}
+                            <div className="space-y-4 pt-2">
+                                {/* AREA SPECIFIC */}
+                                <div className="space-y-1">
+                                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Checklist: {master.layouts[form.layout]?.name || form.layout}</div>
+                                    {master.layouts[form.layout]?.checklist?.map((item, idx) => {
+                                        const itemId = item.id || `cl_${idx}`;
+                                        const itemText = item.text || item;
+                                        return (
+                                            <div key={itemId} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-left">
+                                                <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{itemText}</span>
+                                                <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
+                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'yes' ? ((isLeader || form.isTraineeMode) ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white') : 'text-slate-300'}`}>CÓ</button>
+                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-300'}`}>KHO</button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* LEAD GLOBAL (Always show for leaders and trainees) */}
+                                {(isLeader || form.isTraineeMode) && master.layouts['LEAD']?.checklist?.length > 0 && (
+                                    <div className={`space-y-1 pt-3 border-t-2 border-dashed ${form.isTraineeMode ? 'border-indigo-100' : 'border-emerald-100'}`}>
+                                        <div className={`text-[10px] font-black uppercase tracking-widest ml-1 mb-2 flex items-center gap-2 ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${form.isTraineeMode ? 'bg-indigo-500' : 'bg-emerald-500'}`}></span>Checklist Quản Lý (V8)
+                                        </div>
+                                        {master.layouts['LEAD'].checklist.map((item, idx) => {
+                                            const itemId = item.id || `lead_${idx}`;
+                                            const itemText = item.text || item;
+                                            return (
+                                                <div key={itemId} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-left">
+                                                    <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{itemText}</span>
+                                                    <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white') : 'text-slate-300'}`}>CÓ</button>
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-300'}`}>KHÔNG</button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
 
-            {/* ERROR HANDLING / INCIDENTS - HIDDEN until 'NO' checked */}
-            {hasNoCheck && (
-                <div style={{ marginTop: '8px', background: '#FFF1F2', padding: '10px', borderRadius: '8px', border: '1px solid #FECACA' }}>
-                    <label style={{ color: '#B91C1C', fontWeight: '800', fontSize: '10px', display: 'block', marginBottom: '6px' }}>PHÂN LOẠI SỰ CỐ (BẮT BUỘC)</label>
-                    <select className="input-login" style={{ borderColor: '#FCA5A5', fontSize: '11px', marginBottom: '6px' }} value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
-                        <option value="">-- CHỌN LOẠI SỰ CỐ --</option>
-                        {master.layouts[form.layout]?.incidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
-                    </select>
-                    <textarea className="input-login" style={{ height: '60px', borderColor: '#FCA5A5', fontSize: '11px', marginBottom: 0 }} placeholder="Chi tiết lý do checklist chưa đạt..." value={form.incidentNote} onChange={e => setForm({ ...form, incidentNote: e.target.value })} />
-                </div>
-            )}
+                {/* 4. INCIDENT & MOOD */}
+                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-4">
+                    {hasNoCheck && (
+                        <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 space-y-2">
+                            <div className="text-[9px] font-black text-rose-500 uppercase tracking-tighter">🔒 BẮT BUỘC: CHI TIẾT SỰ CỐ</div>
+                            <select className="w-full bg-white border-none text-[10px] font-bold p-2 rounded-xl shadow-sm" value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
+                                <option value="">-- LOẠI SỰ CỐ --</option>
+                                {(isLeader || form.isTraineeMode ? master.leaderIncidents : master.layouts[form.layout]?.incidents)?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
+                            </select>
+                            <textarea className="w-full bg-white border-none text-[11px] p-3 rounded-xl shadow-sm min-h-[60px] focus:ring-0" placeholder="Mô tả & hướng giải quyết..." value={form.incidentNote} onChange={e => setForm({ ...form, incidentNote: e.target.value })} />
+                        </div>
+                    )}
 
-            {/* FEELINGS */}
-            <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', color: form.rating ? '#10B981' : '#004AAD', borderColor: form.rating ? '#10B981' : '#004AAD' }}>
-                {form.rating ? '| ✅ CẢM NHẬN HÔM NAY' : '| CẢM NHẬN HÔM NAY'}
-                <label style={{ cursor: 'pointer', color: '#004AAD', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    📷 GỬI ẢNH (TÙY CHỌN)
-                    <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => setPhoto(reader.result);
-                            reader.readAsDataURL(file);
-                        }
-                    }} />
-                </label>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '5px' }}>
-                {FEELINGS.map(f => (
-                    <button key={f.id} className="btn-login"
-                        style={{
-                            padding: '12px 15px',
-                            fontSize: '11px',
-                            textAlign: 'left', // LEFT ALIGNMENT
-                            background: form.rating === f.id ? '#004AAD' : 'white',
-                            color: form.rating === f.id ? 'white' : '#004AAD',
-                            border: '1px solid #004AAD',
-                            borderRadius: '10px', // Matches standardized rounded corners
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            fontWeight: '700',
-                            justifyContent: 'flex-start' // Ensure start alignment
-                        }}
-                        onClick={() => setForm({ ...form, rating: f.id })}>
-                        <span style={{ fontSize: '14px' }}>{f.icon}</span> {f.label}
-                    </button>
-                ))}
-            </div>
-
-            {form.rating && form.rating !== 'OK' && (
-                <div style={{ marginTop: '10px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-                        {REASONS.map(r => (
-                            <button key={r} className={`btn-login`}
-                                style={{ padding: '8px 1px', fontSize: '9px', background: form.selectedReasons.includes(r) ? '#004AAD' : 'white', color: form.selectedReasons.includes(r) ? 'white' : '#004AAD', border: '1px solid #004AAD', borderRadius: '20px' }}
-                                onClick={() => setForm(prev => ({ ...prev, selectedReasons: prev.selectedReasons.includes(r) ? prev.selectedReasons.filter(i => i !== r) : (prev.selectedReasons.length < 2 ? [...prev.selectedReasons, r] : prev.selectedReasons) }))}>{r}</button>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
+                    </div>
+                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100">
+                        {Object.keys(MOOD_CONFIG).map(mood => (
+                            <span key={mood} onClick={() => { setForm({ ...form, rating: mood }); setActivePhrase(MOOD_CONFIG[mood].phrases[Math.floor(Math.random() * MOOD_CONFIG[mood].phrases.length)]); setShowMoodModal(true); }} className={`text-2xl cursor-pointer transition-all active:scale-125 ${form.rating === mood ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}>
+                                {MOOD_CONFIG[mood].icon}
+                            </span>
                         ))}
+                    </div>
+
+                    {!(isLeader || form.isTraineeMode) && form.rating && (
+                        <div className="grid grid-cols-3 gap-2">
+                            {REASONS.map(r => (
+                                <button key={r.id} onClick={() => { const newRes = form.selectedReasons.includes(r.id) ? form.selectedReasons.filter(i => i !== r.id) : [...form.selectedReasons, r.id]; setForm({ ...form, selectedReasons: newRes }); }} className={`py-2 rounded-xl text-[8px] font-black flex flex-col items-center gap-1 transition-all border ${form.selectedReasons.includes(r.id) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>
+                                    <span>{r.icon}</span><span>{r.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {(isLeader || form.isTraineeMode) && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <select className={`bg-slate-50 border-none text-[10px] font-black p-2.5 rounded-xl text-slate-700 font-sans focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.nextShiftRisk} onChange={e => setForm({ ...form, nextShiftRisk: e.target.value })}>
+                                <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
+                            </select>
+                            <textarea className="bg-slate-50 border-none text-[10px] p-2.5 rounded-xl min-h-[40px] focus:ring-0" placeholder="Dặn dò ca sau..." value={form.nextShiftNote} onChange={e => setForm({ ...form, nextShiftNote: e.target.value })} />
+                            <div className="col-span-2 space-y-2 mt-1">
+                                <div className={`text-[9px] font-black uppercase tracking-widest ml-1 ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>💡 Sáng kiến & Cải tiến hôm nay?</div>
+                                <textarea className={`w-full border-none text-[10px] p-3 rounded-xl min-h-[60px] focus:ring-2 font-medium italic ${form.isTraineeMode ? 'bg-indigo-50/30 ring-indigo-500/20' : 'bg-emerald-50/30 ring-emerald-500/20'}`} placeholder="Góp ý hoặc sáng kiến để Team mình xịn hơn... (Gamification reward 🎁)" value={form.improvementNote} onChange={e => setForm({ ...form, improvementNote: e.target.value })} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
+                    <label className="flex items-center gap-3 p-3 bg-slate-100/50 rounded-2xl border border-slate-100 cursor-pointer active:bg-slate-200 transition-colors">
+                        <input type="checkbox" className="w-4 h-4 rounded-sm border-2 border-slate-300 transition-all checked:bg-blue-600" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} />
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter leading-tight">Mình nỗ lực hết mình, chia sẻ thật lòng rồi nè ✨</span>
+                    </label>
+                    {error && <p className="text-rose-500 text-[8px] font-black text-center animate-bounce uppercase">{error}</p>}
+                    <button onClick={executeSubmit} disabled={!isReadyToSubmit || loading} className={`w-full py-4 rounded-[20px] font-black text-[10px] uppercase tracking-[0.1em] shadow-xl transition-all active:scale-95 ${!isReadyToSubmit ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'}`}>
+                        {loading ? 'ĐANG XỬ LÝ...' : `XÁC NHẬN BÁO CÁO 🚀`}
+                    </button>
+                    <button onClick={onBack} className="w-full text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] py-2">HUỶ BỎ</button>
+                </div>
+            </div>
+
+            {/* MOOD MODAL */}
+            {showMoodModal && (
+                <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 ${MOOD_CONFIG[form.rating]?.modalBg} backdrop-blur-md animate-in fade-in duration-300`} onClick={() => setShowMoodModal(false)}>
+                    <div className="text-center animate-in zoom-in duration-500">
+                        <div className="text-8xl mb-6 drop-shadow-2xl">{MOOD_CONFIG[form.rating]?.icon}</div>
+                        <h3 className="text-white text-3xl font-black uppercase tracking-tighter mb-2">{activePhrase}</h3>
+                        <p className="text-white/60 text-[10px] font-bold tracking-widest uppercase">Click để tiếp tục</p>
                     </div>
                 </div>
             )}
-
-            <div className="mt-5" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', paddingLeft: '10px' }}>
-                <input type="checkbox" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} style={{ width: '18px', height: '18px' }} />
-                <span style={{ fontSize: '10px', fontWeight: '800', color: '#004AAD' }}>TÔI CAM KẾT THÔNG TIN BÁO CÁO LÀ CHÍNH XÁC.</span>
-            </div>
-
-            {error && <p style={{ color: '#EF4444', fontSize: '10px', fontWeight: '800', textAlign: 'center', margin: '8px 0' }}>{error}</p>}
-
-            <button
-                className="btn-login mt-5"
-                style={{
-                    height: '50px',
-                    background: !isReadyToSubmit ? '#CBD5E1' : (loading ? '#CCC' : '#004AAD'),
-                    cursor: isReadyToSubmit && !loading ? 'pointer' : 'not-allowed'
-                }}
-                onClick={handleCheckBeforeSubmit}
-                disabled={!isReadyToSubmit || loading}
-            >
-                {isUploading ? '📤 ĐANG TẢI ẢNH...' : (loading ? '⌛ ĐANG GỬI...' : 'XÁC NHẬN GỬI BÁO CÁO')}
-            </button>
         </div>
     );
 };

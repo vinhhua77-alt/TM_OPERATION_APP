@@ -39,7 +39,8 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
-                tenant_id: data.tenant_id || null
+                tenant_id: data.tenant_id || null,
+                responsibility: data.responsibility || []
             };
         } catch (error) {
             console.error('UserRepo.getByEmail error:', error);
@@ -74,7 +75,8 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
-                tenant_id: data.tenant_id || null
+                tenant_id: data.tenant_id || null,
+                responsibility: data.responsibility || []
             };
         } catch (error) {
             console.error('UserRepo.getByStaffId error:', error);
@@ -106,7 +108,8 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
-                tenant_id: data.tenant_id || null
+                tenant_id: data.tenant_id || null,
+                responsibility: data.responsibility || []
             };
         } catch (error) {
             console.error('UserRepo.getById error:', error);
@@ -148,7 +151,8 @@ export class UserRepo {
                     store_code: userData.store_code || '',
                     status: userData.status || 'PENDING', // Default to PENDING
                     active: userData.active !== undefined ? userData.active : false, // Default to false
-                    tenant_id: userData.tenant_id || null
+                    tenant_id: userData.tenant_id || null,
+                    responsibility: userData.responsibility || []
                 }])
                 .select()
                 .single();
@@ -239,7 +243,9 @@ export class UserRepo {
                 .order('created_at', { ascending: false });
 
             // Apply filters
-            if (filters.store_code && filters.store_code !== 'ALL') {
+            if (filters.store_codes && Array.isArray(filters.store_codes)) {
+                query = query.in('store_code', filters.store_codes);
+            } else if (filters.store_code && filters.store_code !== 'ALL') {
                 query = query.eq('store_code', filters.store_code);
             }
 
@@ -249,6 +255,10 @@ export class UserRepo {
 
             if (filters.role && filters.role !== 'ALL') {
                 query = query.eq('role', filters.role);
+            }
+
+            if (filters.ids && Array.isArray(filters.ids)) {
+                query = query.in('staff_id', filters.ids);
             }
 
             const { data, error } = await query;
@@ -287,7 +297,7 @@ export class UserRepo {
      */
     static async updateStaffInfo(staffId, updates) {
         try {
-            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash', 'status'];
+            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash', 'status', 'responsibility'];
             const filteredUpdates = {};
 
             // Only allow specific fields to be updated
@@ -325,51 +335,50 @@ export class UserRepo {
     /**
      * Get staff statistics
      */
-    static async getStatistics() {
+    static async getStatistics(storeCode = null) {
         try {
-            // Get total count
-            const { count: totalCount, error: totalError } = await supabase
-                .from('staff_master')
-                .select('*', { count: 'exact', head: true });
+            // Base queries
+            let totalQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true });
+            let activeQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('active', true);
+            let pendingQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('status', 'PENDING');
 
-            if (totalError) throw totalError;
+            if (storeCode) {
+                totalQuery = totalQuery.eq('store_code', storeCode);
+                activeQuery = activeQuery.eq('store_code', storeCode);
+                pendingQuery = pendingQuery.eq('store_code', storeCode);
+            }
 
-            // Get active count
-            const { count: activeCount, error: activeError } = await supabase
-                .from('staff_master')
-                .select('*', { count: 'exact', head: true })
-                .eq('active', true);
+            const [totalRes, activeRes, pendingRes] = await Promise.all([
+                totalQuery,
+                activeQuery,
+                pendingQuery
+            ]);
 
-            if (activeError) throw activeError;
+            if (totalRes.error) throw totalRes.error;
+            if (activeRes.error) throw activeRes.error;
+            if (pendingRes.error) throw pendingRes.error;
 
-            // Get pending count (status='PENDING')
-            const { count: pendingCount, error: pendingError } = await supabase
-                .from('staff_master')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'PENDING');
+            // Store breakdown (only for OPS/ADMIN who see everything)
+            let storeBreakdown = {};
+            if (!storeCode) {
+                const { data: byStore, error: storeError } = await supabase
+                    .from('staff_master')
+                    .select('store_code')
+                    .eq('active', true);
 
-            if (pendingError) throw pendingError;
-
-            // Get count by store
-            const { data: byStore, error: storeError } = await supabase
-                .from('staff_master')
-                .select('store_code')
-                .eq('active', true);
-
-            if (storeError) throw storeError;
-
-            // Count by store
-            const storeBreakdown = {};
-            byStore.forEach(staff => {
-                const store = staff.store_code || 'UNKNOWN';
-                storeBreakdown[store] = (storeBreakdown[store] || 0) + 1;
-            });
+                if (!storeError) {
+                    byStore.forEach(staff => {
+                        const store = staff.store_code || 'UNKNOWN';
+                        storeBreakdown[store] = (storeBreakdown[store] || 0) + 1;
+                    });
+                }
+            }
 
             return {
-                total: totalCount || 0,
-                active: activeCount || 0,
-                pending: pendingCount || 0,
-                inactive: (totalCount || 0) - (activeCount || 0),
+                total: totalRes.count || 0,
+                active: activeRes.count || 0,
+                pending: pendingRes.count || 0,
+                inactive: (totalRes.count || 0) - (activeRes.count || 0),
                 byStore: storeBreakdown
             };
         } catch (error) {

@@ -275,4 +275,80 @@ router.delete('/shifts/:id', authenticateToken, async (req, res, next) => {
     }
 });
 
+// ==================== TENANTS ROUTES ====================
+
+router.get('/tenants', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.getAllTenants(req.user);
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/tenants', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.createTenant(req.user, req.body);
+        res.json({ success: true, data, message: 'Tenant created' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/tenants/:id', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.updateTenant(req.user, req.params.id, req.body);
+        res.json({ success: true, data, message: 'Tenant updated' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete('/tenants/:id', authenticateToken, async (req, res, next) => {
+    try {
+        await MasterDataService.deleteTenant(req.user, req.params.id);
+        res.json({ success: true, message: 'Tenant deleted' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ==================== BRANDS ROUTES ====================
+
+router.get('/brands', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.getAllBrands(req.user);
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/brands', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.createBrand(req.user, req.body);
+        res.json({ success: true, data, message: 'Brand created' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/brands/:id', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await MasterDataService.updateBrand(req.user, req.params.id, req.body);
+        res.json({ success: true, data, message: 'Brand updated' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.delete('/brands/:id', authenticateToken, async (req, res, next) => {
+    try {
+        await MasterDataService.deleteBrand(req.user, req.params.id);
+        res.json({ success: true, message: 'Brand deleted' });
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;

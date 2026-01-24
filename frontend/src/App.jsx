@@ -11,6 +11,7 @@ import PageAnnouncementManagement from './pages/PageAnnouncementManagement';
 import PageIncidentManagement from './pages/PageIncidentManagement';
 import PageCareer from './pages/PageCareer';
 import PageGamification from './pages/PageGamification';
+import PageDailyReporting from './pages/PageDailyReporting';
 import AnnouncementPopup from './components/AnnouncementPopup';
 import { authAPI } from './api/auth';
 import TopMenu from './components/TopMenu';
@@ -21,6 +22,7 @@ import PageGuide from './pages/PageGuide';
 import PageAbout from './pages/PageAbout';
 import PageAdminConsole from './pages/PageAdminConsole';
 import PageAnalytics from './pages/PageAnalytics';
+import PageStoreSetup from './pages/PageStoreSetup';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
@@ -37,11 +39,30 @@ function App() {
 
   useEffect(() => {
     // 1. Check authentication
+    // 2. Load System Config (Feature Flags) - Move inside login success logic or check role
+    const loadSystemConfig = () => {
+      import('./api/admin.api').then(({ adminAPI }) => {
+        adminAPI.getConsoleData()
+          .then(res => {
+            if (res.success) {
+              const activeFlags = res.data.featureFlags
+                .filter(f => f.is_enabled)
+                .map(f => f.flag_key);
+              setSysConfig({ featureFlags: activeFlags, loaded: true });
+            }
+          })
+          .catch(err => console.warn('System config restricted or unavailable', err.message));
+      });
+    };
+
     authAPI.getMe()
       .then((res) => {
         if (res.success) {
           setUser(res.user);
           restoreLastPage();
+          if (['ADMIN', 'OPS'].includes(res.user.role)) {
+            loadSystemConfig();
+          }
         } else {
           checkPasswordReset();
         }
@@ -49,25 +70,11 @@ function App() {
       .catch(() => checkPasswordReset())
       .finally(() => setLoading(false));
 
-    // 2. Load System Config (Feature Flags) - Fail-safe (won't block app if fails)
-    import('./api/admin.api').then(({ adminAPI }) => {
-      adminAPI.getConsoleData()
-        .then(res => {
-          if (res.success) {
-            const activeFlags = res.data.featureFlags
-              .filter(f => f.is_enabled)
-              .map(f => f.flag_key);
-            setSysConfig({ featureFlags: activeFlags, loaded: true });
-          }
-        })
-        .catch(err => console.warn('Failed to load system config', err));
-    });
-
   }, []);
 
   const restoreLastPage = () => {
     const lastPage = localStorage.getItem('lastPage');
-    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_MANAGEMENT', 'ANNOUNCEMENT_MANAGEMENT', 'INCIDENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE', 'ANALYTICS'];
+    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_SETUP', 'ANNOUNCEMENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE', 'ANALYTICS', 'DAILY_HUB', 'QAQC_HUB'];
     setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
   };
 
@@ -122,32 +129,23 @@ function App() {
       case 'HOME':
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'SHIFT_LOG':
-        if (user?.role === 'LEADER') {
-          return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
-        }
-        return <PageShiftLog user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case 'LEADER_REPORT':
+        return <PageShiftLog user={user} onBack={() => handleNavigate('DAILY_HUB')} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'DASHBOARD':
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
-      case 'LEADER_REPORT':
-        return <PageLeaderReport user={user} onNavigate={handleNavigate} />;
       case 'STAFF_MANAGEMENT':
-        return <PageStaffManagement user={user} onBack={() => handleNavigate('DASHBOARD')} />;
+        return <PageStaffManagement user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'STORE_SETUP':
+        return <PageStoreSetup user={user} onBack={() => handleNavigate('HOME')} />;
       case 'STORE_MANAGEMENT':
-        return <PageStoreManagement user={user} initialView="info" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_STORES':
-        return <PageStoreManagement user={user} initialView="info" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_CHECKLIST':
-        return <PageStoreManagement user={user} initialView="checklist" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_POSITIONS':
-        return <PageStoreManagement user={user} initialView="positions" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_ROLES':
-        return <PageStoreManagement user={user} initialView="roles" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_SHIFTS':
-        return <PageStoreManagement user={user} initialView="shifts" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_INCIDENTS':
-        return <PageStoreManagement user={user} initialView="incidents" onBack={() => handleNavigate('DASHBOARD')} />;
       case 'STORE_LAYOUTS':
-        return <PageStoreManagement user={user} initialView="layouts" onBack={() => handleNavigate('DASHBOARD')} />;
+        return <PageStoreSetup user={user} onBack={() => handleNavigate('HOME')} />;
       case 'CAREER':
         return <PageCareer user={user} onBack={() => handleNavigate('HOME')} />;
       case 'GAMIFICATION':
@@ -164,6 +162,8 @@ function App() {
         return <PageAdminConsole user={user} onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS':
         return <PageAnalytics user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'DAILY_HUB':
+        return <PageDailyReporting user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} />;
       case 'ANALYTICS_LEADER':
         return <PageAnalytics user={user} viewMode="leader" onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS_SM':

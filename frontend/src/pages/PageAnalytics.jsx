@@ -1,347 +1,277 @@
 import React, { useState, useEffect } from 'react';
+import StoreGridSelector from '../components/analytics/StoreGridSelector';
+import TimeRangePicker from '../components/analytics/TimeRangePicker';
+import { masterDataAPI } from '../api/master-data';
 import { analyticsAPI } from '../api/analytics.api';
-import WidgetComponents from '../components/analytics/WidgetComponents';
 
-const { HealthScoreCard, MoodTrendCard, TopStaffList, IncidentAlertCard } = WidgetComponents;
+const PageAnalytics = ({ user, onBack }) => {
+    // 1. PHÂN QUYỀN MẶC ĐỊNH
+    const isSM = user?.role === 'SM' || user?.role === 'LEADER';
+    const userStore = user?.storeCode || 'ALL';
 
-// ==========================================
-// 1. COMPONENT: LEADER DASHBOARD (Daily Ops)
-// ==========================================
-const LeaderDashboard = ({ metrics, incidents, dateRange }) => {
-    // Get latest day metrics
-    const todayStats = metrics.length > 0 ? metrics[metrics.length - 1] : null;
-    const ext = todayStats?.extended_metrics || {};
+    const [activeTab, setActiveTab] = useState('leader');
+    const [selectedStore, setSelectedStore] = useState(isSM ? userStore : 'ALL');
+    const [mode, setMode] = useState('day');
+    const [date, setDate] = useState(new Date());
+    const [stores, setStores] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState(null);
 
-    return (
-        <div className="space-y-4 fade-in">
-            {/* Header Stats Grid */}
-            <div className="grid grid-cols-2 gap-3">
-                <StatBox
-                    label="Nhân sự đi làm"
-                    value={ext.headcount || 0}
-                    icon="👥"
-                    color="text-blue-600"
-                    bg="bg-blue-50"
-                />
-                <StatBox
-                    label="Tổng số ca"
-                    value={ext.total_shifts || 0}
-                    icon="📋"
-                    color="text-indigo-600"
-                    bg="bg-indigo-50"
-                />
-                <StatBox
-                    label="Tổng giờ công"
-                    value={`${ext.total_hours || 0}h`}
-                    icon="⏱️"
-                    color="text-green-600"
-                    bg="bg-green-50"
-                />
-                <StatBox
-                    label="KPI Checklist"
-                    value={`${todayStats?.avg_checklist_score || 0}%`}
-                    icon="✅"
-                    color="text-orange-600"
-                    bg="bg-orange-50"
-                />
-            </div>
-
-            {/* Incident Alert (Red if any) */}
-            <div className={`p-4 rounded-xl border ${todayStats?.incident_count > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-bold text-sm ${todayStats?.incident_count > 0 ? 'text-red-800' : 'text-green-800'}`}>
-                        {todayStats?.incident_count > 0 ? '⚠️ Cần xử lý' : '✅ Vận hành ổn định'}
-                    </h3>
-                    <span className="text-xl">{todayStats?.incident_count > 0 ? '🚨' : '🛡️'}</span>
-                </div>
-                {todayStats?.incident_count > 0 ? (
-                    <p className="text-xs text-red-600">Phát hiện {todayStats.incident_count} sự cố trong ngày.</p>
-                ) : (
-                    <p className="text-xs text-green-600">Không có sự cố nghiêm trọng nào hôm nay.</p>
-                )}
-            </div>
-
-            {/* Recent Incidents List */}
-            {incidents.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">Sự cố mới nhất</h3>
-                    <div className="space-y-3">
-                        {incidents.map((inc, idx) => (
-                            <div key={idx} className="flex gap-3 items-start border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                                <div className="mt-1 min-w-[4px] h-[4px] rounded-full bg-red-500"></div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-800 line-clamp-2">{inc.note}</p>
-                                    <div className="flex gap-2 mt-1">
-                                        <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{inc.staff_master?.fullname || 'Staff'}</span>
-                                        <span className="text-[10px] text-gray-400">{new Date(inc.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="text-center text-[10px] text-gray-400 pt-2">
-                Dữ liệu ngày: {dateRange.end}
-            </div>
-        </div>
-    );
-};
-
-// ==========================================
-// 2. COMPONENT: SM DASHBOARD (Weekly/Health)
-// ==========================================
-const SMDashboard = ({ metrics, topStaff, incidents, dateRange }) => {
-    // Calculate averages over the period
-    const avgHealth = Math.round(metrics.reduce((acc, m) => acc + (m.health_score || 0), 0) / (metrics.length || 1));
-
-    return (
-        <div className="space-y-6 fade-in">
-            {/* Health Score Overview */}
-            <HealthScoreCard score={avgHealth} status={avgHealth >= 80 ? 'OK' : 'WARNING'} />
-
-            {/* Trend Chart */}
-            <MoodTrendCard metrics={metrics} />
-
-            {/* Staff Performance */}
-            <TopStaffList staffList={topStaff} />
-
-            {/* Critical Incidents */}
-            {incidents.length > 0 && <IncidentAlertCard incidents={incidents} />}
-
-            <div className="text-center text-[10px] text-gray-400 pt-2">
-                Báo cáo tuần: {dateRange.start} - {dateRange.end}
-            </div>
-        </div>
-    );
-};
-
-// ==========================================
-// 3. COMPONENT: OPS DASHBOARD (Chain View)
-// ==========================================
-const OPSDashboard = ({ metrics, topStaff, incidents, dateRange, onStoreChange, storeList, selectedStoreId }) => {
-    const latest = metrics.length > 0 ? metrics[metrics.length - 1] : null;
-
-    return (
-        <div className="space-y-6 fade-in">
-            {/* Store Filter */}
-            <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                <label className="text-xs font-bold text-gray-400 block mb-1">Chọn Chi Nhánh / Chuỗi</label>
-                <select
-                    className="w-full bg-gray-50 border border-gray-200 text-sm font-bold rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500"
-                    value={selectedStoreId}
-                    onChange={(e) => onStoreChange(e.target.value)}
-                >
-                    {storeList.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
-            </div>
-
-            {/* High Level Metrics */}
-            {latest && (
-                <div className="grid grid-cols-2 gap-3">
-                    <StatBox label="Health Score" value={latest.health_score} icon="🏥" color={latest.health_score >= 80 ? 'text-green-600' : 'text-red-500'} bg="bg-white" />
-                    <StatBox label="Incidents" value={latest.incident_count} icon="🔥" color="text-red-600" bg="bg-white" />
-                    <StatBox label="Checklist" value={`${latest.avg_checklist_score}%`} icon="✅" color="text-blue-600" bg="bg-white" />
-                    <StatBox label="Mood" value={latest.avg_mood_score} icon="😊" color="text-yellow-600" bg="bg-white" />
-                </div>
-            )}
-
-            {/* Trends & Lists */}
-            <MoodTrendCard metrics={metrics} />
-            <TopStaffList staffList={topStaff} />
-
-            <div className="text-center text-[10px] text-gray-400 pt-2">
-                Báo cáo quản trị chuỗi: {dateRange.start} - {dateRange.end}
-            </div>
-        </div>
-    );
-};
-
-// Helper: StatBox
-const StatBox = ({ label, value, icon, color, bg }) => (
-    <div className={`${bg} p-3 rounded-xl flex flex-col justify-between min-h-[80px] border border-black/5`}>
-        <div className="flex justify-between items-start">
-            <span className="text-[10px] font-bold text-gray-500 uppercase">{label}</span>
-            <span className="text-lg opacity-80">{icon}</span>
-        </div>
-        <span className={`text-xl font-extrabold ${color}`}>{value}</span>
-    </div>
-);
-
-// ==========================================
-// MAIN PAGE ANALYTICS
-// ==========================================
-// ==========================================
-// MAIN PAGE ANALYTICS
-// ==========================================
-const PageAnalytics = ({ user, onBack, viewMode }) => {
-    // Roles
-    const isHQ = ['OPS', 'ADMIN', 'BOD'].includes(user?.role);
-
-    // Determine Mode & Period
-    // If viewMode provided, strict. Else fallback to role (legacy)
-    const activeMode = viewMode || (user?.role === 'LEADER' ? 'leader' : user?.role === 'SM' ? 'sm' : 'ops');
-
-    // Map Mode to Period
-    const getPeriodForMode = (m) => {
-        switch (m) {
-            case 'leader': return 'daily';
-            case 'sm': return 'weekly';
-            case 'ops': return 'monthly';
-            default: return 'daily';
-        }
+    // Hệ màu thương hiệu nâng cấp (Sáng, Nhẹ, Sang trọng)
+    const colorMap = {
+        'ALL': 'from-blue-600 to-indigo-700',
+        'TMG01': 'from-blue-400 to-blue-600',
+        'TMG02': 'from-emerald-400 to-emerald-600',
+        'TMG03': 'from-violet-400 to-violet-600',
+        'TMG04': 'from-amber-400 to-orange-500',
+        'TMG05': 'from-rose-400 to-rose-600',
+        'TMG06': 'from-sky-400 to-sky-600',
+        'TMG07': 'from-indigo-400 to-indigo-600',
+        'TMG08': 'from-orange-400 to-red-500',
+        'TMG09': 'from-teal-400 to-teal-600',
+        'TMG10': 'from-pink-400 to-pink-600',
     };
 
-    const [period, setPeriod] = useState(getPeriodForMode(activeMode));
-    const [loading, setLoading] = useState(true);
-    const [storeMetrics, setStoreMetrics] = useState([]);
-    const [topStaff, setTopStaff] = useState([]);
-    const [incidents, setIncidents] = useState([]);
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const currentTheme = colorMap[selectedStore] || 'from-slate-400 to-slate-600';
+    const textColor = currentTheme.replace('bg-', 'text-');
 
-    // Store Selection for HQ
-    // Default to 'ALL' if OPS/Chain view, but for Daily/Weekly might want specific store default? 
-    // Let's keep 'ALL' default, user can switch.
-    const [selectedStoreId, setSelectedStoreId] = useState(isHQ ? 'ALL' : user?.store_id);
-    const [storeList, setStoreList] = useState([]);
+    const availableTabs = [
+        { id: 'leader', label: 'Điều Hành', icon: '⚡', role: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'] },
+        { id: 'sm', label: 'Cửa Hàng', icon: '🏢', role: ['SM', 'OPS', 'ADMIN', 'BOD'] },
+        { id: 'ops', label: 'Hệ Thống', icon: '📊', role: ['OPS', 'ADMIN', 'BOD'] },
+        { id: 'bod', label: 'Tầm Nhìn', icon: '💎', role: ['ADMIN', 'BOD'] }
+    ].filter(t => t.role.includes(user?.role));
 
-    // Calculate dates
-    const calculateDates = (p) => {
-        const end = new Date();
-        const start = new Date();
-
-        if (p === 'daily') {
-            start.setDate(end.getDate() - 1); // Focus on Yesterday/Today
-        } else if (p === 'weekly') {
-            start.setDate(end.getDate() - 7);
-        } else {
-            start.setDate(end.getDate() - 30);
-        }
-        return {
-            start: start.toISOString().split('T')[0],
-            end: end.toISOString().split('T')[0]
-        };
-    };
-
-    // Load Stores (Mock for now)
     useEffect(() => {
-        if (isHQ) {
-            setStoreList([
-                { id: 'ALL', name: '🏢 Toàn bộ hệ thống' },
-                { id: 'TM01', name: '🏪 TM01 - Ngô Quyền' },
-                { id: 'TM02', name: '🏪 TM02 - Sơn Trà' }
-            ]);
-        }
-    }, [isHQ]);
+        if (!isSM) loadStores();
+    }, [user]);
 
-    // Fetch Data
+    useEffect(() => { loadData(); }, [selectedStore, mode, date, activeTab]);
+
+    const loadStores = async () => {
+        try {
+            const res = await masterDataAPI.getAllStores();
+            if (res.success) setStores(res.data.slice(0, 10));
+        } catch (e) { console.error(e); }
+    };
+
     const loadData = async () => {
         setLoading(true);
         try {
-            const targetStoreId = selectedStoreId || user?.store_id;
-            const finalStoreId = targetStoreId || 'ALL';
+            // 1. Tính toán Range Date (Dựa trên mode & date hiện tại)
+            let start, end;
+            const d = new Date(date);
+            if (mode === 'day') {
+                start = end = d.toISOString().split('T')[0];
+            } else if (mode === 'week') {
+                const day = d.getDay() || 7;
+                const Monday = new Date(d);
+                Monday.setDate(d.getDate() - day + 1);
+                const Sunday = new Date(Monday);
+                Sunday.setDate(Monday.getDate() + 6);
+                start = Monday.toISOString().split('T')[0];
+                end = Sunday.toISOString().split('T')[0];
+            } else {
+                start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+                end = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+            }
 
-            // Adjust period based on active mode primarily
-            const currentPeriod = getPeriodForMode(activeMode);
-            const { start, end } = calculateDates(currentPeriod);
+            // 2. Gọi API
+            const res = await analyticsAPI.getStoreMetrics(selectedStore, start, end);
 
-            setDateRange({ start, end });
+            if (res.success && res.data) {
+                const rawData = res.data;
+                const count = rawData.length || 1;
 
-            const [metricsRes, staffRes, incidentsRes] = await Promise.all([
-                analyticsAPI.getStoreMetrics(finalStoreId, start, end),
-                analyticsAPI.getTopStaff(finalStoreId, start, end, 5),
-                analyticsAPI.getRecentIncidents(finalStoreId, 10)
-            ]);
+                // Aggregator
+                const sums = rawData.reduce((acc, curr) => {
+                    const ext = curr.extended_metrics || {};
+                    return {
+                        health: acc.health + (curr.health_score || 0),
+                        incidents: acc.incidents + (curr.incident_count || 0),
+                        checklist: acc.checklist + (curr.avg_checklist_score || 0),
+                        mood: acc.mood + (curr.avg_mood_score || 0),
+                        late: acc.late + (ext.late_count || 0),
+                        headcount: acc.headcount + (ext.headcount || 0),
+                        cagay: acc.cagay + (ext.split_shift_count || 0),
+                        uniform: acc.uniform + (ext.uniform_violations || 0),
+                        training: acc.training + (ext.training_hours || 0)
+                    };
+                }, { health: 0, incidents: 0, checklist: 0, mood: 0, late: 0, headcount: 0, cagay: 0, uniform: 0, training: 0 });
 
-            if (metricsRes.success) setStoreMetrics(metricsRes.data || []);
-            if (staffRes.success) setTopStaff(staffRes.data || []);
-            if (incidentsRes.success) setIncidents(incidentsRes.data || []);
+                const avg = {
+                    health: Math.round(sums.health / count),
+                    incidents: sums.incidents,
+                    checklist: Math.round(sums.checklist / count),
+                    mood: (sums.mood / count).toFixed(1),
+                    late: sums.late,
+                    headcount: Math.round(sums.headcount / count), // Average headcount per day
+                    cagay: sums.cagay,
+                    uniform: sums.uniform,
+                    training: Math.round(sums.training)
+                };
 
-        } catch (error) {
-            console.error(error);
+                const isAll = selectedStore === 'ALL';
+                const formattedData = {
+                    leader: [
+                        { n: 'Checklist', v: `${avg.checklist}%`, i: '✅' },
+                        { n: 'Mood', v: avg.mood, i: '😊' },
+                        { n: 'Sự cố', v: avg.incidents.toString(), i: '⚠️' },
+                        { n: 'Đi muộn', v: avg.late.toString(), i: '⏰' },
+                        { n: 'Sức khỏe', v: `${avg.health}%`, i: '🌡️' },
+                        { n: 'Headcount', v: avg.headcount.toString(), i: '👥' },
+                        { n: 'Ca gãy', v: avg.cagay.toString(), i: '📉' },
+                        { n: 'Đồng phục', v: avg.uniform.toString(), i: '👔' },
+                        { n: 'Training', v: `${avg.training}h`, i: '📖' }
+                    ],
+                    sm: [
+                        { n: 'Hiệu suất', v: avg.health > 80 ? 'Cao' : 'Khá', i: '⚡' },
+                        { n: 'Giờ công', v: `${Math.round(sums.training + (avg.headcount * 8))}h`, i: '⏱️' },
+                        { n: 'Checklist', v: `${avg.checklist}%`, i: '📋' },
+                        { n: 'Mood', v: avg.mood, i: '🌟' },
+                        { n: 'Sự cố', v: avg.incidents.toString(), i: '🎯' },
+                        { n: 'Vệ sinh', v: 'Ổn', i: '🧹' },
+                        { n: 'Nhân sự', v: avg.headcount.toString(), i: '👥' },
+                        { n: 'OT', v: '0h', i: '🔥' },
+                        { n: 'Late/Fail', v: avg.late.toString(), i: '🚫' }
+                    ],
+                    ops: [
+                        { n: 'Năng suất', v: (avg.health / 80).toFixed(1), i: '⚡' },
+                        { n: 'Tuân thủ', v: `${avg.checklist}%`, i: '🛡️' },
+                        { n: 'Rủi ro', v: avg.incidents > 5 ? 'Cao' : 'Thấp', i: '🛡️' },
+                        { n: 'Lỗi quy trình', v: (avg.late + avg.uniform).toString(), i: '🚫' },
+                        { n: 'Health', v: avg.health >= 80 ? 'A+' : 'B', i: '🌡️' },
+                        { n: 'Top Store', v: isAll ? 'TMG01' : selectedStore, i: '🏆' },
+                        { n: 'Đào tạo', v: `${avg.checklist}%`, i: '🎓' },
+                        { n: 'QA/QC', v: (avg.checklist / 10).toFixed(1), i: '🔍' },
+                        { n: 'Tăng trưởng', v: '+2%', i: '📈' }
+                    ],
+                    bod: [
+                        { n: 'EBITDA', v: '18%', i: '💎' },
+                        { n: 'ROI', v: '15%', i: '🏦' },
+                        { n: 'Tăng trưởng', v: '+12%', i: '🚀' },
+                        { n: 'Sức khỏe', v: avg.health >= 80 ? 'Ổn định' : 'Cần chú ý', i: '🌈' },
+                        { n: 'Thương hiệu', v: avg.mood, i: '⭐' },
+                        { n: 'Mở rộng', v: 'TMG11', i: '🏗️' },
+                        { n: 'Công suất', v: `${avg.health}%`, i: '⚡' },
+                        { n: 'Thị phần', v: '11%', i: '🌍' },
+                        { n: 'Ổn định', v: avg.incidents === 0 ? 'Cao' : 'Vừa', i: '⚓' }
+                    ]
+                };
+                setData(formattedData);
+            }
+        } catch (e) {
+            console.error("Analytics load error:", e);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        loadData();
-    }, [activeMode, selectedStoreId]);
-
-    // Store Control Component
-    const StoreControl = () => (
-        isHQ && (
-            <div className="bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-                <select
-                    className="bg-transparent text-[10px] font-bold outline-none px-1"
-                    value={selectedStoreId}
-                    onChange={(e) => setSelectedStoreId(e.target.value)}
-                >
-                    {storeList.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                </select>
-            </div>
-        )
-    );
+    const currentTabInfo = availableTabs.find(t => t.id === activeTab);
+    const activeStats = data ? data[activeTab] : [];
 
     return (
-        <div className="p-4 max-w-md mx-auto min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <div onClick={onBack} className="text-xs text-blue-600 font-bold mb-1 cursor-pointer hover:underline">← Quay lại</div>
-                    <h1 className="text-xl font-extrabold text-gray-800">
-                        {activeMode === 'leader' ? 'Leader Dashboard' : activeMode === 'sm' ? 'SM Dashboard' : 'Báo Cáo Chuỗi'}
-                    </h1>
-                    <p className="text-xs text-gray-500 font-medium">
-                        {activeMode === 'leader' ? 'Vận hành hàng ngày (Daily)' : activeMode === 'sm' ? 'Sức khỏe Store (Weekly)' : 'Tổng quan quản trị (Monthly)'}
-                    </p>
+        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
+            {/* FRAMEWORK HEADER - DYNAMIC GRADIENT */}
+            <div className={`shrink-0 bg-gradient-to-br ${currentTheme} p-5 pb-10 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
+                <div className="relative z-10">
+                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-4 active:scale-95">
+                        ← Dashboard
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2 leading-none animate-in zoom-in duration-500">
+                            {currentTabInfo?.icon || '📈'}
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-black uppercase tracking-tight leading-none mb-0.5">TM ANALYTICS</h1>
+                            <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                                {selectedStore === 'ALL' ? 'Chain Overview' : `Branch: ${selectedStore}`}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <StoreControl />
+                <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
+                <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-black/5 rounded-full blur-[60px]"></div>
             </div>
 
-            {loading ? (
-                <div className="space-y-4 animate-pulse">
-                    <div className="h-24 bg-gray-200 rounded-xl"></div>
-                    <div className="h-40 bg-gray-200 rounded-xl"></div>
+            {/* CONTENT AREA */}
+            <div className="flex-1 px-5 -mt-8 relative z-20 space-y-5">
+
+                {/* ROLE TABS */}
+                <div className="flex bg-white p-1.5 rounded-[24px] shadow-xl flex gap-1 border border-slate-100/50">
+                    {availableTabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter transition-all duration-500 ${activeTab === tab.id ? `bg-gradient-to-r ${currentTheme} text-white shadow-lg scale-[1.02]` : 'text-slate-400'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
-            ) : (
-                <>
-                    {/* Render Content Based on Mode */}
-                    {activeMode === 'leader' && (
-                        <LeaderDashboard
-                            metrics={storeMetrics}
-                            incidents={incidents}
-                            dateRange={dateRange}
-                        />
-                    )}
 
-                    {activeMode === 'sm' && (
-                        <SMDashboard
-                            metrics={storeMetrics}
-                            topStaff={topStaff}
-                            incidents={incidents}
-                            dateRange={dateRange}
-                        />
+                {/* LƯỚI CHỈ SỐ SIÊU TINH GỌN (4 CỘT) */}
+                <div className="grid grid-cols-4 gap-1.5 relative min-h-[160px]">
+                    {loading && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/40 backdrop-blur-[2px] rounded-[32px]">
+                            <div className="w-5 h-5 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
                     )}
+                    {activeStats.map((s, i) => {
+                        const isAll = selectedStore === 'ALL';
+                        return (
+                            <div
+                                key={i}
+                                className={`
+                                    py-2 px-1 rounded-2xl shadow-sm flex flex-col items-center text-center active:scale-95 transition-all duration-500
+                                    bg-gradient-to-br ${currentTheme} border border-white/5
+                                `}
+                                style={{ animationDelay: `${i * 15}ms` }}
+                            >
+                                <span className={`text-sm mb-0.5`}>{s.i}</span>
+                                <div className={`text-[10px] font-black leading-none mb-0.5 text-white`}>{s.v}</div>
+                                <div className={`text-[5px] font-black uppercase tracking-tighter text-white/80`}>{s.n}</div>
+                            </div>
+                        );
+                    })}
+                </div>
 
-                    {activeMode === 'ops' && (
-                        <OPSDashboard
-                            metrics={storeMetrics}
-                            topStaff={topStaff}
-                            incidents={incidents}
-                            dateRange={dateRange}
-                            selectedStoreId={selectedStoreId}
-                            storeList={storeList}
-                            onStoreChange={setSelectedStoreId} // Duplicated control but kept for OPS layout
-                        />
-                    )}
-                </>
-            )}
+                {/* SELECTORS (Only for OPS+) */}
+                {!isSM && (
+                    <div className="bg-white p-5 rounded-[36px] shadow-xl border border-slate-100/80 space-y-4">
+                        <div className="flex items-center gap-3 px-1">
+                            <div className={`w-1.5 h-4 rounded-full bg-gradient-to-b ${currentTheme}`}></div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hệ Thống Chi Nhánh</span>
+                        </div>
+                        <StoreGridSelector stores={stores} selectedStore={selectedStore} onSelect={setSelectedStore} />
+                    </div>
+                )}
+
+                {/* TIME PICKER */}
+                <div className="bg-white p-5 rounded-[32px] shadow-sm border border-slate-100">
+                    <TimeRangePicker mode={mode} setMode={setMode} date={date} setDate={setDate} />
+                </div>
+
+                {/* INSIGHT CARD */}
+                <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-2xl relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className={`w-2 h-2 rounded-full ${currentTheme} animate-pulse`}></span>
+                            <h3 className="text-[10px] font-black uppercase tracking-widest opacity-40">Insight Hệ Thống</h3>
+                        </div>
+                        <p className="text-[12px] font-bold leading-relaxed opacity-90 italic">
+                            "{selectedStore === 'ALL'
+                                ? `Toàn chuỗi đang vận hành ổn định. Chú ý các điểm nóng tại khu vực trung tâm.`
+                                : `Chi nhánh ${selectedStore} đang ${activeTab === 'leader' ? 'thực thi tốt' : 'tăng trưởng ổn định'}. Cần duy trì phong độ hiện tại.`}"
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-8 text-center opacity-20">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">TMG Decision Engine v3.0</p>
+            </div>
         </div>
     );
 };

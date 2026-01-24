@@ -173,7 +173,18 @@ export class AuthService {
         userAgent
       });
 
-      // 6. Trả về thông tin user và token
+      // 6. Check for pending approvals count for Manager notification
+      let pendingApprovals = 0;
+      if (['ADMIN', 'OPS', 'SM'].includes(user.role)) {
+        const filter = { status: 'PENDING' };
+        if (user.role === 'SM') {
+          filter.store_code = user.store_code;
+        }
+        const pendingList = await UserRepo.getAllStaff(filter);
+        pendingApprovals = pendingList.length;
+      }
+
+      // 7. Trả về thông tin user và token
       return {
         success: true,
         token,
@@ -182,7 +193,8 @@ export class AuthService {
           staff_id: user.staff_id,
           name: user.staff_name,
           role: user.role,
-          storeCode: user.store_code
+          storeCode: user.store_code,
+          pendingApprovals // Popup logic use this
         }
       };
     } catch (error) {

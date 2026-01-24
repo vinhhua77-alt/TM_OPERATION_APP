@@ -103,6 +103,33 @@ export class AccessRepo {
     }
 
     /**
+     * Get counts for system summary dashboard
+     */
+    static async getSystemSummary() {
+        const fetchCount = async (table) => {
+            const { count, error } = await supabase
+                .from(table)
+                .select('*', { count: 'exact', head: true });
+            if (error) return 0;
+            return count;
+        };
+
+        const [tenants, brands, stores, staff] = await Promise.all([
+            fetchCount('tenants'),
+            fetchCount('brands'),
+            fetchCount('store_list'),
+            fetchCount('staff_master')
+        ]);
+
+        return {
+            tenants,
+            brands,
+            stores,
+            staff
+        };
+    }
+
+    /**
      * Get system audit logs
      */
     static async getAuditLogs(limit = 100) {

@@ -6,6 +6,7 @@
 
 import { supabase } from '../../infra/supabase.client.js';
 import { Sanitizer } from '../../utils/sanitizer.js';
+import { SignalService } from '../decision/signal.service.js';
 
 export class ShiftService {
   /**
@@ -109,6 +110,25 @@ export class ShiftService {
       }
 
       console.log('Shift log inserted successfully:', data);
+
+      // --- V3 DECISION ENGINE INTEGRATION ---
+      try {
+        // 4. Log Raw Event (Append-only Fact)
+        const rawEvent = await SignalService.logRawEvent(
+          'SHIFT_LOG',
+          shiftData,
+          staffId,
+          payload.storeId
+        );
+
+        if (rawEvent) {
+          // 5. Extract Operational Signals (Flags)
+          await SignalService.extractFromShiftLog(rawEvent.id, shiftData);
+        }
+      } catch (v3Error) {
+        console.error('V3 Decision Engine Integration Error (Non-blocking):', v3Error);
+      }
+      // --------------------------------------
 
       return {
         success: true,

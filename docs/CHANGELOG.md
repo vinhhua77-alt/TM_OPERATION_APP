@@ -246,6 +246,19 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 ---
 
+## Detailed Changes - 2026-01-25
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-25 | **Added AM Assignment Tab** | Enable OPS/Admin to map Area Managers to specific stores via Matrix UI |
+| 2026-01-25 | **Upgraded Hierarchical Trainee Mode** | Logical career paths: Staff (TS Thu Ngân/Leader) and Leader (TS SM/AM) |
+| 2026-01-25 | **Removed 'Topics' Module** | Cleanup of unused prototype module to improve UI clarity |
+| 2026-01-25 | **Fixed 500 Error on Save** | Implemented `cleanPayload` to strip UI-only fields before API calls |
+| 2026-01-25 | **Fixed React 'key' Prop Warnings** | Improved unique key generation across all lists in Setup Center |
+| 2026-01-25 | **Updated User Manual (v2.1)** | Documented hierarchical Trainee Mode and AM Assignment features |
+
+---
+
 ## Detailed Changes - 2026-01-24
 
 | Date | Change | Reason |

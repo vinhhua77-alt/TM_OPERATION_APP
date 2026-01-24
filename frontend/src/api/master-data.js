@@ -118,5 +118,33 @@ export const masterDataAPI = {
     },
     async deleteShift(id) {
         return await apiClient.delete(`/master-data/shifts/${id}`);
+    },
+
+    // ==================== TENANTS ====================
+    async getAllTenants() {
+        return await apiClient.get('/master-data/tenants');
+    },
+    async createTenant(tenantData) {
+        return await apiClient.post('/master-data/tenants', tenantData);
+    },
+    async updateTenant(id, updates) {
+        return await apiClient.put(`/master-data/tenants/${id}`, updates);
+    },
+    async deleteTenant(id) {
+        return await apiClient.delete(`/master-data/tenants/${id}`);
+    },
+
+    // ==================== BRANDS ====================
+    async getAllBrands() {
+        return await apiClient.get('/master-data/brands');
+    },
+    async createBrand(brandData) {
+        return await apiClient.post('/master-data/brands', brandData);
+    },
+    async updateBrand(id, updates) {
+        return await apiClient.put(`/master-data/brands/${id}`, updates);
+    },
+    async deleteBrand(id) {
+        return await apiClient.delete(`/master-data/brands/${id}`);
     }
 };
