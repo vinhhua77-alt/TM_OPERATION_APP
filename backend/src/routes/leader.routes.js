@@ -58,6 +58,7 @@ router.post('/submit', async (req, res, next) => {
                     nhac_topic: payload.nhac_topic,
                     next_shift_risk: payload.next_shift_risk,
                     next_shift_note: payload.next_shift_note,
+                    improvement_initiative: payload.improvement_initiative,
                     is_confirmed: payload.confirm_all
                 }
             ])

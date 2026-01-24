@@ -34,6 +34,14 @@ const PageShiftLog = ({ user, onBack }) => {
         { id: 'STOCK', label: 'HÀNG HÓA', icon: '📦' }
     ];
 
+    const LAYOUT_THEMES = {
+        FOH: { main: 'bg-emerald-500', light: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' },
+        BOH: { main: 'bg-orange-500', light: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' },
+        CASH: { main: 'bg-rose-500', light: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100' },
+        SUPPORT: { main: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-100' },
+        DEFAULT: { main: 'bg-slate-800', light: 'bg-slate-50', text: 'text-slate-400', border: 'border-slate-100' }
+    };
+
     const [form, setForm] = useState({
         storeId: user?.store_code || user?.storeCode || '',
         lead: '',
@@ -184,8 +192,8 @@ const PageShiftLog = ({ user, onBack }) => {
             </div>
 
             <div className="flex-1 px-3 -mt-6 relative z-20 space-y-3">
-                {/* 0. TRAINEE TOGGLE (STAFF & LEADER) */}
-                {['STAFF', 'LEADER'].includes(user?.role) && (
+                {/* 0. TRAINEE TOGGLE (STAFF, LEADER, ADMIN, OPS) */}
+                {['STAFF', 'LEADER', 'ADMIN', 'OPS', 'AM'].includes(user?.role?.toString().toUpperCase().trim()) && (
                     <div className={`p-4 rounded-[28px] border transition-all duration-500 shadow-sm ${form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-slate-400 border-slate-100'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
@@ -193,7 +201,8 @@ const PageShiftLog = ({ user, onBack }) => {
                                 <span className={`text-[12px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>💎 TẬP SỰ QUẢN LÝ</span>
                             </div>
                             <button onClick={() => {
-                                const options = user.role === 'STAFF' ? ['CASHIER', 'LEADER'] : ['SM', 'AM'];
+                                const role = user?.role?.toString().toUpperCase().trim();
+                                const options = role === 'STAFF' ? ['CASHIER', 'LEADER'] : ['SM', 'AM'];
                                 setForm({ ...form, isTraineeMode: !form.isTraineeMode, traineePos: !form.isTraineeMode ? options[0] : '' });
                             }} className={`w-14 h-7 rounded-full relative transition-all duration-300 shadow-inner ${form.isTraineeMode ? 'bg-indigo-400' : 'bg-slate-200'}`}>
                                 <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${form.isTraineeMode ? 'left-8' : 'left-1'}`}></div>
@@ -201,7 +210,7 @@ const PageShiftLog = ({ user, onBack }) => {
                         </div>
                         {form.isTraineeMode && (
                             <div className="mt-3 grid grid-cols-2 gap-2 animate-in zoom-in duration-300">
-                                {(user.role === 'STAFF' ? [
+                                {(user?.role?.toString().toUpperCase().trim() === 'STAFF' ? [
                                     { id: 'CASHIER', label: '💎 TS THU NGÂN' },
                                     { id: 'LEADER', label: '💎 TS LEADER' }
                                 ] : [
@@ -216,34 +225,32 @@ const PageShiftLog = ({ user, onBack }) => {
                         )}
                     </div>
                 )}
-                {/* 1. STORE & TIME */}
+                {/* 1. STORE & CONTEXT */}
                 <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
-                    {(isLeader || form.isTraineeMode) ? (
-                        <div className="grid grid-cols-2 gap-2">
-                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
-                                <option value="">-- CHI NHÁNH --</option>
-                                {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
-                            </select>
+                    <div className="grid grid-cols-2 gap-2">
+                        <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : (isLeader ? 'ring-emerald-500/20' : 'ring-blue-500/20')}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                            <option value="">-- CHI NHÁNH --</option>
+                            {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
+                        </select>
 
+                        {!isLeader ? (
+                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20 ${form.lead === 'KHÔNG CÓ LEAD CA' ? 'text-rose-500' : ''}`} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
+                                <option value="">-- LEAD CA --</option>
+                                <option value="KHÔNG CÓ LEAD CA" className="text-rose-500 font-black italic">⚠ KHÔNG CÓ LEAD</option>
+                                {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                            </select>
+                        ) : (
                             <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.layout} onChange={e => setForm({ ...form, layout: e.target.value, subPos: form.isTraineeMode ? `${form.traineePos}_TRAINEE` : 'LEADER', checks: {} })}>
                                 <option value="">-- KHU VỰC CẮM CHỐT --</option>
                                 {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(k => <option key={k} value={k}>{master.layouts[k].name || k}</option>)}
                             </select>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-2">
-                            <select className="bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20" value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
-                                <option value="">-- CHI NHÁNH --</option>
-                                {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
-                            </select>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
-                    {!isLeader && (
-                        <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20 ${form.lead === 'KHÔNG CÓ LEAD CA' ? 'text-rose-500' : ''}`} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
-                            <option value="">-- LEAD CA --</option>
-                            <option value="KHÔNG CÓ LEAD CA" className="text-rose-500 font-black italic">⚠ KHÔNG CÓ LEAD</option>
-                            {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
+                    {(!isLeader && form.isTraineeMode) && (
+                        <select className="bg-white border-2 border-indigo-100 text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-indigo-500/20" value={form.layout} onChange={e => setForm({ ...form, layout: e.target.value, subPos: `${form.traineePos}_TRAINEE`, checks: {} })}>
+                            <option value="">-- KHU VỰC CẮM CHỐT --</option>
+                            {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(k => <option key={k} value={k}>{master.layouts[k].name || k}</option>)}
                         </select>
                     )}
 
@@ -341,11 +348,19 @@ const PageShiftLog = ({ user, onBack }) => {
                         <>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block text-left">KHU VỰC LÀM VIỆC</span>
                             <div className="grid grid-cols-4 gap-1.5">
-                                {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(key => (
-                                    <button key={key} onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {} })} className={`py-2.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-sm ${form.layout === key ? 'bg-blue-600 text-white active:scale-95' : 'bg-slate-50 text-slate-400'}`}>
-                                        {master.layouts[key].name || key}
-                                    </button>
-                                ))}
+                                {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(key => {
+                                    const active = form.layout === key;
+                                    const theme = LAYOUT_THEMES[key] || LAYOUT_THEMES.DEFAULT;
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {} })}
+                                            className={`py-2.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-sm active:scale-95 ${active ? `${theme.main} text-white` : 'bg-slate-50 text-slate-400'}`}
+                                        >
+                                            {master.layouts[key].name || key}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </>
                     ) : (
@@ -366,11 +381,19 @@ const PageShiftLog = ({ user, onBack }) => {
                             ) : (
                                 master.layouts[form.layout]?.subPositions?.length > 0 && (
                                     <div className="grid grid-cols-3 gap-1.5">
-                                        {master.layouts[form.layout].subPositions.map(sp => (
-                                            <button key={sp} onClick={() => setForm({ ...form, subPos: sp })} className={`py-2 rounded-lg text-[9px] font-black transition-all ${form.subPos === sp ? 'bg-slate-700 text-white shadow-md' : 'bg-slate-50 text-slate-400 border border-dashed border-slate-200'}`}>
-                                                {sp}
-                                            </button>
-                                        ))}
+                                        {master.layouts[form.layout].subPositions.map(sp => {
+                                            const active = form.subPos === sp;
+                                            const theme = LAYOUT_THEMES[form.layout] || LAYOUT_THEMES.DEFAULT;
+                                            return (
+                                                <button
+                                                    key={sp}
+                                                    onClick={() => setForm({ ...form, subPos: sp })}
+                                                    className={`py-2 rounded-xl text-[9px] font-black transition-all border ${active ? `${theme.main} text-white shadow-md scale-105 z-10` : `${theme.light} ${theme.text} ${theme.border} border-dashed opacity-80`}`}
+                                                >
+                                                    {sp}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 )
                             )}
@@ -407,9 +430,13 @@ const PageShiftLog = ({ user, onBack }) => {
                                             return (
                                                 <div key={itemId} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-left">
                                                     <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{itemText}</span>
-                                                    <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
-                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white') : 'text-slate-300'}`}>CÓ</button>
-                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-300'}`}>KHÔNG</button>
+                                                    <div className="flex bg-slate-50 p-0.5 rounded-lg gap-0.5 border border-slate-100 shadow-inner shrink-0">
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white') : 'text-slate-200'}`}>
+                                                            {form.checks[itemId] === 'yes' ? '✅' : '✔'}
+                                                        </button>
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-200'}`}>
+                                                            {form.checks[itemId] === 'no' ? '❌' : '✖'}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -437,7 +464,7 @@ const PageShiftLog = ({ user, onBack }) => {
                     <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
                     </div>
-                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100 mb-3">
                         {Object.keys(MOOD_CONFIG).map(mood => (
                             <span key={mood} onClick={() => { setForm({ ...form, rating: mood }); setActivePhrase(MOOD_CONFIG[mood].phrases[Math.floor(Math.random() * MOOD_CONFIG[mood].phrases.length)]); setShowMoodModal(true); }} className={`text-2xl cursor-pointer transition-all active:scale-125 ${form.rating === mood ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}>
                                 {MOOD_CONFIG[mood].icon}
@@ -445,15 +472,23 @@ const PageShiftLog = ({ user, onBack }) => {
                         ))}
                     </div>
 
-                    {!(isLeader || form.isTraineeMode) && form.rating && (
-                        <div className="grid grid-cols-3 gap-2">
-                            {REASONS.map(r => (
-                                <button key={r.id} onClick={() => { const newRes = form.selectedReasons.includes(r.id) ? form.selectedReasons.filter(i => i !== r.id) : [...form.selectedReasons, r.id]; setForm({ ...form, selectedReasons: newRes }); }} className={`py-2 rounded-xl text-[8px] font-black flex flex-col items-center gap-1 transition-all border ${form.selectedReasons.includes(r.id) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>
-                                    <span>{r.icon}</span><span>{r.label}</span>
-                                </button>
-                            ))}
+                    {form.selectedReasons.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 animate-in fade-in slide-in-from-top-1 duration-500">
+                            {form.selectedReasons.map(rid => {
+                                const r = REASONS.find(i => i.id === rid);
+                                return (
+                                    <div key={rid} onClick={() => setShowMoodModal(true)} className="px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-[9px] font-black uppercase flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+                                        <span>{r?.icon}</span>
+                                        <span>{r?.label}</span>
+                                    </div>
+                                );
+                            })}
+                            <button onClick={() => setShowMoodModal(true)} className="px-2.5 py-1 text-slate-300 border border-slate-100 border-dashed rounded-lg text-[9px] font-black uppercase">
+                                ✎ Sửa
+                            </button>
                         </div>
                     )}
+
 
                     {(isLeader || form.isTraineeMode) && (
                         <div className="grid grid-cols-2 gap-2">
@@ -484,11 +519,39 @@ const PageShiftLog = ({ user, onBack }) => {
 
             {/* MOOD MODAL */}
             {showMoodModal && (
-                <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 ${MOOD_CONFIG[form.rating]?.modalBg} backdrop-blur-md animate-in fade-in duration-300`} onClick={() => setShowMoodModal(false)}>
-                    <div className="text-center animate-in zoom-in duration-500">
+                <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 ${MOOD_CONFIG[form.rating]?.modalBg} backdrop-blur-md animate-in fade-in duration-300`}>
+                    <div className="text-center animate-in zoom-in duration-500 max-w-sm w-full">
                         <div className="text-8xl mb-6 drop-shadow-2xl">{MOOD_CONFIG[form.rating]?.icon}</div>
                         <h3 className="text-white text-3xl font-black uppercase tracking-tighter mb-2">{activePhrase}</h3>
-                        <p className="text-white/60 text-[10px] font-bold tracking-widest uppercase">Click để tiếp tục</p>
+                        <p className="text-white/60 text-[10px] font-bold tracking-widest uppercase mb-8">Điều gì khiến ca làm của bạn như vậy?</p>
+
+                        <div className="grid grid-cols-3 gap-2 mb-10">
+                            {REASONS.map(r => {
+                                const active = form.selectedReasons.includes(r.id);
+                                return (
+                                    <button
+                                        key={r.id}
+                                        onClick={() => {
+                                            if (active) {
+                                                setForm({ ...form, selectedReasons: form.selectedReasons.filter(i => i !== r.id) });
+                                            } else if (form.selectedReasons.length < 2) {
+                                                setForm({ ...form, selectedReasons: [...form.selectedReasons, r.id] });
+                                            }
+                                        }}
+                                        className={`py-3 rounded-2xl text-[9px] font-black flex flex-col items-center gap-1 transition-all border-2 ${active ? 'bg-white text-slate-900 border-white shadow-xl scale-105' : 'bg-white/10 text-white border-white/10'}`}
+                                    >
+                                        <span className="text-lg">{r.icon}</span><span>{r.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => setShowMoodModal(false)}
+                            className="bg-white text-slate-900 px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+                        >
+                            Xác nhận & Tiếp tục
+                        </button>
                     </div>
                 </div>
             )}

@@ -89,6 +89,7 @@ export class ShiftService {
         incident_type: payload.incidentType || '',
         // Sanitize incident notes
         incident_note: Sanitizer.sanitizeText(payload.incidentNote || ''),
+        improvement_note: Sanitizer.sanitizeText(payload.improvementNote || ''),
         rating: payload.rating || 0, // Updated to include default
         selected_reasons: typeof payload.selectedReasons === 'string' ? payload.selectedReasons : JSON.stringify(payload.selectedReasons || []),
         is_valid: true,

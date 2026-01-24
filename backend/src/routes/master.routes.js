@@ -58,13 +58,13 @@ router.get('/data', async (req, res) => {
             { data: incidents, error: errIncidents },
             { data: staff, error: errStaff }
         ] = await Promise.all([
-            supabase.from('store_list').select('id, store_code, store_name'),
-            supabase.from('shift_master').select('*'),
+            supabase.from('store_list').select('id, store_code, store_name, active').eq('active', true),
+            supabase.from('shift_master').select('*').eq('active', true),
             supabase.from('layout_master').select('*').order('sort_order', { ascending: true }),
             supabase.from('sub_position_master').select('*'),
             supabase.from('checklist_master').select('*').order('sort_order', { ascending: true }),
             supabase.from('incident_master').select('*'),
-            supabase.from('staff_master').select('id, staff_name, store_code, role')
+            supabase.from('staff_master').select('id, staff_name, store_code, role, active').eq('active', true)
         ]);
 
         if (errStores || errShifts || errLayouts || errSubPos || errChecklists || errIncidents || errStaff) {
@@ -127,26 +127,26 @@ router.get('/data', async (req, res) => {
         // 5. Transform Layouts (Heavy lifting)
         const layoutsData = {};
 
-        // Helper to transform lists
+        // Helper to transform lists (only if active)
         const getChecklist = (layoutCode) => (checklists || [])
-            .filter(ck => ck.layout === layoutCode)
+            .filter(ck => ck.layout === layoutCode && ck.active !== false)
             .map(ck => ({
                 id: ck.checklist_id || `ck_${ck.id}`,
                 text: ck.checklist_text
             }));
 
         const getIncidents = (layoutCode) => (incidents || [])
-            .filter(ic => ic.layout === layoutCode)
+            .filter(ic => ic.layout === layoutCode && ic.active !== false)
             .map(ic => ic.incident_name);
 
         const getSubPositions = (layoutCode) => (subPositions || [])
-            .filter(sp => sp.layout === layoutCode)
+            .filter(sp => sp.layout === layoutCode && sp.active !== false)
             .map(sp => sp.sub_position);
 
-        // Add all layouts from layout_master
+        // Add all layouts from layout_master (only if active)
         (layouts || []).forEach(l => {
             const layoutKey = l.layout_code;
-            if (!layoutKey) return;
+            if (!layoutKey || l.active === false) return;
             layoutsData[layoutKey] = {
                 name: l.layout_code,
                 subPositions: getSubPositions(layoutKey),
@@ -173,7 +173,7 @@ router.get('/data', async (req, res) => {
             leaders: leadersData || [],
             shifts: shiftsData || [],
             layouts: layoutsData || {},
-            areas: (layouts || []).map(l => l.layout_code).filter(Boolean),
+            areas: (layouts || []).filter(l => l.active !== false).map(l => l.layout_code).filter(Boolean),
             staff: staffData || [],
             leaderChecklist: (checklists || []).filter(c => c.layout === 'LEAD').map(c => c.checklist_text),
             leaderIncidents: (incidents || []).filter(i => i.layout === 'LEAD').map(i => i.incident_name)

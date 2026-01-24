@@ -148,22 +148,69 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
       </div>
 
       <div className="px-3 space-y-3">
+        {/* === SECTION: GAMIFICATION & CAREER (PREMIUM) === */}
+        <div className="bg-slate-900 rounded-[28px] p-5 text-white shadow-xl relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-2xl border border-white/10 shadow-inner">
+                  🏅
+                </div>
+                <div>
+                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Cấp độ hiện tại</div>
+                  <div className="text-xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">LEVEL {data?.gamification?.level || 1}</div>
+                </div>
+              </div>
+              <div className="bg-orange-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
+                <span className="text-sm">🔥</span>
+                <span className="text-[10px] font-black">{data?.gamification?.streak || 0} CA LIÊN TIẾP</span>
+              </div>
+            </div>
+
+            {/* XP progress */}
+            <div className="space-y-1.5 mb-6">
+              <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/60">
+                <span>Kinh nghiệm (XP)</span>
+                <span>{data?.gamification?.xp || 0} / {data?.gamification?.nextLevelXp || 1000}</span>
+              </div>
+              <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div style={{ width: `${data?.gamification?.progress || 0}%` }} className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 shadow-[0_0_15px_rgba(96,165,250,0.4)]"></div>
+              </div>
+            </div>
+
+            {/* FLIGHT HOURS / CAREER PROGRESS */}
+            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 backdrop-blur-sm">
+              <div className="flex justify-between items-center mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">✈️</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Lộ trình "Giờ bay"</span>
+                </div>
+                <span className="text-[9px] font-black text-indigo-400">MỐC TIẾP: 300H</span>
+              </div>
+              <div className="flex items-end gap-3">
+                <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div style={{ width: `${Math.min(100, (data?.stats?.totalHours || 0) / 300 * 100)}%` }} className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                </div>
+                <div className="text-[14px] font-black italic leading-none whitespace-nowrap">{data?.stats?.totalHours || 0}<span className="text-[9px] not-italic opacity-40 ml-1">/300H</span></div>
+              </div>
+            </div>
+          </div>
+          {/* Decorative elements */}
+          <div className="absolute -right-16 -top-16 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        </div>
 
         {/* === SECTION: TẢI CÔNG VIỆC STORE === */}
         {safeUser?.storeCode && (
-          <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 relative overflow-hidden">
-            <div className="flex justify-between items-end mb-3">
-              <div>
-                <h2 className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-0.5">PHÂN TÍCH TẢI CÔNG VIỆC</h2>
-                {/* Store Code Removed */}
-              </div>
-              {/* Filter Controls */}
-              <div className="flex bg-slate-100 rounded-lg p-0.5">
+          <div className="bg-white rounded-[32px] p-5 shadow-sm border border-slate-100 relative overflow-hidden">
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Hiệu suất chi nhánh</h2>
+              <div className="flex bg-slate-50 rounded-xl p-1 border border-slate-100">
                 {['day', 'week', 'month'].map(p => (
                   <button
                     key={p}
                     onClick={() => setWorkloadPeriod(p)}
-                    className={`px-2 py-0.5 text-[9px] font-bold rounded-md transition-all ${workloadPeriod === p ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+                    className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all ${workloadPeriod === p ? 'bg-white text-blue-600 shadow-sm border border-slate-100/50' : 'text-slate-400'}`}
                   >
                     {p === 'day' ? 'NGÀY' : p === 'week' ? 'TUẦN' : 'THÁNG'}
                   </button>
@@ -171,76 +218,66 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
               </div>
             </div>
 
-            {/* Content ... */}
             {workloadLoading ? (
-              <div className="animate-pulse space-y-2">
-                <div className="h-3 bg-slate-100 w-1/3 rounded"></div>
-                <div className="h-6 bg-slate-100 w-full rounded-lg"></div>
+              <div className="animate-pulse flex gap-4 items-center h-16">
+                <div className="h-10 bg-slate-100 w-20 rounded-2xl"></div>
+                <div className="h-5 bg-slate-100 flex-1 rounded-full"></div>
               </div>
             ) : workload ? (
-              <div>
-                {/* Total Hours */}
-                <div className="flex items-baseline mb-2">
-                  <div className="text-2xl font-black text-slate-800 mr-2">{workload.total_hours}h</div>
-                  <div className="text-[10px] text-slate-400 font-bold">Total hours</div>
+              <div className="flex items-center gap-5">
+                <div className="shrink-0 flex flex-col items-center">
+                  <div className="text-3xl font-black text-slate-800 leading-none">{workload.total_hours}<span className="text-xs ml-0.5 opacity-30 text-slate-400">h</span></div>
+                  <div className="text-[8px] text-slate-400 font-bold uppercase tracking-tight mt-1">Tổng giờ</div>
                 </div>
 
-                {/* Split Bar */}
-                <div className="space-y-2">
-                  <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-100">
-                    <div style={{ width: `${(workload.morning_hours / workload.total_hours) * 100}%` }} className="bg-blue-400"></div>
-                    <div style={{ width: `${(workload.evening_hours / workload.total_hours) * 100}%` }} className="bg-orange-400"></div>
+                <div className="flex-1 space-y-2.5">
+                  <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-slate-50 border border-slate-100/50">
+                    <div style={{ width: `${(workload.morning_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-blue-500"></div>
+                    <div style={{ width: `${(workload.evening_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-orange-500"></div>
                   </div>
-
-                  <div className="flex justify-between text-[10px] font-bold">
-                    <div className="text-blue-500">
-                      <span className="block text-[9px] text-slate-400">CA SÁNG</span>
-                      {workload.morning_hours}h
-                    </div>
-                    <div className="text-right text-orange-500">
-                      <span className="block text-[9px] text-slate-400">CA CHIỀU</span>
-                      {workload.evening_hours}h
-                    </div>
+                  <div className="flex justify-between text-[8px] font-black tracking-widest">
+                    <div className="text-blue-500 uppercase">☀️ Sáng: {Math.round((workload.morning_hours / (workload.total_hours || 1)) * 100)}%</div>
+                    <div className="text-orange-500 uppercase text-right">🌙 Tối: {Math.round((workload.evening_hours / (workload.total_hours || 1)) * 100)}%</div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-3 text-slate-400 text-[10px] italic">
-                Chưa có dữ liệu phân tích cho {workloadPeriod === 'day' ? 'hôm qua' : 'giai đoạn này'}.
+              <div className="text-center py-5 text-slate-300 text-[10px] font-black uppercase tracking-widest italic border border-dashed border-slate-100 rounded-2xl">
+                ☕ Dữ liệu đang được tổng hợp
               </div>
             )}
           </div>
         )}
 
-        {/* 1. STATS GRID (4 Columns - Full Row) */}
-        <div className="grid grid-cols-4 gap-1.5">
+        {/* 1. STATS GRID (4 Columns) */}
+        <div className="grid grid-cols-4 gap-2">
           <StatCard
             label="TỔNG CA"
-            value={data?.stats?.shift_count || 0}
-            subValue={data?.stats?.total_hours ? `${data.stats.total_hours}h` : '0h'}
+            value={data?.stats?.shiftCount || 0}
+            subValue=""
             icon="📅"
             color="blue"
             compact={true}
           />
           <StatCard
             label="ĐÁNH GIÁ"
-            value={data?.stats?.avg_rating || "-"}
-            subValue=""
+            value={data?.stats?.avgRating || "-"}
+            subValue="pts"
             icon="⭐"
             color="yellow"
             compact={true}
           />
           <StatCard
-            label="THỜI GIAN"
-            value={data?.stats?.avg_duration || 0}
-            subValue="h"
-            icon="⏱️"
+            label="CHẤT LƯỢNG"
+            value={`${data?.stats?.avgChecklist || 0}%`}
+            subValue=""
+            icon="✅"
             color="purple"
             compact={true}
           />
           <StatCard
-            label="LƯƠNG"
-            value={data?.stats?.estimated_salary ? `${(data.stats.estimated_salary / 1000).toFixed(0)}k` : "0"}
+            label="THU NHẬP"
+            value={data?.stats?.estimatedSalary ? `${(data.stats.estimatedSalary / 1000).toFixed(0)}k` : "0"}
             subValue=""
             icon="💰"
             color="green"

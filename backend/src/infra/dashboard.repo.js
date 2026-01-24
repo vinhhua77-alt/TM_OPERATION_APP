@@ -53,9 +53,25 @@ export class DashboardRepo {
             };
 
             // 3. Calculate statistics
-            const totalShifts = shifts?.length || 0;
-            const totalHours = shifts?.reduce((sum, s) => sum + (parseFloat(s.duration) || 0), 0) || 0;
-            const avgDuration = totalShifts > 0 ? (totalHours / totalShifts).toFixed(1) : 0;
+            const shiftCount = shifts?.length || 0;
+            const totalHoursNum = shifts?.reduce((sum, s) => sum + (parseFloat(s.duration) || 0), 0) || 0;
+            const avgDuration = shiftCount > 0 ? (totalHoursNum / shiftCount).toFixed(1) : 0;
+
+            // Calculate average checklist score
+            let totalChecklistScore = 0;
+            let checklistCount = 0;
+            shifts?.forEach(s => {
+                try {
+                    const checks = typeof s.checks === 'string' ? JSON.parse(s.checks || '{}') : (s.checks || {});
+                    const totalItems = Object.keys(checks).length;
+                    if (totalItems > 0) {
+                        const yesItems = Object.values(checks).filter(v => v === 'yes').length;
+                        totalChecklistScore += (yesItems / totalItems) * 100;
+                        checklistCount++;
+                    }
+                } catch (e) { }
+            });
+            const avgChecklist = checklistCount > 0 ? Math.round(totalChecklistScore / checklistCount) : 100;
 
             // Calculate average rating (convert feeling to numeric score)
             const ratingMap = { 'OK': 5, 'BUSY': 4, 'FIXED': 3, 'OPEN': 2, 'OVER': 1 };
@@ -73,21 +89,26 @@ export class DashboardRepo {
             // Convert to percentages
             const feelingPercentages = {};
             Object.keys(feelings).forEach(key => {
-                feelingPercentages[key] = totalShifts > 0 ? Math.round((feelings[key] / totalShifts) * 100) : 0;
+                feelingPercentages[key] = shiftCount > 0 ? Math.round((feelings[key] / shiftCount) * 100) : 0;
             });
 
             // 4. Get recent shifts (last 5)
             const recentShifts = shifts?.slice(-5).reverse() || [];
+
+            // 5. Estimated Salary (Mock logic: 25k/h)
+            const estimatedSalary = Math.round(totalHoursNum * 25000);
 
             return {
                 success: true,
                 data: {
                     period: yearMonth,
                     stats: {
-                        totalShifts,
-                        totalHours: totalHours.toFixed(1),
+                        shiftCount,
+                        totalHours: totalHoursNum.toFixed(1),
                         avgDuration,
-                        avgRating
+                        avgRating,
+                        avgChecklist,
+                        estimatedSalary
                     },
                     feelings: feelingPercentages,
                     gamification: {

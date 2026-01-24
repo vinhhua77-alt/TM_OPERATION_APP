@@ -49,6 +49,17 @@ export class SignalService {
             });
         }
 
+        // 4. RULE R31: Operational Improvement (Proactive suggestions)
+        if (shiftLogData.improvement_note && shiftLogData.improvement_note.trim().length > 10) {
+            signals.push({
+                event_id: rawEventId,
+                rule_code: 'R31',
+                flag_key: 'proactive_improvement',
+                severity: 'INFO',
+                metadata: { note: shiftLogData.improvement_note }
+            });
+        }
+
         // Lưu signals vào DB
         if (signals.length > 0) {
             const { error } = await supabase
@@ -93,6 +104,17 @@ export class SignalService {
                 flag_key: 'leader_execution_low',
                 severity: 'HIGH',
                 metadata: { fail_count: failCount }
+            });
+        }
+
+        // 3. RULE R31: Leadership Initiative
+        if (reportData.improvement_initiative && reportData.improvement_initiative.trim().length > 10) {
+            signals.push({
+                event_id: rawEventId,
+                rule_code: 'R31',
+                flag_key: 'leadership_initiative',
+                severity: 'INFO',
+                metadata: { initiative: reportData.improvement_initiative }
             });
         }
 
