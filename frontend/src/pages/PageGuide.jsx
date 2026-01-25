@@ -32,47 +32,47 @@ const PageGuide = ({ onBack }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-10 animate-in fade-in duration-500">
+        <div className="min-h-screen bg-slate-50 pb-8 animate-in fade-in duration-500">
             {/* Header Sapphire Style */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 pb-12 text-white relative overflow-hidden shadow-xl mb-[-30px]">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-4 pb-10 text-white relative overflow-hidden shadow-xl mb-[-25px]">
                 <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black px-4 py-1.5 rounded-full border border-white/5 uppercase tracking-widest mb-6 transition-all active:scale-95">
+                    <button onClick={onBack} className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black px-3 py-1 rounded-full border border-white/5 uppercase tracking-widest mb-4 transition-all active:scale-95">
                         ← Dashboard
                     </button>
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-blue-500/20 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-2xl rotate-3">📖</div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center text-2xl shadow-2xl rotate-3">📖</div>
                         <div>
-                            <h1 className="text-2xl font-black uppercase tracking-tighter leading-none">HDSD SAPPHIRE</h1>
-                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.2em] mt-1 italic">V3.0 Decision Engine</p>
+                            <h1 className="text-xl font-black uppercase tracking-tighter leading-none">HDSD SAPPHIRE</h1>
+                            <p className="text-[9px] font-bold opacity-40 uppercase tracking-[0.15em] mt-1 italic">V3.0 Decision Engine</p>
                         </div>
                     </div>
                 </div>
-                <div className="absolute -right-16 -top-16 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl"></div>
-                <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl"></div>
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl"></div>
+                <div className="absolute -left-12 -bottom-12 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl"></div>
             </div>
 
             {/* Accordion List */}
-            <div className="px-4 space-y-3 relative z-20">
+            <div className="px-3.5 space-y-2.5 relative z-20">
                 {sections.map((section, index) => (
-                    <div key={index} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300">
+                    <div key={index} className="bg-white rounded-[16px] shadow-sm border border-slate-100 overflow-hidden transition-all duration-300">
                         <button
                             onClick={() => setOpenSection(openSection === index ? null : index)}
-                            className={`w-full p-5 flex items-center justify-between text-left transition-colors ${openSection === index ? 'bg-slate-50' : 'bg-white'}`}
+                            className={`w-full p-4 flex items-center justify-between text-left transition-colors ${openSection === index ? 'bg-slate-50' : 'bg-white'}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <span className="text-xl">{section.icon}</span>
-                                <span className={`text-[11px] font-black uppercase tracking-tight ${openSection === index ? 'text-blue-600' : 'text-slate-600'}`}>
+                            <div className="flex items-center gap-3">
+                                <span className="text-lg">{section.icon}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-tight ${openSection === index ? 'text-blue-600' : 'text-slate-600'}`}>
                                     {section.title}
                                 </span>
                             </div>
-                            <span className={`text-xs transition-transform duration-300 ${openSection === index ? 'rotate-180 text-blue-500' : 'text-slate-300'}`}>
+                            <span className={`text-[10px] transition-transform duration-300 ${openSection === index ? 'rotate-180 text-blue-500' : 'text-slate-300'}`}>
                                 ▿
                             </span>
                         </button>
                         {openSection === index && (
-                            <div className="px-6 pb-6 pt-1 animate-in slide-in-from-top-4 duration-300">
-                                <div className="h-[1px] bg-slate-100 mb-4 w-full opacity-50"></div>
-                                <div className="text-[11px] font-medium text-slate-500 leading-relaxed whitespace-pre-line font-italic">
+                            <div className="px-5 pb-5 pt-0.5 animate-in slide-in-from-top-4 duration-300">
+                                <div className="h-[1px] bg-slate-100 mb-3 w-full opacity-50"></div>
+                                <div className="text-[10px] font-medium text-slate-500 leading-relaxed whitespace-pre-line">
                                     {section.content}
                                 </div>
                             </div>
@@ -82,10 +82,10 @@ const PageGuide = ({ onBack }) => {
             </div>
 
             {/* Footer Insight */}
-            <div className="mt-8 px-6 text-center">
-                <div className="inline-block p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1 italic">💎 TM PRIDE</p>
-                    <p className="text-[9px] text-blue-600/70 font-medium">"Kỷ luật là sức mạnh - Cải tiến là tương lai"</p>
+            <div className="mt-6 px-6 text-center">
+                <div className="inline-block p-3.5 bg-blue-50 border border-blue-100 rounded-xl">
+                    <p className="text-[9px] font-black text-blue-800 uppercase tracking-widest mb-1 italic">💎 TM PRIDE</p>
+                    <p className="text-[8px] text-blue-600/70 font-medium">"Kỷ luật là sức mạnh - Cải tiến là tương lai"</p>
                 </div>
             </div>
         </div>

@@ -209,25 +209,39 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
 
     // Header & Filter Bar
     const renderFilters = (showLayout = false) => (
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-4 flex flex-col md:flex-row gap-3">
-            {/* Store Filter */}
-            <select
-                className="input-login flex-1"
-                style={{ fontSize: '12px' }}
-                value={filters.store}
-                onChange={e => setFilters({ ...filters, store: e.target.value })}
-            >
-                <option value="ALL">🏢 Toàn hệ thống (ALL)</option>
-                {dropdownStores.map(s => (
-                    <option key={s.store_code} value={s.store_code}>{s.store_name}</option>
-                ))}
-            </select>
+        <div className="bg-white p-2.5 rounded-xl shadow-sm border border-slate-100 mb-3 flex flex-col gap-2">
+            <div className="flex gap-2">
+                {/* Store Filter */}
+                <select
+                    className="input-login flex-1"
+                    style={{ fontSize: '11px', padding: '8px' }}
+                    value={filters.store}
+                    onChange={e => setFilters({ ...filters, store: e.target.value })}
+                >
+                    <option value="ALL">🏢 Stores (ALL)</option>
+                    {dropdownStores.map(s => (
+                        <option key={s.store_code} value={s.store_code}>{s.store_name}</option>
+                    ))}
+                </select>
+
+                {/* Active Filter */}
+                <select
+                    className="input-login w-[110px]"
+                    style={{ fontSize: '11px', padding: '8px' }}
+                    value={filters.active}
+                    onChange={e => setFilters({ ...filters, active: e.target.value })}
+                >
+                    <option value="ALL">👁️ Tất cả</option>
+                    <option value="ACTIVE">✅ Active</option>
+                    <option value="INACTIVE">🚫 Inactive</option>
+                </select>
+            </div>
 
             {/* Layout Filter */}
             {showLayout && (
                 <select
-                    className="input-login flex-1"
-                    style={{ fontSize: '12px' }}
+                    className="input-login w-full"
+                    style={{ fontSize: '11px', padding: '8px' }}
                     value={filters.layout}
                     onChange={e => setFilters({ ...filters, layout: e.target.value })}
                 >
@@ -237,18 +251,6 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
                     ))}
                 </select>
             )}
-
-            {/* Active Filter */}
-            <select
-                className="input-login w-full md:w-auto"
-                style={{ fontSize: '12px' }}
-                value={filters.active}
-                onChange={e => setFilters({ ...filters, active: e.target.value })}
-            >
-                <option value="ALL">👁️ Tất cả</option>
-                <option value="ACTIVE">✅ Active</option>
-                <option value="INACTIVE">🚫 Inactive</option>
-            </select>
         </div>
     );
 
@@ -305,8 +307,8 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
                     if (sortedKeys.length === 0 && shifts.length === 0) return <div style={{ textAlign: 'center', fontSize: '12px', color: '#999', padding: '20px' }}>Chưa có dữ liệu</div>;
 
                     return sortedKeys.map(groupName => (
-                        <div key={groupName} style={{ marginBottom: '20px' }}>
-                            <div style={{ background: '#F3F4F6', padding: '8px 12px', borderRadius: '8px', color: '#374151', fontWeight: '800', fontSize: '12px', marginBottom: '8px', borderLeft: '4px solid #374151' }}>
+                        <div key={groupName} style={{ marginBottom: '15px' }}>
+                            <div style={{ background: '#F8FAFC', padding: '6px 10px', borderRadius: '8px', color: '#475569', fontWeight: '900', fontSize: '10px', marginBottom: '6px', borderLeft: '3px solid #64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 {groupName === 'FULL-TIME (Ca Tiêu chuẩn)' ? '👔 ' : (groupName.includes('PART') ? '⏳ ' : '🧩 ')}
                                 {groupName}
                             </div>
@@ -339,15 +341,15 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
     return (
         <div className="fade-in">
             {/* Navigation Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3.5">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-1 text-slate-500 font-bold text-xs hover:text-slate-800 transition-colors"
+                    className="flex items-center gap-1.5 text-slate-400 font-black text-[10px] hover:text-slate-800 transition-colors uppercase tracking-widest"
                 >
-                    <span className="text-lg">←</span> QUAY LẠI
+                    <span className="text-base">←</span> BACK
                 </button>
                 <div className="text-right">
-                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide">
+                    <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">
                         {currentView === 'info' && 'DANH SÁCH CỬA HÀNG'}
                         {currentView === 'checklist' && 'CHECKLIST MẪU'}
                         {currentView === 'positions' && 'VỊ TRÍ (POSITIONS)'}
@@ -360,7 +362,7 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
             </div>
 
             {message.text && (
-                <div style={{ padding: '10px', borderRadius: '8px', background: message.type === 'error' ? '#FEE2E2' : '#D1FAE5', color: message.type === 'error' ? '#DC2626' : '#059669', fontSize: '11px', fontWeight: '600', textAlign: 'center', marginBottom: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: message.type === 'error' ? '#FEE2E2' : '#D1FAE5', color: message.type === 'error' ? '#DC2626' : '#059669', fontSize: '10px', fontWeight: '700', textAlign: 'center', marginBottom: '10px' }}>
                     {message.text}
                 </div>
             )}
@@ -389,8 +391,8 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
                             return sortedKeys.map(layoutCode => {
                                 const layoutName = dropdownLayouts.find(l => l.layout_code === layoutCode)?.layout_name || layoutCode;
                                 return (
-                                    <div key={layoutCode} style={{ marginBottom: '20px' }}>
-                                        <div style={{ background: '#DBEAFE', padding: '8px 12px', borderRadius: '8px', color: '#1E40AF', fontWeight: '800', fontSize: '12px', marginBottom: '8px', borderLeft: '4px solid #1E40AF' }}>
+                                    <div key={layoutCode} style={{ marginBottom: '15px' }}>
+                                        <div style={{ background: '#EFF6FF', padding: '6px 10px', borderRadius: '8px', color: '#2563EB', fontWeight: '900', fontSize: '10px', marginBottom: '6px', borderLeft: '3px solid #3B82F6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             📂 {layoutName}
                                         </div>
                                         {grouped[layoutCode].map(c => (
@@ -433,8 +435,8 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
                             return sortedKeys.map(layoutCode => {
                                 const layoutName = dropdownLayouts.find(l => l.layout_code === layoutCode)?.layout_name || layoutCode;
                                 return (
-                                    <div key={layoutCode} style={{ marginBottom: '20px' }}>
-                                        <div style={{ background: '#DBEAFE', padding: '8px 12px', borderRadius: '8px', color: '#1E40AF', fontWeight: '800', fontSize: '12px', marginBottom: '8px', borderLeft: '4px solid #1E40AF' }}>
+                                    <div key={layoutCode} style={{ marginBottom: '15px' }}>
+                                        <div style={{ background: '#EFF6FF', padding: '6px 10px', borderRadius: '8px', color: '#2563EB', fontWeight: '900', fontSize: '10px', marginBottom: '6px', borderLeft: '3px solid #3B82F6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             📂 {layoutName}
                                         </div>
                                         {grouped[layoutCode].map(p => (
@@ -473,8 +475,8 @@ const PageStoreManagement = ({ user, onBack, initialView = 'menu' }) => {
                             return sortedKeys.map(layoutCode => {
                                 const layoutName = dropdownLayouts.find(l => l.layout_code === layoutCode)?.layout_name || layoutCode;
                                 return (
-                                    <div key={layoutCode} style={{ marginBottom: '20px' }}>
-                                        <div style={{ background: '#DBEAFE', padding: '8px 12px', borderRadius: '8px', color: '#1E40AF', fontWeight: '800', fontSize: '12px', marginBottom: '8px', borderLeft: '4px solid #1E40AF' }}>
+                                    <div key={layoutCode} style={{ marginBottom: '15px' }}>
+                                        <div style={{ background: '#EFF6FF', padding: '6px 10px', borderRadius: '8px', color: '#2563EB', fontWeight: '900', fontSize: '10px', marginBottom: '6px', borderLeft: '3px solid #3B82F6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             📂 {layoutName}
                                         </div>
                                         {grouped[layoutCode].map(i => (
@@ -543,20 +545,22 @@ const MenuCard = ({ icon, title, onClick }) => (
 );
 
 const ListItem = ({ item, title, subtitle, onEdit, onDelete, onToggle }) => (
-    <div className="checklist-item" style={{ padding: '10px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-        <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '12px', fontWeight: '800' }}>{title}</div>
-            <div style={{ fontSize: '10px', color: '#666' }}>{subtitle}</div>
+    <div className="checklist-item" style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', border: '1px solid #F1F5F9' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '11.5px', fontWeight: '900', color: '#1E293B' }} className="text-truncate">{title}</div>
+            <div style={{ fontSize: '9px', color: '#94A3B8', fontWeight: '700' }} className="text-truncate">{subtitle}</div>
         </div>
-        <ToggleSwitch active={item.active} onChange={onToggle} />
-        <button onClick={onEdit} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>✏️</button>
-        <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ToggleSwitch active={item.active} onChange={onToggle} />
+            <button onClick={onEdit} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.7 }}>✏️</button>
+            <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.7 }}>🗑️</button>
+        </div>
     </div>
 );
 
 const ToggleSwitch = ({ active, onChange }) => (
-    <div onClick={onChange} style={{ width: '40px', height: '22px', borderRadius: '11px', background: active ? '#10B981' : '#DDD', position: 'relative', cursor: 'pointer' }}>
-        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#FFF', position: 'absolute', top: '2px', left: active ? '20px' : '2px', transition: 'left 0.2s' }}></div>
+    <div onClick={onChange} style={{ width: '32px', height: '18px', borderRadius: '10px', background: active ? '#10B981' : '#E2E8F0', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}>
+        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#FFF', position: 'absolute', top: '2px', left: active ? '16px' : '2px', transition: 'left 0.3s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}></div>
     </div>
 );
 
@@ -692,11 +696,13 @@ const StoreModal = ({ data, onSave, onClose }) => {
 
 
 const ModalWrapper = ({ title, onClose, children }) => (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-        <div style={{ background: 'white', padding: '20px', borderRadius: '12px', width: '90%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '5px' }}>{title}</h3>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div style={{ background: 'white', padding: '15px', borderRadius: '16px', width: '85%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            <h3 style={{ fontSize: '12px', fontWeight: '900', marginBottom: '2px', color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title}</h3>
             {children}
-            <button className="btn-login" style={{ background: '#6B7280', marginTop: '5px' }} onClick={onClose}>Hủy</button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', marginTop: '4px' }}>
+                <button className="btn-login" style={{ background: '#F1F5F9', color: '#64748B', border: 'none', fontSize: '11px', padding: '10px', borderRadius: '12px' }} onClick={onClose}>Hủy Bỏ</button>
+            </div>
         </div>
     </div>
 );

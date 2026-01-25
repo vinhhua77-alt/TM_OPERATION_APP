@@ -175,37 +175,37 @@ const PageShiftLog = ({ user, onBack }) => {
     return (
         <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
             {/* HEADER */}
-            <div className={`shrink-0 ${isLeader ? 'bg-emerald-600' : 'bg-blue-600'} p-5 pb-10 text-white relative overflow-hidden shadow-lg`}>
-                <div className="relative z-10 flex flex-col gap-4">
+            <div className={`shrink-0 ${isLeader ? 'bg-emerald-600' : 'bg-blue-600'} p-4 pb-8 text-white relative overflow-hidden shadow-lg`}>
+                <div className="relative z-10 flex flex-col gap-3">
                     <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full border border-white/5 uppercase tracking-tighter w-fit">← Dashboard</button>
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-2xl shadow-xl rotate-2">
                             {isLeader ? '👑' : '👷'}
                         </div>
                         <div>
-                            <h1 className="text-xl font-black uppercase tracking-tighter leading-none">{isLeader ? 'LEADER LOG' : 'NHẬT KÝ CA'}</h1>
-                            <p className="text-[8px] font-black opacity-60 uppercase mt-1 tracking-widest italic">{user?.name} | {user?.role}</p>
+                            <h1 className="text-lg font-black uppercase tracking-tighter leading-none">{isLeader ? 'LEADER LOG' : 'NHẬT KÝ CA'}</h1>
+                            <p className="text-[7.5px] font-black opacity-60 uppercase mt-1 tracking-widest italic">{user?.name} | {user?.role}</p>
                         </div>
                     </div>
                 </div>
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
             </div>
 
-            <div className="flex-1 px-3 -mt-6 relative z-20 space-y-3">
+            <div className="flex-1 px-2.5 -mt-5 relative z-20 space-y-2.5">
                 {/* 0. TRAINEE TOGGLE (STAFF, LEADER, ADMIN, OPS) */}
                 {['STAFF', 'LEADER', 'ADMIN', 'OPS', 'AM'].includes(user?.role?.toString().toUpperCase().trim()) && (
-                    <div className={`p-4 rounded-[28px] border transition-all duration-500 shadow-sm ${form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-slate-400 border-slate-100'}`}>
+                    <div className={`p-3 rounded-[20px] border transition-all duration-500 shadow-sm ${form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-slate-400 border-slate-100'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${form.isTraineeMode ? 'text-indigo-200' : 'text-slate-400'}`}>Lộ trình thăng tiến</span>
-                                <span className={`text-[12px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>💎 TẬP SỰ QUẢN LÝ</span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${form.isTraineeMode ? 'text-indigo-200' : 'text-slate-400'}`}>Lộ trình thăng tiến</span>
+                                <span className={`text-[11px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>💎 TẬP SỰ QUẢN LÝ</span>
                             </div>
                             <button onClick={() => {
                                 const role = user?.role?.toString().toUpperCase().trim();
                                 const options = role === 'STAFF' ? ['CASHIER', 'LEADER'] : ['SM', 'AM'];
                                 setForm({ ...form, isTraineeMode: !form.isTraineeMode, traineePos: !form.isTraineeMode ? options[0] : '' });
-                            }} className={`w-14 h-7 rounded-full relative transition-all duration-300 shadow-inner ${form.isTraineeMode ? 'bg-indigo-400' : 'bg-slate-200'}`}>
-                                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${form.isTraineeMode ? 'left-8' : 'left-1'}`}></div>
+                            }} className={`w-12 h-6 rounded-full relative transition-all duration-300 shadow-inner ${form.isTraineeMode ? 'bg-indigo-400' : 'bg-slate-200'}`}>
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${form.isTraineeMode ? 'left-6.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
                         {form.isTraineeMode && (
@@ -226,21 +226,21 @@ const PageShiftLog = ({ user, onBack }) => {
                     </div>
                 )}
                 {/* 1. STORE & CONTEXT */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
                     <div className="grid grid-cols-2 gap-2">
-                        <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : (isLeader ? 'ring-emerald-500/20' : 'ring-blue-500/20')}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
+                        <select className={`bg-slate-50 border-none text-[8.5px] font-black p-2.5 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : (isLeader ? 'ring-emerald-500/20' : 'ring-blue-500/20')}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
                             <option value="">-- CHI NHÁNH --</option>
                             {master.stores?.map(s => <option key={s.store_code} value={s.store_code}>{s.store_name}</option>)}
                         </select>
 
                         {!isLeader ? (
-                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ring-blue-500/20 ${form.lead === 'KHÔNG CÓ LEAD CA' ? 'text-rose-500' : ''}`} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
+                            <select className={`bg-slate-50 border-none text-[8.5px] font-black p-2.5 rounded-xl focus:ring-2 ring-blue-500/20 ${form.lead === 'KHÔNG CÓ LEAD CA' ? 'text-rose-500' : ''}`} value={form.lead} onChange={e => setForm({ ...form, lead: e.target.value })}>
                                 <option value="">-- LEAD CA --</option>
                                 <option value="KHÔNG CÓ LEAD CA" className="text-rose-500 font-black italic">⚠ KHÔNG CÓ LEAD</option>
                                 {filteredLeaders.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
                             </select>
                         ) : (
-                            <select className={`bg-slate-50 border-none text-[9px] font-black p-3 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.layout} onChange={e => setForm({ ...form, layout: e.target.value, subPos: form.isTraineeMode ? `${form.traineePos}_TRAINEE` : 'LEADER', checks: {} })}>
+                            <select className={`bg-slate-50 border-none text-[8.5px] font-black p-2.5 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.layout} onChange={e => setForm({ ...form, layout: e.target.value, subPos: form.isTraineeMode ? `${form.traineePos}_TRAINEE` : 'LEADER', checks: {} })}>
                                 <option value="">-- KHU VỰC CẮM CHỐT --</option>
                                 {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(k => <option key={k} value={k}>{master.layouts[k].name || k}</option>)}
                             </select>
@@ -306,13 +306,13 @@ const PageShiftLog = ({ user, onBack }) => {
 
                 {/* 2. LEADER STATUS */}
                 {(isLeader || form.isTraineeMode) && (
-                    <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vận hành sảnh & khu vực</span>
+                    <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VẬN HÀNH SẢNH & KHU VỰC</span>
                         </div>
                         <div className="flex gap-2">
                             {[{ id: 'hasPeak', l: 'CA ĐÔNG', icon: '🔥' }, { id: 'hasOutOfStock', l: 'HẾT MÓN', icon: '📦' }, { id: 'hasCustomerIssue', l: 'PHÀN NÀN', icon: '👤' }].map(b => (
-                                <button key={b.id} onClick={() => setForm({ ...form, [b.id]: !form[b.id] })} className={`flex-1 py-3 rounded-xl text-[9px] font-black transition-all border shadow-sm ${form[b.id] ? (form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-emerald-600 text-white border-emerald-600') : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                <button key={b.id} onClick={() => setForm({ ...form, [b.id]: !form[b.id] })} className={`flex-1 py-2.5 rounded-xl text-[8.5px] font-black transition-all border shadow-sm ${form[b.id] ? (form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-emerald-600 text-white border-emerald-600') : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
                                     <div className="text-sm mb-0.5">{b.icon}</div>{b.l}
                                 </button>
                             ))}
@@ -343,11 +343,11 @@ const PageShiftLog = ({ user, onBack }) => {
                 )}
 
                 {/* 3. LAYOUT & CHECKLIST - STAFF UI ONLY */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
+                <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
                     {!(isLeader || form.isTraineeMode) ? (
                         <>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block text-left">KHU VỰC LÀM VIỆC</span>
-                            <div className="grid grid-cols-4 gap-1.5">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block text-left">KHU VỰC LÀM VIỆC</span>
+                            <div className="grid grid-cols-4 gap-1">
                                 {Object.keys(master.layouts || {}).filter(k => k !== 'LEAD').map(key => {
                                     const active = form.layout === key;
                                     const theme = LAYOUT_THEMES[key] || LAYOUT_THEMES.DEFAULT;
@@ -355,7 +355,7 @@ const PageShiftLog = ({ user, onBack }) => {
                                         <button
                                             key={key}
                                             onClick={() => setForm({ ...form, layout: key, subPos: '', checks: {} })}
-                                            className={`py-2.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-sm active:scale-95 ${active ? `${theme.main} text-white` : 'bg-slate-50 text-slate-400'}`}
+                                            className={`py-2 rounded-xl text-[8.5px] font-black uppercase transition-all shadow-sm active:scale-95 ${active ? `${theme.main} text-white` : 'bg-slate-50 text-slate-400'}`}
                                         >
                                             {master.layouts[key].name || key}
                                         </button>
@@ -409,9 +409,13 @@ const PageShiftLog = ({ user, onBack }) => {
                                         return (
                                             <div key={itemId} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-left">
                                                 <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{itemText}</span>
-                                                <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
-                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'yes' ? ((isLeader || form.isTraineeMode) ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white') : 'text-slate-300'}`}>CÓ</button>
-                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`px-4 py-1 rounded-lg text-[10px] font-black transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-300'}`}>KHO</button>
+                                                <div className="flex bg-slate-50 p-0.5 rounded-lg gap-0.5 border border-slate-100 shadow-inner shrink-0">
+                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : (isLeader ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white')) : 'text-slate-200'}`}>
+                                                        {form.checks[itemId] === 'yes' ? '✅' : '✔'}
+                                                    </button>
+                                                    <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-200'}`}>
+                                                        {form.checks[itemId] === 'no' ? '❌' : '✖'}
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -421,20 +425,20 @@ const PageShiftLog = ({ user, onBack }) => {
                                 {/* LEAD GLOBAL (Always show for leaders and trainees) */}
                                 {(isLeader || form.isTraineeMode) && master.layouts['LEAD']?.checklist?.length > 0 && (
                                     <div className={`space-y-1 pt-3 border-t-2 border-dashed ${form.isTraineeMode ? 'border-indigo-100' : 'border-emerald-100'}`}>
-                                        <div className={`text-[10px] font-black uppercase tracking-widest ml-1 mb-2 flex items-center gap-2 ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${form.isTraineeMode ? 'bg-indigo-500' : 'bg-emerald-500'}`}></span>Checklist Quản Lý (V8)
+                                        <div className={`text-[9px] font-black uppercase tracking-widest ml-1 mb-1.5 flex items-center gap-2 ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>
+                                            <span className={`w-1 h-1 rounded-full animate-pulse ${form.isTraineeMode ? 'bg-indigo-500' : 'bg-emerald-500'}`}></span>Checklist Quản Lý (V8)
                                         </div>
                                         {master.layouts['LEAD'].checklist.map((item, idx) => {
                                             const itemId = item.id || `lead_${idx}`;
                                             const itemText = item.text || item;
                                             return (
-                                                <div key={itemId} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 text-left">
-                                                    <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{itemText}</span>
+                                                <div key={itemId} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0 text-left">
+                                                    <span className="text-[10px] font-bold text-slate-600 pr-3 leading-tight">{itemText}</span>
                                                     <div className="flex bg-slate-50 p-0.5 rounded-lg gap-0.5 border border-slate-100 shadow-inner shrink-0">
-                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white') : 'text-slate-200'}`}>
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'yes' } })} className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] transition-all ${form.checks[itemId] === 'yes' ? (form.isTraineeMode ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white') : 'text-slate-200'}`}>
                                                             {form.checks[itemId] === 'yes' ? '✅' : '✔'}
                                                         </button>
-                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`w-8 h-8 rounded-md flex items-center justify-center text-xs transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-200'}`}>
+                                                        <button onClick={() => setForm({ ...form, checks: { ...form.checks, [itemId]: 'no' } })} className={`w-7 h-7 rounded-md flex items-center justify-center text-[10px] transition-all ${form.checks[itemId] === 'no' ? 'bg-rose-500 text-white' : 'text-slate-200'}`}>
                                                             {form.checks[itemId] === 'no' ? '❌' : '✖'}
                                                         </button>
                                                     </div>
@@ -449,24 +453,24 @@ const PageShiftLog = ({ user, onBack }) => {
                 </div>
 
                 {/* 4. INCIDENT & MOOD */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-4">
+                <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-3.5">
                     {hasNoCheck && (
-                        <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 space-y-2">
-                            <div className="text-[9px] font-black text-rose-500 uppercase tracking-tighter">🔒 BẮT BUỘC: CHI TIẾT SỰ CỐ</div>
-                            <select className="w-full bg-white border-none text-[10px] font-bold p-2 rounded-xl shadow-sm" value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
+                        <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-100 space-y-1.5">
+                            <div className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">🔒 BẮT BUỘC: CHI TIẾT SỰ CỐ</div>
+                            <select className="w-full bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={form.incidentType} onChange={e => setForm({ ...form, incidentType: e.target.value })}>
                                 <option value="">-- LOẠI SỰ CỐ --</option>
                                 {(isLeader || form.isTraineeMode ? master.leaderIncidents : master.layouts[form.layout]?.incidents)?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
                             </select>
-                            <textarea className="w-full bg-white border-none text-[11px] p-3 rounded-xl shadow-sm min-h-[60px] focus:ring-0" placeholder="Mô tả & hướng giải quyết..." value={form.incidentNote} onChange={e => setForm({ ...form, incidentNote: e.target.value })} />
+                            <textarea className="w-full bg-white border-none text-[10px] p-2 rounded-lg shadow-sm min-h-[50px] focus:ring-0" placeholder="Mô tả & hướng giải quyết..." value={form.incidentNote} onChange={e => setForm({ ...form, incidentNote: e.target.value })} />
                         </div>
                     )}
 
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
                     </div>
-                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100 mb-3">
+                    <div className="flex justify-between px-2 bg-slate-50 py-2.5 rounded-xl border border-slate-100 mb-2.5">
                         {Object.keys(MOOD_CONFIG).map(mood => (
-                            <span key={mood} onClick={() => { setForm({ ...form, rating: mood }); setActivePhrase(MOOD_CONFIG[mood].phrases[Math.floor(Math.random() * MOOD_CONFIG[mood].phrases.length)]); setShowMoodModal(true); }} className={`text-2xl cursor-pointer transition-all active:scale-125 ${form.rating === mood ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}>
+                            <span key={mood} onClick={() => { setForm({ ...form, rating: mood }); setActivePhrase(MOOD_CONFIG[mood].phrases[Math.floor(Math.random() * MOOD_CONFIG[mood].phrases.length)]); setShowMoodModal(true); }} className={`text-xl cursor-pointer transition-all active:scale-125 ${form.rating === mood ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}>
                                 {MOOD_CONFIG[mood].icon}
                             </span>
                         ))}
@@ -504,16 +508,16 @@ const PageShiftLog = ({ user, onBack }) => {
                     )}
                 </div>
 
-                <div className="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
-                    <label className="flex items-center gap-3 p-3 bg-slate-100/50 rounded-2xl border border-slate-100 cursor-pointer active:bg-slate-200 transition-colors">
-                        <input type="checkbox" className="w-4 h-4 rounded-sm border-2 border-slate-300 transition-all checked:bg-blue-600" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} />
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter leading-tight">Mình nỗ lực hết mình, chia sẻ thật lòng rồi nè ✨</span>
+                <div className="bg-white p-3.5 rounded-[24px] shadow-sm border border-slate-100 space-y-3.5">
+                    <label className="flex items-center gap-2.5 p-2.5 bg-slate-100/50 rounded-xl border border-slate-100 cursor-pointer active:bg-slate-200 transition-colors">
+                        <input type="checkbox" className="w-3.5 h-3.5 rounded-sm border-2 border-slate-300 transition-all checked:bg-blue-600" checked={form.isCommitted} onChange={e => setForm({ ...form, isCommitted: e.target.checked })} />
+                        <span className="text-[7.5px] font-black text-slate-500 uppercase tracking-tighter leading-tight">Mình nỗ lực hết mình, chia sẻ thật lòng rồi nè ✨</span>
                     </label>
                     {error && <p className="text-rose-500 text-[8px] font-black text-center animate-bounce uppercase">{error}</p>}
-                    <button onClick={executeSubmit} disabled={!isReadyToSubmit || loading} className={`w-full py-4 rounded-[20px] font-black text-[10px] uppercase tracking-[0.1em] shadow-xl transition-all active:scale-95 ${!isReadyToSubmit ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'}`}>
+                    <button onClick={executeSubmit} disabled={!isReadyToSubmit || loading} className={`w-full py-3.5 rounded-[16px] font-black text-[9px] uppercase tracking-[0.1em] shadow-xl transition-all active:scale-95 ${!isReadyToSubmit ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'}`}>
                         {loading ? 'ĐANG XỬ LÝ...' : `XÁC NHẬN BÁO CÁO 🚀`}
                     </button>
-                    <button onClick={onBack} className="w-full text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] py-2">HUỶ BỎ</button>
+                    <button onClick={onBack} className="w-full text-[8.5px] font-black text-slate-400 uppercase tracking-[0.2em] py-1.5">HUỶ BỎ</button>
                 </div>
             </div>
 

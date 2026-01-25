@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) => {
+const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, notify }) => {
     const [logoutConfirm, setLogoutConfirm] = useState(false);
 
     // Default open states for sections
@@ -8,11 +8,21 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
         vận_hành: true,
         dashboard: true,
         quản_trị: true,
-        cấu_hình: true
+        cấu_hình: true,
+        lab: false // Default collapsed
     });
 
     const toggleSection = (key) => {
         setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handleFeatureLabClick = () => {
+        closeMenu();
+        if (notify) {
+            notify('Tính năng đang được triển khai', 'info');
+        } else {
+            alert('Tính năng đang được triển khai');
+        }
     };
 
     const closeMenu = () => { onClose(); };
@@ -22,12 +32,12 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
     const SectionHeader = ({ label, isOpen, onClick }) => (
         <div
             onClick={onClick}
-            className="flex items-center justify-between px-5 py-2.5 mt-2 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-between px-3 py-1.5 mt-0.5 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
         >
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-slate-600">
+            <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] group-hover:text-slate-600">
                 {label}
             </span>
-            <span className={`text-[10px] text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+            <span className={`text-[8px] text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
                 ▼
             </span>
         </div>
@@ -37,18 +47,18 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
         <div
             onClick={onClick}
             className={`
-                flex items-center gap-4 px-5 py-3 cursor-pointer transition-all border-l-[4px]
+                flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all border-l-[3px]
                 ${active ? 'bg-blue-50/50 border-blue-600' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'}
                 ${special ? 'bg-blue-50/20' : ''}
             `}
         >
-            <span className="text-xl w-6 text-center">{icon}</span>
+            <span className="text-base w-4 text-center">{icon}</span>
             <div className="flex-1 flex items-center justify-between">
-                <span className={`text-[13px] font-black ${active ? 'text-blue-600' : 'text-slate-700'}`}>
+                <span className={`text-[10.5px] font-bold ${active ? 'text-blue-600' : 'text-slate-700'}`}>
                     {label}
                 </span>
                 {badge && (
-                    <span className="bg-blue-100 text-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                    <span className="bg-blue-100 text-blue-600 text-[8px] font-black px-1 py-0.5 rounded-full uppercase tracking-tighter">
                         {badge}
                     </span>
                 )}
@@ -58,30 +68,30 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
 
     const MenuContent = () => (
         <div className={`
-            fixed top-0 left-0 h-full w-[280px] max-w-[85vw] bg-white z-[1001] shadow-2xl flex flex-col
+            fixed top-0 left-0 h-full w-[230px] max-w-[75vw] bg-white z-[1001] shadow-2xl flex flex-col
             transform transition-transform duration-300 ease-out font-sans
             ${showMenu ? 'translate-x-0' : '-translate-x-full'}
         `}>
             {/* 1. HEADER */}
-            <div className="relative bg-blue-600 flex flex-col justify-end p-6 pt-12 border-b border-blue-700 overflow-hidden shrink-0">
-                <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-white rounded-full opacity-10 blur-2xl"></div>
+            <div className="relative bg-blue-600 flex flex-col justify-end p-3 pt-8 border-b border-blue-700 overflow-hidden shrink-0">
+                <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white rounded-full opacity-10 blur-xl"></div>
                 <button
                     onClick={closeMenu}
-                    className="absolute top-4 right-4 p-2 bg-black/10 rounded-full text-white/80 hover:bg-black/20 transition backdrop-blur-sm"
+                    className="absolute top-2 right-2 p-1 bg-black/10 rounded-full text-white/80 hover:bg-black/20 transition backdrop-blur-sm"
                 >
-                    ✕
+                    <span className="text-[10px]">✕</span>
                 </button>
 
-                <div className="relative z-10 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-xl shadow-inner border border-white/30 backdrop-blur-md">
+                <div className="relative z-10 flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-base shadow-inner border border-white/30 backdrop-blur-md">
                         {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                        <div className="text-white font-black text-base leading-tight truncate max-w-[160px] uppercase tracking-tighter">
+                        <div className="text-white font-black text-[12px] leading-tight truncate max-w-[130px] uppercase tracking-tighter">
                             {user?.name || 'Guest'}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-[2px] rounded-lg text-[9px] font-black bg-white/20 text-white backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                        <div className="flex items-center gap-2 mt-0">
+                            <span className="px-1 py-0 rounded text-[7px] font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 uppercase tracking-widest">
                                 {user?.role || 'Guest'}
                             </span>
                         </div>
@@ -90,7 +100,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
             </div>
 
             {/* 2. SCROLLABLE LIST */}
-            <div className="flex-1 overflow-y-auto py-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto py-1.5 custom-scrollbar">
 
                 <MenuItem
                     icon="🏠"
@@ -98,7 +108,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
-                <div className="my-3 border-t border-slate-50 mx-6 opacity-40"></div>
+                <div className="my-1.5 border-t border-slate-50 mx-3 opacity-40"></div>
 
                 {/* --- 2. VẬN HÀNH --- */}
                 <SectionHeader label="Vận hành" isOpen={expandedSections.vận_hành} onClick={() => toggleSection('vận_hành')} />
@@ -140,34 +150,37 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose }) =
                             <div className="animate-in slide-in-from-left-2 duration-200">
                                 <MenuItem icon="🏗️" label="Thiết lập cấu hình" onClick={() => { closeMenu(); onNavigate('STORE_SETUP'); }} />
                                 <MenuItem icon="⚙️" label="Admin Console" onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }} />
+                                <MenuItem icon="🧪" label="Tính năng Lab" onClick={handleFeatureLabClick} />
                             </div>
                         )}
                     </>
                 )}
 
-                <div className="my-4 border-t border-slate-100 mx-6 opacity-50"></div>
+                <div className="my-1.5 border-t border-slate-100 mx-3 opacity-50"></div>
                 <MenuItem icon="📖" label="Hướng Dẫn Sử DỤng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
                 <MenuItem icon="ℹ" label="About" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
             </div>
 
             {/* 3. FOOTER */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50/80">
-                <div className="text-center mb-4">
-                    <p className="text-[7px] font-black text-slate-300 uppercase tracking-[0.4em] mb-1.5">TMG OPERATION • v3.0</p>
-                    <div className="flex items-center justify-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">DECISION ENGINE ACTIVE</span>
+            <div className="p-2 border-t border-slate-100 bg-slate-50/80">
+                <div className="text-center mb-2">
+                    <p className="text-[6.5px] font-black text-slate-300 uppercase tracking-[0.3em] mb-0.5">TMG OPERATION • v3.0</p>
+                    <div className="flex items-center justify-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[6.5px] font-bold text-slate-400 uppercase tracking-widest">ENGINE ACTIVE</span>
                     </div>
                 </div>
                 <button
                     onClick={() => setLogoutConfirm(true)}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white border border-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold text-[8.5px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95"
                 >
                     🚪 Đăng xuất
                 </button>
             </div>
         </div>
     );
+
+
 
     return (
         <>

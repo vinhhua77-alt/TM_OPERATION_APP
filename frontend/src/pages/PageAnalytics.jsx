@@ -173,37 +173,37 @@ const PageAnalytics = ({ user, onBack }) => {
     return (
         <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
             {/* FRAMEWORK HEADER - DYNAMIC GRADIENT */}
-            <div className={`shrink-0 bg-gradient-to-br ${currentTheme} p-5 pb-10 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
+            <div className={`shrink-0 bg-gradient-to-br ${currentTheme} p-4 pb-8 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
                 <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-4 active:scale-95">
+                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-3 active:scale-95">
                         ← Dashboard
                     </button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2 leading-none animate-in zoom-in duration-500">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-2xl shadow-xl rotate-2 leading-none animate-in zoom-in duration-500">
                             {currentTabInfo?.icon || '📈'}
                         </div>
                         <div>
-                            <h1 className="text-xl font-black uppercase tracking-tight leading-none mb-0.5">TM ANALYTICS</h1>
-                            <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                            <h1 className="text-lg font-black uppercase tracking-tight leading-none mb-0.5">TM ANALYTICS</h1>
+                            <p className="text-[8px] font-bold opacity-80 uppercase tracking-widest">
                                 {selectedStore === 'ALL' ? 'Chain Overview' : `Branch: ${selectedStore}`}
                             </p>
                         </div>
                     </div>
                 </div>
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
-                <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-black/5 rounded-full blur-[60px]"></div>
+                <div className="absolute -right-16 -top-16 w-56 h-56 bg-white/10 rounded-full blur-[70px]"></div>
+                <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-black/5 rounded-full blur-[50px]"></div>
             </div>
 
             {/* CONTENT AREA */}
-            <div className="flex-1 px-5 -mt-8 relative z-20 space-y-5">
+            <div className="flex-1 px-4 -mt-6 relative z-20 space-y-4">
 
                 {/* ROLE TABS */}
-                <div className="flex bg-white p-1.5 rounded-[24px] shadow-xl flex gap-1 border border-slate-100/50">
+                <div className="flex bg-white p-1 rounded-[20px] shadow-xl flex gap-1 border border-slate-100/50">
                     {availableTabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-3 rounded-2xl text-[9px] font-black uppercase tracking-tighter transition-all duration-500 ${activeTab === tab.id ? `bg-gradient-to-r ${currentTheme} text-white shadow-lg scale-[1.02]` : 'text-slate-400'
+                            className={`flex-1 py-2.5 rounded-xl text-[8.5px] font-black uppercase tracking-tighter transition-all duration-500 ${activeTab === tab.id ? `bg-gradient-to-r ${currentTheme} text-white shadow-lg scale-[1.02]` : 'text-slate-400'
                                 }`}
                         >
                             {tab.label}
@@ -212,26 +212,25 @@ const PageAnalytics = ({ user, onBack }) => {
                 </div>
 
                 {/* LƯỚI CHỈ SỐ SIÊU TINH GỌN (4 CỘT) */}
-                <div className="grid grid-cols-4 gap-1.5 relative min-h-[160px]">
+                <div className="grid grid-cols-4 gap-1.5 relative min-h-[140px]">
                     {loading && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/40 backdrop-blur-[2px] rounded-[32px]">
-                            <div className="w-5 h-5 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/40 backdrop-blur-[2px] rounded-[24px]">
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
                     {activeStats.map((s, i) => {
-                        const isAll = selectedStore === 'ALL';
                         return (
                             <div
                                 key={i}
                                 className={`
-                                    py-2 px-1 rounded-2xl shadow-sm flex flex-col items-center text-center active:scale-95 transition-all duration-500
+                                    py-1.5 px-0.5 rounded-xl shadow-sm flex flex-col items-center text-center active:scale-95 transition-all duration-500
                                     bg-gradient-to-br ${currentTheme} border border-white/5
                                 `}
                                 style={{ animationDelay: `${i * 15}ms` }}
                             >
-                                <span className={`text-sm mb-0.5`}>{s.i}</span>
-                                <div className={`text-[10px] font-black leading-none mb-0.5 text-white`}>{s.v}</div>
-                                <div className={`text-[5px] font-black uppercase tracking-tighter text-white/80`}>{s.n}</div>
+                                <span className={`text-[13px] mb-0`}>{s.i}</span>
+                                <div className={`text-[9.5px] font-black leading-none mb-0.5 text-white`}>{s.v}</div>
+                                <div className={`text-[5px] font-extrabold uppercase tracking-tighter text-white/80`}>{s.n}</div>
                             </div>
                         );
                     })}
@@ -239,38 +238,38 @@ const PageAnalytics = ({ user, onBack }) => {
 
                 {/* SELECTORS (Only for OPS+) */}
                 {!isSM && (
-                    <div className="bg-white p-5 rounded-[36px] shadow-xl border border-slate-100/80 space-y-4">
-                        <div className="flex items-center gap-3 px-1">
-                            <div className={`w-1.5 h-4 rounded-full bg-gradient-to-b ${currentTheme}`}></div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hệ Thống Chi Nhánh</span>
+                    <div className="bg-white p-4 rounded-[28px] shadow-xl border border-slate-100/80 space-y-3">
+                        <div className="flex items-center gap-2 px-1">
+                            <div className={`w-1 h-3.5 rounded-full bg-gradient-to-b ${currentTheme}`}></div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hệ Thống Chi Nhánh</span>
                         </div>
                         <StoreGridSelector stores={stores} selectedStore={selectedStore} onSelect={setSelectedStore} />
                     </div>
                 )}
 
                 {/* TIME PICKER */}
-                <div className="bg-white p-5 rounded-[32px] shadow-sm border border-slate-100">
+                <div className="bg-white p-4 rounded-[24px] shadow-sm border border-slate-100">
                     <TimeRangePicker mode={mode} setMode={setMode} date={date} setDate={setDate} />
                 </div>
 
                 {/* INSIGHT CARD */}
-                <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-2xl relative overflow-hidden">
+                <div className="bg-slate-900 rounded-[24px] p-5 text-white shadow-2xl relative overflow-hidden">
                     <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className={`w-2 h-2 rounded-full ${currentTheme} animate-pulse`}></span>
-                            <h3 className="text-[10px] font-black uppercase tracking-widest opacity-40">Insight Hệ Thống</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className={`w-1.5 h-1.5 rounded-full ${currentTheme} animate-pulse`}></span>
+                            <h3 className="text-[9px] font-black uppercase tracking-widest opacity-40">Insight Hệ Thống</h3>
                         </div>
-                        <p className="text-[12px] font-bold leading-relaxed opacity-90 italic">
+                        <p className="text-[11px] font-bold leading-relaxed opacity-90 italic">
                             "{selectedStore === 'ALL'
-                                ? `Toàn chuỗi đang vận hành ổn định. Chú ý các điểm nóng tại khu vực trung tâm.`
-                                : `Chi nhánh ${selectedStore} đang ${activeTab === 'leader' ? 'thực thi tốt' : 'tăng trưởng ổn định'}. Cần duy trì phong độ hiện tại.`}"
+                                ? `Toàn chuỗi đang vận hành ổn định. Chú ý điểm nóng trung tâm.`
+                                : `Chi nhánh ${selectedStore} đang ${activeTab === 'leader' ? 'thực thi tốt' : 'tăng trưởng ổn định'}. Duy trì phong độ.`}"
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div className="p-8 text-center opacity-20">
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">TMG Decision Engine v3.0</p>
+            <div className="p-6 text-center opacity-20">
+                <p className="text-[7.5px] font-bold text-slate-400 uppercase tracking-[0.2em]">TMG Decision Engine v3.0</p>
             </div>
         </div>
     );

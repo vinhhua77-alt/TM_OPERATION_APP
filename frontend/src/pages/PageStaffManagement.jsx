@@ -164,21 +164,22 @@ const PageStaffManagement = ({ user, onBack }) => {
             }}>
                 <div style={{
                     background: 'white',
-                    padding: '20px',
+                    padding: '15px',
                     borderRadius: '12px',
                     width: '90%',
                     maxWidth: '400px'
                 }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '15px' }}>
+                    <h3 style={{ fontSize: '12px', fontWeight: '800', marginBottom: '12px' }}>
                         Chỉnh sửa: {editModal.staff_id}
                     </h3>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <input
                             className="input-login"
                             placeholder="Tên nhân viên"
                             value={formData.staff_name}
                             onChange={e => setFormData({ ...formData, staff_name: e.target.value })}
+                            style={{ padding: '8px', fontSize: '11px' }}
                         />
 
                         <input
@@ -186,20 +187,23 @@ const PageStaffManagement = ({ user, onBack }) => {
                             placeholder="Email"
                             value={formData.gmail}
                             onChange={e => setFormData({ ...formData, gmail: e.target.value })}
+                            style={{ padding: '8px', fontSize: '11px' }}
                         />
 
                         <input
                             className="input-login"
                             type="password"
-                            placeholder="Mật khẩu mới (Để trống nếu không đổi)"
+                            placeholder="Mật khẩu mới"
                             value={formData.password || ''}
                             onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            style={{ padding: '8px', fontSize: '11px' }}
                         />
 
                         <select
                             className="input-login"
                             value={formData.role}
                             onChange={e => setFormData({ ...formData, role: e.target.value })}
+                            style={{ padding: '8px', fontSize: '11px' }}
                         >
                             <option value="ADMIN">ADMIN</option>
                             <option value="OPS">OPS</option>
@@ -212,32 +216,34 @@ const PageStaffManagement = ({ user, onBack }) => {
                             className="input-login"
                             value={formData.store_code}
                             onChange={e => setFormData({ ...formData, store_code: e.target.value })}
+                            style={{ padding: '8px', fontSize: '11px' }}
                         >
                             {statistics?.byStore && Object.keys(statistics.byStore).map(store => (
                                 <option key={store} value={store}>{store}</option>
                             ))}
                         </select>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
                             <input
                                 type="checkbox"
                                 checked={formData.active}
                                 onChange={e => setFormData({ ...formData, active: e.target.checked })}
+                                style={{ width: '14px', height: '14px' }}
                             />
                             Active
                         </label>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
                             <button
                                 className="btn-login"
-                                style={{ background: '#10B981' }}
+                                style={{ background: '#10B981', padding: '10px', fontSize: '11px' }}
                                 onClick={() => handleUpdateStaff(formData)}
                             >
                                 Lưu
                             </button>
                             <button
                                 className="btn-login"
-                                style={{ background: '#6B7280' }}
+                                style={{ background: '#6B7280', padding: '10px', fontSize: '11px' }}
                                 onClick={() => setEditModal(null)}
                             >
                                 Hủy
@@ -253,15 +259,15 @@ const PageStaffManagement = ({ user, onBack }) => {
         <div className="fade-in">
             {/* Header Removed for cleaner UI */}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
                 {/* Message Notification */}
                 {message.text && (
                     <div style={{
-                        padding: '10px',
+                        padding: '8px',
                         borderRadius: '8px',
                         background: message.type === 'error' ? '#FEE2E2' : '#D1FAE5',
                         color: message.type === 'error' ? '#DC2626' : '#059669',
-                        fontSize: '11px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         textAlign: 'center'
                     }}>
@@ -270,9 +276,8 @@ const PageStaffManagement = ({ user, onBack }) => {
                 )}
 
                 {/* Statistics Cards */}
-                {/* Statistics Cards - Clickable Filters */}
                 {statistics && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                         <StatCard
                             label="Tổng"
                             value={statistics.total}
@@ -305,24 +310,24 @@ const PageStaffManagement = ({ user, onBack }) => {
                 )}
 
                 {/* Search & Filters */}
-                <div style={{ marginBottom: '8px' }}>
+                <div style={{ marginBottom: '6px' }}>
                     <input
                         className="input-login"
-                        placeholder="🔍 Tìm kiếm nhân viên (Tên, Mã ID, Email)..."
+                        placeholder="🔍 Tìm kiếm nhân viên..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        style={{ width: '100%', padding: '10px' }}
+                        style={{ width: '100%', padding: '8px', fontSize: '11px' }}
                     />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                     <select
                         className="input-login"
-                        style={{ fontSize: '11px' }}
+                        style={{ fontSize: '10px', padding: '6px' }}
                         value={filters.store_code}
                         onChange={e => setFilters({ ...filters, store_code: e.target.value })}
                     >
-                        <option value="ALL">Tất cả store</option>
+                        <option value="ALL">Stores</option>
                         {statistics?.byStore && Object.keys(statistics.byStore).map(store => (
                             <option key={store} value={store}>{store} ({statistics.byStore[store]})</option>
                         ))}
@@ -330,11 +335,11 @@ const PageStaffManagement = ({ user, onBack }) => {
 
                     <select
                         className="input-login"
-                        style={{ fontSize: '11px' }}
+                        style={{ fontSize: '10px', padding: '6px' }}
                         value={filters.role}
                         onChange={e => setFilters({ ...filters, role: e.target.value })}
                     >
-                        <option value="ALL">Tất cả role</option>
+                        <option value="ALL">Roles</option>
                         <option value="ADMIN">ADMIN</option>
                         <option value="OPS">OPS</option>
                         <option value="SM">SM</option>
@@ -344,18 +349,18 @@ const PageStaffManagement = ({ user, onBack }) => {
 
                     <button
                         className="btn-login"
-                        style={{ fontSize: '11px', background: '#3B82F6', height: '100%', padding: '0' }}
+                        style={{ fontSize: '10px', background: '#3B82F6', height: '100%', padding: '0' }}
                         onClick={loadStaffData}
                     >
-                        🔄 Làm mới
+                        🔄
                     </button>
                     <button
                         className="btn-login"
-                        style={{ fontSize: '11px', background: '#6B7280', height: '100%', padding: '0' }}
+                        style={{ fontSize: '10px', background: '#6B7280', height: '100%', padding: '0' }}
                         onClick={handleSyncStatus}
-                        title="Đồng bộ trạng thái (Fix lỗi hiển thị)"
+                        title="Sync"
                     >
-                        ⚙️ Sync
+                        ⚙️
                     </button>
                 </div>
 
@@ -371,12 +376,12 @@ const PageStaffManagement = ({ user, onBack }) => {
                 )}
 
                 {/* Staff List */}
-                <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #DDD', borderRadius: '8px' }}>
+                <div style={{ maxHeight: '450px', overflowY: 'auto', border: '1px solid #F1F5F9', borderRadius: '12px', background: 'white' }}>
                     {loading ? (
-                        <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>⌛ Đang tải...</p>
+                        <p style={{ textAlign: 'center', padding: '15px', fontSize: '10px' }}>⌛ Đang tải...</p>
                     ) : filteredStaffList.length === 0 ? (
-                        <p style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>
-                            {searchTerm ? 'Không tìm thấy kết quả phù hợp' : 'Không có dữ liệu'}
+                        <p style={{ textAlign: 'center', padding: '15px', fontSize: '10px' }}>
+                            {searchTerm ? 'Không tìm thấy' : 'Không có dữ liệu'}
                         </p>
                     ) : (
                         filteredStaffList.map(staff => (
@@ -384,8 +389,9 @@ const PageStaffManagement = ({ user, onBack }) => {
                                 key={staff.staff_id}
                                 className="checklist-item"
                                 style={{
-                                    padding: '10px',
-                                    background: selectedStaff.includes(staff.staff_id) ? '#EFF6FF' : 'white'
+                                    padding: '8px 12px',
+                                    borderBottom: '1px solid #F8FAFC',
+                                    background: selectedStaff.includes(staff.staff_id) ? '#F1F7FF' : 'white'
                                 }}
                             >
 
@@ -398,24 +404,24 @@ const PageStaffManagement = ({ user, onBack }) => {
                                     flexWrap: 'wrap' // Mobile responsive: wrap content 
                                 }}>
                                     {/* Left Side: Checkbox + Staff Info */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '200px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '180px' }}>
                                         {/* Checkbox for pending staff */}
                                         {!staff.active && (
                                             <input
                                                 type="checkbox"
                                                 checked={selectedStaff.includes(staff.staff_id)}
                                                 onChange={() => toggleSelectStaff(staff.staff_id)}
-                                                style={{ width: '16px', height: '16px', flexShrink: 0 }}
+                                                style={{ width: '14px', height: '14px', flexShrink: 0 }}
                                             />
                                         )}
 
                                         {/* Staff Info */}
                                         <div style={{ overflow: 'hidden' }}>
-                                            <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                                 <span className="text-truncate">{staff.staff_name}</span>
                                                 <span style={{
-                                                    fontSize: '9px',
-                                                    padding: '2px 6px',
+                                                    fontSize: '8px',
+                                                    padding: '1px 5px',
                                                     borderRadius: '4px',
                                                     background: staff.active ? '#D1FAE5' : '#FEE2E2',
                                                     color: staff.active ? '#059669' : '#DC2626',
@@ -424,7 +430,7 @@ const PageStaffManagement = ({ user, onBack }) => {
                                                     {staff.active ? 'ACTIVE' : (staff.status || 'INACTIVE')}
                                                 </span>
                                             </div>
-                                            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }} className="text-truncate">
+                                            <div style={{ fontSize: '10px', color: '#94A3B8', marginTop: '1px' }} className="text-truncate">
                                                 {staff.staff_id} | {staff.role} | {staff.store_code}
                                             </div>
                                         </div>
@@ -549,19 +555,19 @@ const StatCard = ({ label, value, color, onClick, isActive }) => (
     <div
         onClick={onClick}
         style={{
-            padding: '12px',
-            borderRadius: '8px',
-            background: isActive ? color : color + '15', // Solid color if active
+            padding: '8px',
+            borderRadius: '10px',
+            background: isActive ? color : color + '10', // Solid color if active
             color: isActive ? 'white' : 'inherit',
-            border: `2px solid ${color}`,
+            border: `1.5px solid ${isActive ? color : color + '30'}`,
             textAlign: 'center',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            transform: isActive ? 'scale(1.05)' : 'scale(1)',
-            boxShadow: isActive ? `0 4px 6px -1px ${color}66` : 'none'
+            transform: isActive ? 'scale(1.02)' : 'scale(1)',
+            boxShadow: isActive ? `0 4px 10px -2px ${color}44` : 'none'
         }}>
-        <div style={{ fontSize: '20px', fontWeight: '800', color: isActive ? 'white' : color }}>{value}</div>
-        <div style={{ fontSize: '10px', color: isActive ? 'white' : '#666', marginTop: '4px' }}>{label}</div>
+        <div style={{ fontSize: '18px', fontWeight: '900', color: isActive ? 'white' : color }}>{value}</div>
+        <div style={{ fontSize: '9px', color: isActive ? 'white' : '#94A3B8', marginTop: '2px', fontWeight: '800', textTransform: 'uppercase' }}>{label}</div>
     </div>
 );
 

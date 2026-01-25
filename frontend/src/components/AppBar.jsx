@@ -75,7 +75,7 @@ const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
                 style={{
                     flex: 1,
                     textAlign: 'center',
-                    fontSize: isHomePage ? '16px' : '14px',
+                    fontSize: isHomePage ? '14px' : '12px',
                     fontWeight: '800',
                     cursor: 'pointer',
                     transition: 'opacity 0.2s',
@@ -86,17 +86,17 @@ const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
             >
                 {isHomePage ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <img
                                 src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91"
                                 alt="TMG Logo"
-                                style={{ height: '24px', filter: 'brightness(0) invert(1)' }}
+                                style={{ height: '20px', filter: 'brightness(0) invert(1)' }}
                             />
-                            <span style={{ fontSize: '14px' }}>THÁI MẬU GROUP</span>
+                            <span style={{ fontSize: '12px', letterSpacing: '0.05em' }}>THÁI MẬU GROUP</span>
                         </div>
                         {user && (
-                            <div style={{ fontSize: '11px', fontWeight: '400', opacity: 0.9 }}>
-                                Chúc {user.full_name?.split(' ').pop()} một ngày tràn đầy năng lượng! ⚡
+                            <div style={{ fontSize: '9px', fontWeight: '400', opacity: 0.8, marginTop: '-2px' }}>
+                                Chúc {user.full_name?.split(' ').pop()} một ngày tốt lành! ⚡
                             </div>
                         )}
                     </div>

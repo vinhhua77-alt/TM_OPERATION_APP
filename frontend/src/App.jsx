@@ -23,6 +23,7 @@ import PageAbout from './pages/PageAbout';
 import PageAdminConsole from './pages/PageAdminConsole';
 import PageAnalytics from './pages/PageAnalytics';
 import PageStoreSetup from './pages/PageStoreSetup';
+import Notification from './components/Notification';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
@@ -36,6 +37,7 @@ function App() {
     featureFlags: [],
     loaded: false
   });
+  const [notification, setNotification] = useState({ message: '', type: 'info' });
 
   useEffect(() => {
     // 1. Check authentication
@@ -93,6 +95,12 @@ function App() {
   const handleNavigate = (page) => {
     setCurrentPage(page);
     localStorage.setItem('lastPage', page);
+  };
+
+  const notify = (message, type = 'info') => {
+    setNotification({ message, type });
+    // Auto-clear after 3 seconds
+    setTimeout(() => setNotification({ message: '', type: 'info' }), 3000);
   };
 
   const handleLogin = (userData, token) => {
@@ -220,11 +228,21 @@ function App() {
           onLogout={handleLogout}
           showMenu={showMenu}
           onClose={() => setShowMenu(false)}
+          notify={notify}
         />
       </div>
 
       {/* Announcement Popup */}
       {user && showAnnouncements && <AnnouncementPopup user={user} onClose={() => setShowAnnouncements(false)} />}
+
+      {/* Notification Toast */}
+      {notification.message && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification({ message: '', type: 'info' })}
+        />
+      )}
 
       {/* BottomNav REMOVED as requested */}
     </div>

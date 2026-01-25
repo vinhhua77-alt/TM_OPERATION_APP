@@ -180,17 +180,17 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
             {/* LEADER HEADER */}
             <div className={`shrink-0 bg-gradient-to-br from-emerald-600 to-teal-700 p-5 pb-10 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
                 <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-4 active:scale-95">
-                        ← Báo cáo ngày
+                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[7.5px] font-bold px-2 py-0.5 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-2 active:scale-95">
+                        ← Trở về
                     </button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-xl rotate-2 leading-none">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-2xl shadow-xl leading-none">
                             📋
                         </div>
                         <div>
-                            <h1 className="text-xl font-black uppercase tracking-tight leading-none mb-0.5">LEADER LOG</h1>
-                            <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
-                                {user?.name} - {user?.role}
+                            <h1 className="text-lg font-black uppercase tracking-tight leading-none mb-0">LEADER LOG</h1>
+                            <p className="text-[8px] font-bold opacity-80 uppercase tracking-widest">
+                                {user?.name}
                             </p>
                         </div>
                     </div>
@@ -203,13 +203,13 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
             <div className="flex-1 px-4 -mt-6 relative z-20 space-y-4">
 
                 {/* 1. STORE & AREA CARD */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chi nhánh & Khu vực</span>
+                <div className="bg-white p-3 rounded-[24px] shadow-sm border border-slate-100 space-y-2">
+                    <div className="flex items-center gap-2 mb-0">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Chi nhánh & Khu vực</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <select
-                            className="bg-slate-50 border-none text-[11px] font-black text-slate-700 p-2.5 rounded-xl focus:ring-2 ring-emerald-500/20"
+                            className="bg-slate-50 border-none text-[10px] font-black text-slate-700 p-2 rounded-xl focus:ring-2 ring-emerald-500/20"
                             value={formData.store_id}
                             onChange={(e) => handleInputChange('store_id', e.target.value)}
                         >
@@ -218,7 +218,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
                         </select>
 
                         <select
-                            className="bg-slate-50 border-none text-[11px] font-black text-slate-700 p-2.5 rounded-xl focus:ring-2 ring-emerald-500/20"
+                            className="bg-slate-50 border-none text-[10px] font-black text-slate-700 p-2 rounded-xl focus:ring-2 ring-emerald-500/20"
                             value={formData.area_code}
                             onChange={(e) => handleInputChange('area_code', e.target.value)}
                         >
@@ -305,13 +305,17 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
                         ))}
                     </div>
 
-                    <div className="mt-4 space-y-1">
+                    <div className="mt-4 space-y-0">
                         {master.leaderChecklist?.map(item => (
-                            <div key={item} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0">
-                                <span className="text-[11px] font-bold text-slate-600 pr-4 leading-tight">{item}</span>
-                                <div className="flex bg-slate-100 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
-                                    <button onClick={() => toggleChecklist(item, true)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${formData.checklist[item] === true ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400 opacity-40'}`}>CÓ</button>
-                                    <button onClick={() => toggleChecklist(item, false)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${formData.checklist[item] === false ? 'bg-white text-rose-500 shadow-lg' : 'text-slate-400 opacity-40'}`}>KHÔNG</button>
+                            <div key={item} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                                <span className="text-[10.5px] font-bold text-slate-600 pr-4 leading-tight">{item}</span>
+                                <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
+                                    <button onClick={() => toggleChecklist(item, true)} className={`px-4 py-1.5 rounded-lg transition-all ${formData.checklist[item] === true ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-300'}`}>
+                                        <span className="text-[10px]">✔️</span>
+                                    </button>
+                                    <button onClick={() => toggleChecklist(item, false)} className={`px-4 py-1.5 rounded-lg transition-all ${formData.checklist[item] === false ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-300'}`}>
+                                        <span className="text-[10px]">❌</span>
+                                    </button>
                                 </div>
                             </div>
                         ))}
