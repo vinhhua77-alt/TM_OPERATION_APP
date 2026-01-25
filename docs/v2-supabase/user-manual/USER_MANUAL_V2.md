@@ -1,7 +1,7 @@
 # HƯỚNG DẪN SỬ DỤNG (USER MANUAL)
-## TM OPERATION APP - Version 2.0 (Supabase Era)
+## TM OPERATION APP - Version 3.0 (Decision Engine)
 
-Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operation App**. Đây là công cụ giúp ghi chép, theo dõi và tối ưu hóa hoạt động hàng ngày tại chi nhánh của Thái Mẫu Group.
+Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operation App v3.0**. Đây là phiên bản tích hợp **Decision Engine**, giúp tự động hóa việc phân tích rủi ro và tối ưu hóa vận hành dựa trên dữ liệu thời gian thực.
 
 ---
 
@@ -13,7 +13,7 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 3. Nhập **Mật khẩu**.
 4. Nhấn **Đăng nhập**.
 
-### 1.2. Đăng ký tài khoản (Cho nhân viên mới)
+### 1.2. Đăng ký tài khoản
 1. Nhấn vào liên kết **Đăng ký ngay** tại trang đăng nhập.
 2. Điền đầy đủ thông tin: Họ tên, Email, Mã nhân viên, Chi nhánh và Mật khẩu.
 3. Chờ Quản lý kích hoạt tài khoản trước khi có thể đăng nhập.
@@ -30,103 +30,56 @@ Chào mừng bạn đến với hệ thống quản lý vận hành **TM Operati
 
 ### 2.1. Gửi Báo Cáo Ca Làm Việc (Shift Log)
 Đây là nhiệm vụ bắt buộc sau mỗi ca làm việc.
-1. Chọn **Gửi Báo Cáo** từ Menu chính (biểu tượng 3 gạch góc trái).
-2. Chọn **Chi nhánh** và **Layout** làm việc (FOH, BOH, Cashier...).
-3. Chọn **Thời gian Vào/Ra** (hệ thống cho phép chọn bước nhảy 30 phút).
-4. Tích chọn các đầu việc đã hoàn thành trong **Checklist**.
+1. Chọn **Gửi Báo Cáo** từ Menu chính.
+2. Chọn **Chi nhánh** và **Layout** làm việc.
+3. Chọn **Thời gian Vào/Ra** (bước nhảy 30 phút).
+4. Tích chọn các đầu việc đã hoàn thành (Sử dụng biểu tượng ✔️/❌ để tiết kiệm diện tích).
 5. Ghi chú các **Sự cố** (nếu có).
 6. Đánh giá trạng thái ca làm việc (OK, Busy, Fixed...).
 7. Nhấn **Gửi Báo Cáo**.
 
-**Lưu ý**: Hệ thống chỉ cho phép gửi tối đa 2 báo cáo/ngày và mỗi báo cáo phải cách nhau ít nhất 2 tiếng.
+**Phân tích tự động (V3)**: Ngay sau khi gửi, **Decision Engine** sẽ quét báo cáo của bạn:
+- Tự động cảnh báo nếu bạn bắt đầu ca trễ (>15 phút).
+- Ghi nhận lỗi thực thi nếu có quá nhiều đầu việc trong checklist bị bỏ trống.
 
-### 2.2. Xem Bảng Điều Khiển Cá Nhân (Dashboard)
-- Tại trang chủ, các chỉ số thống kê được sắp xếp dạng lưới (Grid 4 cột) ngang hàng, giúp xem nhanh toàn bộ thông tin quan trọng.
-- Dữ liệu được cập nhật từ bảng `raw_shiftlog` hỗ trợ theo dõi hiệu suất cá nhân theo thời gian thực.
+### 2.2. Trung tâm báo cáo ngày (Daily Reporting Hub)
+Hệ thống báo cáo tập trung mới:
+1. Truy cập **Daily Hub** từ menu hoặc màn hình chính.
+2. Danh sách các module báo cáo (5S, Thu ngân, Kiểm kho...) sẽ hiện ra.
+3. Các module này được Quản lý bật/tắt linh hoạt từ Admin Console (Nếu bạn không thấy module nào, có nghĩa là bộ phận vận hành đang tạm đóng tính năng đó).
 
 ### 2.3. Hồ Sơ Năng Lực (My Career Center)
-Đây là nơi ghi nhận sự trưởng thành và đóng góp của bạn:
-1. **XP & Cấp độ**: Bạn được cộng điểm kinh nghiệm (XP) qua mỗi ca làm việc và phản hồi. Tích lũy đủ XP để thăng cấp (Level).
-2. **Chỉ số Vận hành**:
-    - **Giờ công**: Tổng số giờ làm việc thực tế trong tháng.
-    - **Sự cố đã xử lý**: Đếm các ca làm việc có ghi nhận và xử lý sự cố.
-    - **Chuỗi đi làm (🔥)**: Số ngày liên tiếp bạn gửi báo cáo ca đều đặn.
-    - **Điểm cảm xúc (😊)**: Trung bình điểm tâm trạng của bạn trong 30 ngày.
-3. **Bộ sưu tập Huy hiệu**: Các danh hiệu ghi nhận nỗ lực đặc biệt của bạn (VD: Thần tốc, Người hùng).
-4. **Gửi cảm nghĩ (+50 XP)**: Mỗi ngày bạn có thể chia sẻ cảm nghĩ để nhận thêm điểm XP.
+Nơi ghi nhận đóng góp cá nhân:
+- **XP & Cấp độ**: Cộng điểm qua mỗi báo cáo chuẩn xác.
+- **Chỉ số Vận hành**: Theo dõi giờ công, sự cố đã xử lý.
+- **Huy hiệu (Badges)**: Vinh danh nhân viên xuất sắc.
 
-### 2.4. Lộ trình Tập sự Quản lý (💎 Trainee Mode)
-Nếu bạn đang trong lộ trình phát triển năng lực:
-1. Tại trang **Gửi Báo Cáo**, bật nút gạt **💎 TẬP SỰ QUẢN LÝ**.
-2. Chọn vị trí bạn đang tập sự (hệ thống tự lọc theo cấp bậc hiện tại):
-   - **Đối với Staff**: Tập sự Thu Ngân hoặc Tập sự Leader.
-   - **Đối với Leader**: Trợ lý SM hoặc Tập sự AM (Area Manager).
-3. Hệ thống sẽ mở khóa giao diện quản lý tương ứng (Checklist Quản trị V8, Sáng kiến cải tiến).
-4. Dữ liệu tập sự được Decision Engine ghi nhận riêng để đánh giá thăng tiến.
+### 2.4. Tính năng Lab (🧪 Feature Lab)
+Nơi trải nghiệm các công nghệ quản trị mới nhất của Thái Mậu Group:
+- Truy cập từ menu chính.
+- Các tính năng đang phát triển như: Thăng cấp tự động, Dự báo sản lượng, Phân tích ROI nhân sự.
+- Các tính năng này có thể thay đổi liên tục để tối ưu hóa.
 
 ---
 
-## 3. DÀNH CHO CA TRƯỞNG (LEADER)
+## 3. DÀNH CHO CẤP QUẢN LÝ (LEADER / SM / OPS)
 
-### 3.1. Gửi Báo Cáo Ca Trưởng (Leader Report)
-Ngoài báo cáo cá nhân, Ca trưởng cần gửi báo cáo tổng kết tình hình ca.
-1. Chọn mục **Báo cáo Ca trưởng**.
-2. Ghi nhận tình hình khách hàng (Giờ cao điểm, các vấn đề phát sinh).
-3. Báo cáo tình trạng hàng hóa (Hết hàng, hàng hư hỏng).
-4. Ghi chú nội dung đã **Coaching** cho nhân viên cấp dưới.
-5. Cảnh báo rủi ro cho ca tiếp theo.
-6. Nhấn **Gửi Báo Cáo**.
+### 3.1. Phân tích thông minh (Decision Intelligence)
+- Truy cập trang **Analytics** để thấy bức tranh tổng thể.
+- Hệ thống tự động trích xuất các **Flags (Tín hiệu)** rủi ro như: Ca trực thiếu người, Nhân viên làm sai quy trình nhiều lần, hoặc Store có điểm sức khỏe (Health Score) thấp.
 
----
-
-## 4. DÀNH CHO QUẢN LÝ (SM / OPS)
-
-### 4.1. Nhật Ký Hành Động (SM Action Log)
-Quản lý sử dụng mục này để ghi nhận các phản hồi hoặc xử lý sự cố.
-1. Xem các báo cáo bất thường từ Staff hoặc Leader.
-2. Truy cập mục **Hành động Quản lý**.
-3. Chọn loại hành động (Xác nhận, Sửa lỗi, Yêu cầu làm lại, v.v.).
-4. Ghi chú chi tiết hướng xử lý.
-5. Nhấn **Lưu hành động**.
-
-### 4.2. Quản Lý Nhân Sự (Staff Management)
-- Admin/OPS có quyền kích hoạt hoặc vô hiệu hóa tài khoản nhân viên.
-- Chỉnh sửa thông tin nhân viên hoặc reset mật khẩu cho nhân viên khi cần thiết.
-
-### 4.3. Admin Console (Dành cho IT & Ops)
-Tính năng quản trị nâng cao giúp kiểm soát hệ thống:
-1. **Truy cập**: Vào menu **Cấu hình hệ thống** > chọn **Admin Console**.
-2. **Tab Feature Flags**:
-    - Dành cho bộ phận IT.
-    - Bật/Tắt các tính năng mới (ví dụ: Module Báo cáo AI, Giao diện mới).
-3. **Tab Permission Matrix**:
-    - Dành cho bộ phận Vận hành (Ops).
-    - Phân quyền chi tiết: Ai được làm gì (VD: Store Manager có được xem báo cáo tài chính không?).
-    - Tích vào ô tương ứng để cấp/thu hồi quyền ngay lập tức.
-98. **Tab Audit Logs** (Beta):
-    - Dành cho bộ phận Kiểm soát.
-    - Xem lại toàn bộ lịch sử hoạt động hệ thống: Ai làm gì, Khi nào, Thay đổi giá trị từ A sang B.
-    - Cột "Time" và tiêu đề luôn được cố định để dễ tra cứu khi danh sách dài.
-
-### 4.4. Quản lý Vùng (AM Assignment)
-Dành cho OPS/Admin để gán cửa hàng cho Area Manager (AM):
-1. Truy cập **Setup Center** > Chọn Tab **QUẢN LÝ VÙNG (👔)**.
-2. Danh sách các AM sẽ hiện ra cùng với Ma trận cửa hàng.
-3. Muốn AM nào quản lý store nào, chỉ cần **Tick chọn** vào mã cửa hàng tương ứng.
-4. Hệ thống tự động cập nhật quyền truy cập dữ liệu và báo cáo cho AM đó ngay lập tức.
+### 3.2. Quản trị hệ thống (Admin Console)
+Dành cho IT & Ops Director:
+1. **Feature Flags**: Bật/Tắt các module báo cáo thời gian thực. Thay đổi tại đây sẽ áp dụng ngay lập tức cho toàn bộ nhân viên trong trang **Daily Hub**.
+2. **Permission Matrix**: Phân quyền chi tiết cho từng vai trò đối với từng tính năng cụ thể.
+3. **Audit Tracking**: Truy vết mọi hành động thay đổi cấu hình hoặc dữ liệu nhân sự.
 
 ---
 
-## 5. CÁC CÂU HỎI THƯỜNG GẶP (FAQ)
-
-**Q: Tại sao tôi không thể gửi báo cáo ca làm việc?**
-A: Có thể bạn vừa gửi báo cáo trong vòng 2 tiếng gần đây, hoặc bạn đã gửi đủ 2 báo cáo trong ngày. Hãy kiểm tra lại thời gian.
-
-**Q: Tôi đăng nhập báo "Tài khoản chưa được kích hoạt"?**
-A: Nhân viên mới đăng ký cần được Quản lý (SM/OPS) kích hoạt trạng thái ACTIVE trong hệ thống trước khi sử dụng.
-
-**Q: Làm sao để thay đổi chi nhánh làm việc?**
-A: Bạn có thể chọn chi nhánh phù hợp ngay trong form gửi báo cáo hàng ngày.
+## 4. CÁC QUY TẮC VẬN HÀNH (V3)
+- **Compact Mobile UI**: Giao diện được tối ưu cho màn hình nhỏ, ưu tiên các biểu tượng và font chữ tối giản để thao tác nhanh bằng một tay.
+- **Data Lock**: Dữ liệu sau khi đã chốt cuối ngày sẽ không được phép sửa đổi từ phía nhân viên (SM cần mở khóa nếu muốn điều chỉnh).
 
 ---
-**TM Operation App - Hỗ trợ vận hành Thái Mẫu Group**
+**TM Operation App v3.0 - Hỗ trợ vận hành Thái Mậu Group**
+**Release Date: 2026-01-25**

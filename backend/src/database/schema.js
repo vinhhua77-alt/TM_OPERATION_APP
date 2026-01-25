@@ -86,6 +86,12 @@ export function createTables(db) {
       role TEXT,
       store_code TEXT,
       active INTEGER DEFAULT 1,
+      current_level TEXT DEFAULT 'L0',
+      trust_score REAL DEFAULT 100,
+      performance_score REAL DEFAULT 0,
+      promotion_eligible INTEGER DEFAULT 0,
+      last_score_update DATETIME,
+      level_changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );

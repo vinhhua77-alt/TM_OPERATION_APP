@@ -175,7 +175,7 @@ export class AuthService {
 
       // 6. Check for pending approvals count for Manager notification
       let pendingApprovals = 0;
-      if (['ADMIN', 'OPS', 'SM'].includes(user.role)) {
+      if (['ADMIN', 'IT', 'OPS', 'SM'].includes(user.role)) {
         const filter = { status: 'PENDING' };
         if (user.role === 'SM') {
           filter.store_code = user.store_code;

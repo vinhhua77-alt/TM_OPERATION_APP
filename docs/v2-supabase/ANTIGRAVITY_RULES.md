@@ -1,8 +1,8 @@
 # ANTIGRAVITY RULES
 ## Non-Negotiable Rulebook for AI Coding Assistants
 
-**Version**: 2.0 (Supabase)  
-**Last Updated**: 2026-01-21  
+**Version**: 3.0 (Decision Engine Core)  
+**Last Updated**: 2026-01-25  
 **Status**: ACTIVE - ENFORCED
 
 ---
@@ -379,12 +379,13 @@ router.post('/submit', async (req, res, next) => {
 
 ## 🛠️ GIT & DEPLOYMENT RULES
 
-### RULE 29: No Git Push Without Permission
+### RULE 29: No Git Push Without Permission (STRICT)
 **Never push code to the remote repository without explicit user approval.**
 
 - ❌ FORBIDDEN: `git push` without asking "Can I push now?"
 - ✅ REQUIRED: Always ask for confirmation before pushing changes.
 - ✅ REQUIRED: List the changes that will be pushed.
+- ✅ REQUIRED: **Commit messages MUST contain Version Code (vX.Y.Z) and Release Date.**
 
 **Violation**: Unauthorized code deployment. Risk of breaking production.
 
@@ -402,14 +403,39 @@ router.post('/submit', async (req, res, next) => {
 
 ---
 
-### RULE 31: Clear Semantic Versioning
-**All commits/releases MUST have clear versioning marks.**
+### RULE 31: Versioning & About Page Sync
+**All git pushes MUST sync with the UI version display.**
 
-- ✅ REQUIRED: Use semantic versioning (vX.Y.Z) in commit messages or tags.
+- ✅ REQUIRED: Use semantic versioning (vX.Y.Z) and date in commit messages.
+- ✅ REQUIRED: **Update `PageAbout.jsx` with the exact Version and Release Date before pushing.**
 - ✅ REQUIRED: Update `package.json` version if applicable.
-- ❌ FORBIDDEN: Vague messages like "update code".
+- ❌ FORBIDDEN: Version mismatch between code, commit, and UI.
 
-**Violation**: Impossible to track changes or rollback release.
+**Violation**: Impossible to track changes or verify deployment state.
+
+---
+
+## 🛠️ OPERATIONAL RULES (AI BEHAVIOR)
+
+### RULE 32: Strict Scope Adherence
+**Only execute what is explicitly requested.**
+
+- ✅ REQUIRED: Stick to the user's task description.
+- ❌ FORBIDDEN: Adding "proactive" features or refactoring unrelated code without approval.
+- ❌ FORBIDDEN: Exploring or modifying files outside the scope of the request.
+
+**Violation**: Scope creep, unintended bugs, and wasted context.
+
+---
+
+### RULE 33: Continuous User Manual Updates
+**All new features MUST be documented for the User Manual.**
+
+- ✅ REQUIRED: When adding a new feature, update `/docs/v2-supabase/user-manual/USER_MANUAL_V2.md` (or relevant V3 manual) immediately.
+- ✅ REQUIRED: Documentation must include: What it is, How to use it, and Who can use it.
+- ❌ FORBIDDEN: Delivering code without corresponding user instructions.
+
+**Violation**: Users cannot use new features. Technical debt in documentation.
 
 ---
 
@@ -448,6 +474,7 @@ If you detect a rule violation:
 | Date | Change |
 |------|--------|
 | 2026-01-21 | Initial ANTIGRAVITY_RULES.md v2.0 for Supabase system |
+| 2026-01-25 | v3.0 Update: Added Git Push approval, Strict Scope, and User Manual rules |
 
 ---
 
@@ -465,4 +492,4 @@ They exist to:
 
 ---
 
-**END OF ANTIGRAVITY RULES v2.0**
+**END OF ANTIGRAVITY RULES v3.0**

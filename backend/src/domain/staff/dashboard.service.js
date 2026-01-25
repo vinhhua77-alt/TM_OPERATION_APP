@@ -29,6 +29,16 @@ export class DashboardService {
     }
 
     /**
+     * Get employee dashboard data for a specific day
+     */
+    static async getEmployeeDailyDashboard(currentUser, staffId, date) {
+        if (currentUser.id !== staffId && !['ADMIN', 'OPS'].includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+        return await DashboardRepo.getEmployeeDailyDashboard(staffId, date);
+    }
+
+    /**
      * Get available months for staff member
      */
     static async getAvailableMonths(currentUser, staffId) {

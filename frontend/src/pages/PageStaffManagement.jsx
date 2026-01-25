@@ -9,7 +9,7 @@ import FAB from '../components/FAB';
 const PageStaffManagement = ({ user, onBack }) => {
     const [staffList, setStaffList] = useState([]);
     const [statistics, setStatistics] = useState(null);
-    const [filters, setFilters] = useState({ store_code: 'ALL', status: 'PENDING', role: 'ALL' });
+    const [filters, setFilters] = useState({ store_code: 'ALL', status: 'ACTIVE', role: 'ALL' });
     const [selectedStaff, setSelectedStaff] = useState([]);
     const [editModal, setEditModal] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -113,6 +113,18 @@ const PageStaffManagement = ({ user, onBack }) => {
         }
     };
 
+    const handleApproveTrainee = async (staffId) => {
+        try {
+            const res = await staffAPI.updateStaff(staffId, { is_trainee: true, trainee_verified: true });
+            if (res.success) {
+                showMessage('Đã xác minh tập sự thành công!', 'success');
+                loadStaffData();
+            }
+        } catch (error) {
+            showMessage('Lỗi xác minh: ' + error.message, 'error');
+        }
+    };
+
     const handleSyncStatus = async () => {
         setLoading(true);
         try {
@@ -146,7 +158,9 @@ const PageStaffManagement = ({ user, onBack }) => {
             gmail: editModal.gmail,
             role: editModal.role,
             store_code: editModal.store_code,
-            active: editModal.active
+            active: editModal.active,
+            is_trainee: editModal.is_trainee || false,
+            trainee_verified: editModal.trainee_verified || false
         });
 
         return (
@@ -206,6 +220,7 @@ const PageStaffManagement = ({ user, onBack }) => {
                             style={{ padding: '8px', fontSize: '11px' }}
                         >
                             <option value="ADMIN">ADMIN</option>
+                            <option value="IT">IT</option>
                             <option value="OPS">OPS</option>
                             <option value="SM">SM</option>
                             <option value="LEADER">LEADER</option>
@@ -232,6 +247,30 @@ const PageStaffManagement = ({ user, onBack }) => {
                             />
                             Active
                         </label>
+
+                        <div style={{ height: '1px', background: '#F1F5F9', margin: '4px 0' }}></div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#B45309' }}>
+                            <input
+                                type="checkbox"
+                                checked={formData.is_trainee}
+                                onChange={e => setFormData({ ...formData, is_trainee: e.target.checked, trainee_verified: false })}
+                                style={{ width: '14px', height: '14px' }}
+                            />
+                            <b>Bật Chế độ Tập sự (Trainee)</b>
+                        </label>
+
+                        {formData.is_trainee && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#1E40AF', paddingLeft: '10px' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.trainee_verified}
+                                    onChange={e => setFormData({ ...formData, trainee_verified: e.target.checked })}
+                                    style={{ width: '14px', height: '14px' }}
+                                />
+                                SM Approved (Xác minh tập sự)
+                            </label>
+                        )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
                             <button
@@ -277,7 +316,7 @@ const PageStaffManagement = ({ user, onBack }) => {
 
                 {/* Statistics Cards */}
                 {statistics && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
                         <StatCard
                             label="Tổng"
                             value={statistics.total}
@@ -293,14 +332,21 @@ const PageStaffManagement = ({ user, onBack }) => {
                             isActive={filters.status === 'ACTIVE'}
                         />
                         <StatCard
-                            label="Pending"
+                            label="Duyệt TS"
+                            value={statistics.traineePending || 0}
+                            color="#6366F1"
+                            onClick={() => setFilters({ ...filters, status: 'TRAINEE_PENDING' })}
+                            isActive={filters.status === 'TRAINEE_PENDING'}
+                        />
+                        <StatCard
+                            label="Mới"
                             value={statistics.pending}
                             color="#F59E0B"
                             onClick={() => setFilters({ ...filters, status: 'PENDING' })}
                             isActive={filters.status === 'PENDING'}
                         />
                         <StatCard
-                            label="Inactive"
+                            label="OFF"
                             value={statistics.inactive}
                             color="#EF4444"
                             onClick={() => setFilters({ ...filters, status: 'INACTIVE' })}
@@ -341,6 +387,7 @@ const PageStaffManagement = ({ user, onBack }) => {
                     >
                         <option value="ALL">Roles</option>
                         <option value="ADMIN">ADMIN</option>
+                        <option value="IT">IT</option>
                         <option value="OPS">OPS</option>
                         <option value="SM">SM</option>
                         <option value="LEADER">LEADER</option>
@@ -429,6 +476,19 @@ const PageStaffManagement = ({ user, onBack }) => {
                                                 }}>
                                                     {staff.active ? 'ACTIVE' : (staff.status || 'INACTIVE')}
                                                 </span>
+                                                {staff.is_trainee && (
+                                                    <span style={{
+                                                        fontSize: '8px',
+                                                        padding: '1px 5px',
+                                                        borderRadius: '4px',
+                                                        background: staff.trainee_verified ? '#DBEAFE' : '#FEF3C7',
+                                                        color: staff.trainee_verified ? '#1E40AF' : '#92400E',
+                                                        fontWeight: '900',
+                                                        flexShrink: 0
+                                                    }}>
+                                                        {staff.trainee_verified ? '🎓 TRAINEE' : '⌛ PENDING TRAINEE'}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div style={{ fontSize: '10px', color: '#94A3B8', marginTop: '1px' }} className="text-truncate">
                                                 {staff.staff_id} | {staff.role} | {staff.store_code}
@@ -438,6 +498,26 @@ const PageStaffManagement = ({ user, onBack }) => {
 
                                     {/* Actions - Right Aligned */}
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        {/* Trainee Pending Approval (Specific Case) */}
+                                        {staff.is_trainee && !staff.trainee_verified && (
+                                            <button
+                                                onClick={() => handleApproveTrainee(staff.staff_id)}
+                                                style={{
+                                                    padding: '4px 10px',
+                                                    borderRadius: '8px',
+                                                    background: '#6366F1',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    fontSize: '9px',
+                                                    fontWeight: '900',
+                                                    textTransform: 'uppercase',
+                                                    boxShadow: '0 2px 4px rgba(99,102,241,0.2)'
+                                                }}
+                                            >
+                                                Duyệt TS
+                                            </button>
+                                        )}
+
                                         {/* Pending Actions: Approve / Reject */}
                                         {!staff.active && filters.status === 'PENDING' ? (
                                             <>

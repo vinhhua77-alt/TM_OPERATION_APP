@@ -3,7 +3,7 @@ import { masterDataAPI } from '../api/master-data';
 import { staffAPI } from '../api/staff';
 
 const PageStoreSetup = ({ user, onBack }) => {
-    const isAuthorized = ['ADMIN', 'OPS'].includes(user?.role);
+    const isAuthorized = ['ADMIN', 'IT', 'OPS'].includes(user?.role);
     const [activeTab, setActiveTab] = useState('stores');
     const [selectedStore, setSelectedStore] = useState('ALL');
     const [stores, setStores] = useState([]);

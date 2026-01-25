@@ -10,6 +10,12 @@
 - **Ultra-Compact Mobile UI:** Overhauled entire frontend for maximum mobile efficiency (10-11px font standards).
 - **Feature Lab:** Added 🧪 Feature Lab section for upcoming Decision Engine modules (Auto-promotion, Predictive Labor).
 - **Communication Architecture:** Replaced legacy alerts with an integrated `Notification` (Toast) system in `App.jsx`.
+- **Decision Engine Intelligence (Phase 4 & 5):**
+  - **Scoring Engine:** Implemented `ScoringService` to calculate rolling `Trust Score` and `Ops Contribution` from operational signals.
+  - **Career State Machine:** Built `CareerService` for automated promotion eligibility checking (L0-L4) based on scoring thresholds and time-in-level.
+  - **Decision Console:** Created a premium Admin/OPS interface for personnel career management and thăng tiến (promotion) workflow.
+- **Enhanced Staff Metadata:** Added `current_level`, `trust_score`, and `performance_score` columns to `staff_master` via migration `v3_15`.
+- **Logic-First Documentation:** Created comprehensive Tech and User Manuals for the Decision Engine at `/docs/v3-decision-engine/`.
 - **UI Optimizations:** 
   - Checklist: Replaced text buttons with compact `✔️`/`❌` icons.
   - Analytics: Streamlined padding/margins for 80% more screen utility.

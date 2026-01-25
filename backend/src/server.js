@@ -28,6 +28,9 @@ import announcementRoutes from './routes/announcement.routes.js';
 import gamificationRoutes from './routes/gamification.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js'; // [NEW]
+import revenueRoutes from './routes/revenue.routes.js'; // [NEW]
+import metricsRoutes from './routes/metrics.routes.js'; // [NEW]
+import decisionRoutes from './routes/decision.routes.js'; // [NEW]
 
 import cron from 'node-cron'; // [NEW]
 import analyticsService from './domain/analytics/analytics.service.js'; // [NEW]
@@ -147,6 +150,9 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes); // [NEW]
+app.use('/api/revenue', revenueRoutes); // [NEW]
+app.use('/api/metrics', metricsRoutes); // [NEW]
+app.use('/api/decision', decisionRoutes); // [NEW]
 
 // Error handling
 app.use(errorHandler);

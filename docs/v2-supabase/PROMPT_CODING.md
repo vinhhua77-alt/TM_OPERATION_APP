@@ -275,3 +275,30 @@ const response = await fetch('/api/endpoint', {
 **END OF PROMPT**
 
 **Copy everything above this line and paste to Antigravity before requesting code changes.**
+
+
+## 📝 CODING STANDARDS (v3)
+
+### 1. Backend (Node.js + Supabase)
+- **Service Layer**: Business logic lives here. Use `bcryptjs` for all sensitive hashing.
+- **Repository Layer**: Pure data access using `@supabase/supabase-js`.
+- **Validation**: Strict input validation using Zod or custom logic before any DB write.
+
+### 2. Frontend (React + Vite)
+- **Smart Defaults**: UI must predict user intent (End Time = Start + 8h, etc.).
+- **Visual Validation**: Every valid input section should show a GREEN ✅.
+- **Micro-Interactions**: Use floating popups (Z-index 9999) for feedback to ensure visibility.
+
+## 🎯 MANDATORY DOCUMENTATION OUTPUTS
+
+Every coding task MUST include/update the following:
+
+### 1. TECHNICAL MANUAL (Vibecode Version)
+- **Path**: `/docs/v3-decision-engine/tech-manual/`
+- **Focus**: Endpoints, Service logic, DB Relationships, Edge cases.
+- **Rule**: "If it's in the code, it MUST be in the Tech Manual."
+
+### 2. USER MANUAL (Operations Version)
+- **Path**: `/docs/v3-decision-engine/user-manual/`
+- **Focus**: UX flow, Terminologies, Business value (The "WHY").
+- **Language**: Simple, non-technical, Operations-friendly.

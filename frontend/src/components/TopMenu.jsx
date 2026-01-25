@@ -34,7 +34,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
             onClick={onClick}
             className="flex items-center justify-between px-3 py-1.5 mt-0.5 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
         >
-            <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] group-hover:text-slate-600">
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-slate-600">
                 {label}
             </span>
             <span className={`text-[8px] text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
@@ -54,7 +54,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
         >
             <span className="text-base w-4 text-center">{icon}</span>
             <div className="flex-1 flex items-center justify-between">
-                <span className={`text-[10.5px] font-bold ${active ? 'text-blue-600' : 'text-slate-700'}`}>
+                <span className={`text-[10px] font-bold ${active ? 'text-blue-600' : 'text-slate-700'} tracking-tight`}>
                     {label}
                 </span>
                 {badge && (
@@ -108,20 +108,34 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
+                {sysConfig.featureFlags.includes('MODULE_DECISION_CONSOLE') && (
+                    <MenuItem
+                        icon="🚀"
+                        label="Quản trị sự nghiệp và thăng tiến"
+                        onClick={() => { closeMenu(); onNavigate('DECISION_CONSOLE'); }}
+                        special
+                    />
+                )}
+
                 <div className="my-1.5 border-t border-slate-50 mx-3 opacity-40"></div>
 
                 {/* --- 2. VẬN HÀNH --- */}
-                <SectionHeader label="Vận hành" isOpen={expandedSections.vận_hành} onClick={() => toggleSection('vận_hành')} />
+                <SectionHeader label="Vận hành 🛡️" isOpen={expandedSections.vận_hành} onClick={() => toggleSection('vận_hành')} />
                 {expandedSections.vận_hành && (
                     <div className="animate-in slide-in-from-left-2 duration-200">
-                        <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('QAQC_HUB'); }} />
+                        {sysConfig.featureFlags.includes('MODULE_QAQC_HUB') && (
+                            <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('QAQC_HUB'); }} />
+                        )}
                         <MenuItem icon="📝" label="Báo Cáo Hàng Ngày" onClick={() => { closeMenu(); onNavigate('DAILY_HUB'); }} />
-                        <MenuItem icon="✅" label="HỆ THỐNG QA/QC" onClick={() => { closeMenu(); onNavigate('QAQC_HUB'); }} />
+                        {sysConfig.featureFlags.includes('MODULE_OPERATION_METRICS') && (
+                            <MenuItem icon="📉" label="HỆ THỐNG QA/QC" onClick={() => { closeMenu(); onNavigate('OPERATION_METRICS'); }} />
+                        )}
+                        {/* Hidden but kept in code if needed later: REVENUE_CONSOLE */}
                     </div>
                 )}
 
                 {/* --- 3. DASHBOARD --- */}
-                <SectionHeader label="Dashboard" isOpen={expandedSections.dashboard} onClick={() => toggleSection('dashboard')} />
+                <SectionHeader label="Dashboard 📊" isOpen={expandedSections.dashboard} onClick={() => toggleSection('dashboard')} />
                 {expandedSections.dashboard && (
                     <div className="animate-in slide-in-from-left-2 duration-200">
                         <MenuItem icon="📊" label="Dashboard Trung Tâm" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
@@ -130,7 +144,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                 )}
 
                 {/* --- 4. QUẢN TRỊ HỆ THỐNG --- */}
-                {['ADMIN', 'OPS', 'SM'].includes(user?.role) && (
+                {['ADMIN', 'IT', 'OPS', 'SM'].includes(user?.role) && (
                     <>
                         <SectionHeader label="QUẢN TRỊ HỆ THỐNG" isOpen={expandedSections.quản_trị} onClick={() => toggleSection('quản_trị')} />
                         {expandedSections.quản_trị && (
@@ -143,21 +157,23 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                 )}
 
                 {/* --- 5. CẤU HÌNH HỆ THỐNG --- */}
-                {['ADMIN', 'OPS'].includes(user?.role) && (
+                {['ADMIN', 'IT'].includes(user?.role) && (
                     <>
                         <SectionHeader label="Cấu hình hệ thống" isOpen={expandedSections.cấu_hình} onClick={() => toggleSection('cấu_hình')} />
                         {expandedSections.cấu_hình && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
                                 <MenuItem icon="🏗️" label="Thiết lập cấu hình" onClick={() => { closeMenu(); onNavigate('STORE_SETUP'); }} />
                                 <MenuItem icon="⚙️" label="Admin Console" onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }} />
-                                <MenuItem icon="🧪" label="Tính năng Lab" onClick={handleFeatureLabClick} />
+                                {['ADMIN', 'IT'].includes(user?.role) && (
+                                    <MenuItem icon="🧪" label="Tính năng Lab" onClick={() => { closeMenu(); onNavigate('LAB_FEATURES'); }} />
+                                )}
                             </div>
                         )}
                     </>
                 )}
 
                 <div className="my-1.5 border-t border-slate-100 mx-3 opacity-50"></div>
-                <MenuItem icon="📖" label="Hướng Dẫn Sử DỤng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
+                <MenuItem icon="📖" label="Hướng Dẫn Sử Dụng" onClick={() => { closeMenu(); onNavigate('GUIDE'); }} />
                 <MenuItem icon="ℹ" label="About" onClick={() => { closeMenu(); onNavigate('ABOUT'); }} />
             </div>
 

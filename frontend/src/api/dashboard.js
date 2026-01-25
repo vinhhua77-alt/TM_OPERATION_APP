@@ -16,6 +16,10 @@ export const dashboardAPI = {
         return await apiClient.get(`/dashboard/${staffId}${params}`);
     },
 
+    getDailyDashboard: async (staffId, date) => {
+        return await apiClient.get(`/dashboard/${staffId}/day`, { params: { date } });
+    },
+
     /**
      * Get available months for staff member
      */

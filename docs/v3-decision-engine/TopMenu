@@ -1,0 +1,30 @@
+Trang chủ 🏠
+Quản trị sự nghiệp và thăng tiến
+Vận hành 🛡️
+- Vận Hành Tuân Thủ 
+- Báo Cáo Hàng Ngày 
+- HỆ THỐNG QA/QC 
+Dashboard 📊
+- Dashboard Trung Tâm
+- Báo Cáo dữ liệu
+QUẢN TRỊ HỆ THỐNG
+- Quản Lý Nhân Sự
+- Quản Lý Thông Báo
+Cấu hình hệ thống 
+- Thiết lập cấu hình
+- Admin Console
+- tính năng Lab
+Hướng Dẫn Sử DỤng
+About
+
+1. Tối ưu hóa TopMenu (Menu cạnh):
+Thu gọn kích thước: Giảm chiều rộng từ 280px xuống còn 230px để không chiếm quá nhiều không gian màn hình.
+Chữ nhỏ & Chuyên nghiệp: Giảm kích thước font chữ xuống còn 10.5px cho các mục menu và 8.5px cho các tiêu đề nhóm (Vận hành, Quản trị...).
+Giảm khoảng cách (Compact):
+Giảm padding dọc giữa các mục từ py-3 xuống py-2.
+Giảm khoảng cách giữa icon và chữ.
+Thu nhỏ header (phần thông tin người dùng) để dành nhiều chỗ hơn cho danh sách chức năng.
+Mục tiêu: Giúp hiển thị được nhiều mục nhất có thể trên cùng một màn hình mà không cần cuộn trang.
+2. Tối ưu hóa AppBar (Thanh điều hướng trên cùng):
+Giảm kích thước Logo và font chữ tên tập đoàn.
+Thu gọn câu chào người dùng để tiết kiệm chiều cao màn hình (Vertical Space).

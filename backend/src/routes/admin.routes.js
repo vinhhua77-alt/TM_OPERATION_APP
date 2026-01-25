@@ -8,10 +8,10 @@ import { AccessService } from '../domain/access/access.service.js';
 
 const router = express.Router();
 
-// Middleware to ensure user is ADMIN or OPS
-const requireAdminOrOps = (req, res, next) => {
-    if (!['ADMIN', 'OPS'].includes(req.user.role)) {
-        return res.status(403).json({ success: false, message: 'Forbidden: Admin access required' });
+// Middleware to ensure user is ADMIN or IT
+const requireAdminOrIT = (req, res, next) => {
+    if (!['ADMIN', 'IT'].includes(req.user.role)) {
+        return res.status(403).json({ success: false, message: 'Forbidden: Admin or IT access required' });
     }
     next();
 };
@@ -20,7 +20,7 @@ const requireAdminOrOps = (req, res, next) => {
  * GET /api/admin/console
  * Get all data for Admin Console UI (Flags + Matrix)
  */
-router.get('/console', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+router.get('/console', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
         const data = await AccessService.getAdminConsoleData();
         res.json({ success: true, data });
@@ -33,7 +33,7 @@ router.get('/console', authenticateToken, requireAdminOrOps, async (req, res, ne
  * GET /api/admin/summary
  * Get system-wide counts (Tenants, Brands, Stores, Staff)
  */
-router.get('/summary', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+router.get('/summary', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
         const data = await AccessService.getSystemSummary();
         res.json({ success: true, data });
@@ -47,7 +47,7 @@ router.get('/summary', authenticateToken, requireAdminOrOps, async (req, res, ne
  * Update Feature Flag or Permission
  * Payload: { type: 'FEATURE_FLAG' | 'PERMISSION', ...data }
  */
-router.post('/config', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+router.post('/config', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
         const { type, payload } = req.body;
         const result = await AccessService.updateConfig(req.user, type, payload);
@@ -61,7 +61,7 @@ router.post('/config', authenticateToken, requireAdminOrOps, async (req, res, ne
  * GET /api/admin/audit-logs
  * Get system audit logs
  */
-router.get('/audit-logs', authenticateToken, requireAdminOrOps, async (req, res, next) => {
+router.get('/audit-logs', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
         const data = await AccessService.getAuditLogs();
         res.json({ success: true, data });

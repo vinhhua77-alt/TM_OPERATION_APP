@@ -52,6 +52,20 @@ router.get('/:staffId', async (req, res, next) => {
 });
 
 /**
+ * GET /api/dashboard/:staffId/day
+ */
+router.get('/:staffId/day', async (req, res, next) => {
+  try {
+    const { staffId } = req.params;
+    const { date } = req.query;
+    const result = await DashboardService.getEmployeeDailyDashboard(req.user, staffId, date);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/dashboard/:staffId/months
  */
 router.get('/:staffId/months', async (req, res, next) => {

@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 import { supabase } from '../infra/supabase.client.js';
+import { AccessService } from '../domain/access/access.service.js';
 
 const router = express.Router();
 
@@ -35,6 +36,29 @@ router.get('/stores', async (req, res) => {
             success: false,
             message: 'Lỗi hệ thống'
         });
+    }
+});
+
+/**
+ * GET /api/master/active-features
+ * Get list of currently enabled feature flags (Global access for authenticated users)
+ */
+router.get('/active-features', authenticateToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('system_feature_flags')
+            .select('flag_key')
+            .eq('is_enabled', true);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data: data.map(f => f.flag_key)
+        });
+    } catch (error) {
+        console.error('Error fetching active features:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
 

@@ -19,11 +19,17 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
   yesterday.setDate(yesterday.getDate() - 1);
   const [workloadDate, setWorkloadDate] = useState(yesterday.toISOString().split('T')[0]);
 
+  // Daily Dashboard State
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dailyData, setDailyData] = useState(null);
+  const [dailyLoading, setDailyLoading] = useState(false);
+
   useEffect(() => {
     if (user?.id) {
       loadInitialData();
+      loadDailyData(selectedDate);
     }
-  }, [user]);
+  }, [user, selectedDate]);
 
   // Helper: Get safe user properties
   const getSafeUser = (u) => ({
@@ -34,7 +40,19 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
 
   const safeUser = user ? getSafeUser(user) : null;
 
-  // Effect to load workload when filter changes
+  // Sync Workload Date with Selected Date
+  useEffect(() => {
+    setWorkloadDate(selectedDate);
+  }, [selectedDate]);
+
+  // Effect to load data when state changes
+  useEffect(() => {
+    if (user?.id) {
+      loadInitialData();
+      loadDailyData(selectedDate);
+    }
+  }, [user, selectedDate]);
+
   useEffect(() => {
     if (safeUser?.storeCode) {
       loadWorkload();
@@ -75,6 +93,44 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
     } catch (e) { console.error(e); }
   };
 
+  const loadDailyData = async (date) => {
+    if (!user?.id) return;
+    setDailyLoading(true);
+    try {
+      const res = await dashboardAPI.getDailyDashboard(user.id, date);
+      if (res.success) {
+        setDailyData(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDailyLoading(false);
+    }
+  };
+
+  const handlePrevPeriod = () => {
+    const d = new Date(selectedDate);
+    if (workloadPeriod === 'day') d.setDate(d.getDate() - 1);
+    else if (workloadPeriod === 'week') d.setDate(d.getDate() - 7);
+    else if (workloadPeriod === 'month') d.setMonth(d.getMonth() - 1);
+    setSelectedDate(d.toISOString().split('T')[0]);
+  };
+
+  const handleNextPeriod = () => {
+    const d = new Date(selectedDate);
+    const today = new Date().toISOString().split('T')[0];
+
+    if (workloadPeriod === 'day') d.setDate(d.getDate() + 1);
+    else if (workloadPeriod === 'week') d.setDate(d.getDate() + 7);
+    else if (workloadPeriod === 'month') d.setMonth(d.getMonth() + 1);
+
+    if (d.toISOString().split('T')[0] > today) {
+      setSelectedDate(today);
+    } else {
+      setSelectedDate(d.toISOString().split('T')[0]);
+    }
+  };
+
   const loadWorkload = async () => {
     if (!safeUser?.storeCode) return;
     setWorkloadLoading(true);
@@ -82,13 +138,10 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
       const res = await dashboardAPI.getWorkload(safeUser.storeCode, workloadPeriod, workloadDate);
       if (res.success) {
         setWorkload(res.data);
-      } else {
-        setWorkload(null);
       }
     } catch (e) {
       console.error("Workload Error", e);
     } finally {
-      // Add small delay for visual smoothness? No
       setWorkloadLoading(false);
     }
   };
@@ -141,13 +194,33 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
           className="w-full mt-0.5 bg-slate-50 border-none text-slate-600 font-bold text-[10px] py-1.5 px-3 rounded-lg focus:ring-0"
         >
           {months.map(m => (
-            <option key={m.month} value={m.month}>Tháng {m.month} ({m.completed_shifts}/{m.total_shifts} ca)</option>
+            <option key={m.month} value={m.month}>TỔNG KẾT THÁNG {m.month.split('-')[1]} ({m.completed_shifts}/{m.total_shifts} ca)</option>
           ))}
           {months.length === 0 && <option>Tháng này</option>}
         </select>
       </div>
 
       <div className="px-2 space-y-2.5">
+        {/* === SECTION: TRAINEE WARNING (NEW) === */}
+        {user?.is_trainee && (
+          <div className={`p-4 rounded-[24px] border-2 flex items-center justify-between mb-2 ${user.trainee_verified ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100 animate-pulse'}`}>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{user.trainee_verified ? '🎓' : '⏳'}</span>
+              <div>
+                <div className={`text-[10px] font-black uppercase tracking-widest ${user.trainee_verified ? 'text-blue-700' : 'text-amber-700'}`}>
+                  {user.trainee_verified ? 'Chế độ Tập sự: Active' : 'Chờ duyệt Tập sự'}
+                </div>
+                <p className="text-[9px] font-bold text-slate-500 italic">
+                  {user.trainee_verified ? 'Dữ liệu được giám sát bởi SM.' : 'Vui lòng liên hệ SM để xác minh.'}
+                </p>
+              </div>
+            </div>
+            {user.trainee_verified && (
+              <div className="bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest">Verified</div>
+            )}
+          </div>
+        )}
+
         {/* === SECTION: GAMIFICATION & CAREER (PREMIUM) === */}
         <div className="bg-slate-900 rounded-[20px] p-4 text-white shadow-xl relative overflow-hidden">
           <div className="relative z-10">
@@ -218,50 +291,96 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
               </div>
             </div>
 
-            {workloadLoading ? (
-              <div className="animate-pulse flex gap-3 items-center h-12">
-                <div className="h-8 bg-slate-100 w-16 rounded-xl"></div>
-                <div className="h-4 bg-slate-100 flex-1 rounded-full"></div>
-              </div>
-            ) : workload ? (
-              <div className="flex items-center gap-4">
-                <div className="shrink-0 flex flex-col items-center">
-                  <div className="text-2xl font-black text-slate-800 leading-none">{workload.total_hours}<span className="text-[10px] ml-0.5 opacity-30 text-slate-400">h</span></div>
-                  <div className="text-[7px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">Tổng giờ</div>
-                </div>
+            <div className={`transition-all duration-300 ${workloadLoading ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+              {workload ? (
+                <div className="flex items-center gap-4">
+                  <div className="shrink-0 flex flex-col items-center">
+                    <div className="text-2xl font-black text-slate-800 leading-none">{workload.total_hours}<span className="text-[10px] ml-0.5 opacity-30 text-slate-400">h</span></div>
+                    <div className="text-[7px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">Tổng giờ</div>
+                  </div>
 
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-50 border border-slate-100/50">
-                    <div style={{ width: `${(workload.morning_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-blue-500"></div>
-                    <div style={{ width: `${(workload.evening_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-orange-500"></div>
-                  </div>
-                  <div className="flex justify-between text-[7px] font-black tracking-widest">
-                    <div className="text-blue-500 uppercase">☀️ Sáng: {Math.round((workload.morning_hours / (workload.total_hours || 1)) * 100)}%</div>
-                    <div className="text-orange-500 uppercase text-right">🌙 Tối: {Math.round((workload.evening_hours / (workload.total_hours || 1)) * 100)}%</div>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-50 border border-slate-100/50">
+                      <div style={{ width: `${(workload.morning_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-blue-500"></div>
+                      <div style={{ width: `${(workload.evening_hours / (workload.total_hours || 1)) * 100}%` }} className="bg-orange-500"></div>
+                    </div>
+                    <div className="flex justify-between text-[7px] font-black tracking-widest">
+                      <div className="text-blue-500 uppercase">☀️ Sáng: {Math.round((workload.morning_hours / (workload.total_hours || 1)) * 100)}%</div>
+                      <div className="text-orange-500 uppercase text-right">🌙 Tối: {Math.round((workload.evening_hours / (workload.total_hours || 1)) * 100)}%</div>
+                    </div>
                   </div>
                 </div>
+              ) : (
+                <div className="text-center py-4 bg-amber-50 rounded-xl border border-dashed border-amber-200">
+                  <div className="text-amber-600 text-[9px] font-black uppercase tracking-widest">
+                    ⚠️ DỮ LIỆU ĐANG TỔNG HỢP (HÔM NAY)
+                  </div>
+                  <div className="text-slate-400 text-[8px] font-bold mt-1">Đang hiển thị tạm thời dữ liệu ngày hôm qua...</div>
+                </div>
+              )}
+            </div>
+
+            {/* INTEGRATED DATE NAVIGATOR - 1 LINE COMPACT */}
+            <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
+              <button
+                onClick={handlePrevPeriod}
+                className="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg text-slate-400 active:scale-90 transition-all text-xs"
+              >
+                ←
+              </button>
+
+              <div className="relative flex items-center justify-center flex-1 mx-2">
+                <button
+                  onClick={() => document.getElementById('dash-date-picker').showPicker()}
+                  className="text-[10px] font-black text-slate-800 uppercase tracking-tight flex items-center gap-1.5 bg-blue-50/50 px-3 py-1 rounded-full border border-blue-100/50"
+                >
+                  <span>📅</span>
+                  <span>
+                    {workloadPeriod === 'day' ? (
+                      selectedDate === new Date().toISOString().split('T')[0] ? 'Hôm nay' :
+                        selectedDate === new Date(Date.now() - 86400000).toISOString().split('T')[0] ? 'Hôm qua' :
+                          new Date(selectedDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+                    ) : workloadPeriod === 'week' ? (
+                      `Tuần này (${new Date(selectedDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})`
+                    ) : (
+                      `Tháng ${new Date(selectedDate).getMonth() + 1}/${new Date(selectedDate).getFullYear()}`
+                    )}
+                  </span>
+                </button>
+                <input
+                  id="dash-date-picker"
+                  type="date"
+                  className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                />
               </div>
-            ) : (
-              <div className="text-center py-4 text-slate-300 text-[9px] font-black uppercase tracking-widest italic border border-dashed border-slate-100 rounded-xl">
-                ☕ Dữ liệu đang được tổng hợp
-              </div>
-            )}
+
+              <button
+                onClick={handleNextPeriod}
+                disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+                className={`w-7 h-7 flex items-center justify-center bg-slate-50 rounded-lg transition-all text-xs ${selectedDate >= new Date().toISOString().split('T')[0] ? 'opacity-10 text-slate-200' : 'text-slate-400 active:scale-90'}`}
+              >
+                →
+              </button>
+            </div>
           </div>
         )}
 
         {/* 1. STATS GRID (4 Columns) */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className={`grid grid-cols-4 gap-1.5 transition-opacity duration-300 ${dailyLoading ? 'opacity-50' : 'opacity-100'}`}>
           <StatCard
-            label="TỔNG CA"
-            value={data?.stats?.shiftCount || 0}
-            subValue=""
+            label="CA LÀM"
+            value={dailyData?.stats?.shiftCount || 0}
+            subValue="Shift"
             icon="📅"
             color="blue"
             compact={true}
           />
           <StatCard
             label="ĐÁNH GIÁ"
-            value={data?.stats?.avgRating || "-"}
+            value={dailyData?.stats?.avgRating || "-"}
             subValue="pts"
             icon="⭐"
             color="yellow"
@@ -269,7 +388,7 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
           />
           <StatCard
             label="CHẤT LƯỢNG"
-            value={`${data?.stats?.avgChecklist || 0}%`}
+            value={`${dailyData?.stats?.avgChecklist || 0}%`}
             subValue=""
             icon="✅"
             color="purple"
@@ -277,8 +396,8 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
           />
           <StatCard
             label="THU NHẬP"
-            value={data?.stats?.estimatedSalary ? `${(data.stats.estimatedSalary / 1000).toFixed(0)}k` : "0"}
-            subValue=""
+            value={dailyData?.stats?.estimatedSalary ? `${(dailyData.stats.estimatedSalary / 1000).toFixed(0)}k` : "0"}
+            subValue={`@${(dailyData?.stats?.hourlyRate || 30000) / 1000}k/h`}
             icon="💰"
             color="green"
             isMoney

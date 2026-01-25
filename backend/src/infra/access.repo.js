@@ -23,6 +23,17 @@ export class AccessRepo {
     }
 
     /**
+     * Get single feature flag
+     */
+    static async getFeatureFlag(flagKey) {
+        return await supabase
+            .from('system_feature_flags')
+            .select('*')
+            .eq('flag_key', flagKey)
+            .single();
+    }
+
+    /**
      * Get active feature keys
      */
     static async getActiveFeatures() {
@@ -52,6 +63,23 @@ export class AccessRepo {
     }
 
     /**
+     * Update feature flag targeting (stores)
+     */
+    static async updateFeatureFlagTargeting(flagKey, targetStores) {
+        const { data, error } = await supabase
+            .from('system_feature_flags')
+            .update({
+                target_stores: targetStores,
+                updated_at: new Date().toISOString()
+            })
+            .eq('flag_key', flagKey)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
+    /**
      * Get permission matrix for all roles
      */
     static async getPermissionMatrix() {
@@ -60,6 +88,7 @@ export class AccessRepo {
             .from('permissions_master')
             .select(`
                 perm_key,
+                domain,
                 module,
                 description,
                 role_permissions(role_code, can_access)

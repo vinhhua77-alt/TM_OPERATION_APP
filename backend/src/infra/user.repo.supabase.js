@@ -39,6 +39,12 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
+                current_level: data.current_level || 'L0',
+                trust_score: data.trust_score || 100,
+                performance_score: data.performance_score || 0,
+                promotion_eligible: data.promotion_eligible || false,
+                is_trainee: data.is_trainee || false,
+                trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
                 responsibility: data.responsibility || []
             };
@@ -75,6 +81,12 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
+                current_level: data.current_level || 'L0',
+                trust_score: data.trust_score || 100,
+                performance_score: data.performance_score || 0,
+                promotion_eligible: data.promotion_eligible || false,
+                is_trainee: data.is_trainee || false,
+                trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
                 responsibility: data.responsibility || []
             };
@@ -108,6 +120,12 @@ export class UserRepo {
                 role: data.role,
                 store_code: data.store_code,
                 active: data.active,
+                current_level: data.current_level || 'L0',
+                trust_score: data.trust_score || 100,
+                performance_score: data.performance_score || 0,
+                promotion_eligible: data.promotion_eligible || false,
+                is_trainee: data.is_trainee || false,
+                trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
                 responsibility: data.responsibility || []
             };
@@ -250,7 +268,11 @@ export class UserRepo {
             }
 
             if (filters.status && filters.status !== 'ALL') {
-                query = query.eq('status', filters.status);
+                if (filters.status === 'TRAINEE_PENDING') {
+                    query = query.eq('is_trainee', true).eq('trainee_verified', false);
+                } else {
+                    query = query.eq('status', filters.status);
+                }
             }
 
             if (filters.role && filters.role !== 'ALL') {
@@ -297,7 +319,11 @@ export class UserRepo {
      */
     static async updateStaffInfo(staffId, updates) {
         try {
-            const allowedFields = ['staff_name', 'gmail', 'role', 'store_code', 'active', 'password_hash', 'status', 'responsibility'];
+            const allowedFields = [
+                'staff_name', 'gmail', 'role', 'store_code', 'active',
+                'password_hash', 'status', 'responsibility',
+                'is_trainee', 'trainee_verified', 'trainee_verified_by', 'trainee_verified_at'
+            ];
             const filteredUpdates = {};
 
             // Only allow specific fields to be updated
@@ -341,22 +367,26 @@ export class UserRepo {
             let totalQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true });
             let activeQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('active', true);
             let pendingQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('status', 'PENDING');
+            let traineePendingQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('is_trainee', true).eq('trainee_verified', false);
 
             if (storeCode) {
                 totalQuery = totalQuery.eq('store_code', storeCode);
                 activeQuery = activeQuery.eq('store_code', storeCode);
                 pendingQuery = pendingQuery.eq('store_code', storeCode);
+                traineePendingQuery = traineePendingQuery.eq('store_code', storeCode);
             }
 
-            const [totalRes, activeRes, pendingRes] = await Promise.all([
+            const [totalRes, activeRes, pendingRes, traineeRes] = await Promise.all([
                 totalQuery,
                 activeQuery,
-                pendingQuery
+                pendingQuery,
+                traineePendingQuery
             ]);
 
             if (totalRes.error) throw totalRes.error;
             if (activeRes.error) throw activeRes.error;
             if (pendingRes.error) throw pendingRes.error;
+            if (traineeRes.error) throw traineeRes.error;
 
             // Store breakdown (only for OPS/ADMIN who see everything)
             let storeBreakdown = {};
@@ -378,6 +408,7 @@ export class UserRepo {
                 total: totalRes.count || 0,
                 active: activeRes.count || 0,
                 pending: pendingRes.count || 0,
+                traineePending: traineeRes.count || 0,
                 inactive: (totalRes.count || 0) - (activeRes.count || 0),
                 byStore: storeBreakdown
             };

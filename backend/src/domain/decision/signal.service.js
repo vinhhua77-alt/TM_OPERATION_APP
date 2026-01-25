@@ -60,6 +60,26 @@ export class SignalService {
             });
         }
 
+        // 5. RULE R61: Trainee Report (BOD Awareness)
+        const { data: staffInfo } = await supabase
+            .from('staff_master')
+            .select('is_trainee, trainee_verified')
+            .eq('staff_id', shiftLogData.staff_id)
+            .single();
+
+        if (staffInfo?.is_trainee) {
+            signals.push({
+                event_id: rawEventId,
+                rule_code: 'R61',
+                flag_key: 'trainee_submission',
+                severity: staffInfo.trainee_verified ? 'INFO' : 'MEDIUM',
+                metadata: {
+                    verified: staffInfo.trainee_verified,
+                    note: staffInfo.trainee_verified ? 'Báo cáo từ Tập sự đã xác minh' : '⚠️ Báo cáo từ Tập sự CHƯA duyệt'
+                }
+            });
+        }
+
         // Lưu signals vào DB
         if (signals.length > 0) {
             const { error } = await supabase

@@ -13,6 +13,7 @@ const PageAbout = ({ onBack }) => {
                 <div style={{ marginBottom: '15px' }}>
                     <h3 style={{ fontSize: '12px', fontWeight: '800', color: '#004AAD', marginBottom: '5px' }}>PHIÊN BẢN</h3>
                     <p style={{ fontSize: '11px', color: '#666' }}>v3.0.0 (Decision Engine Core)</p>
+                    <p style={{ fontSize: '9px', color: '#999', marginTop: '4px' }}>Release: 25-01-2026</p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>

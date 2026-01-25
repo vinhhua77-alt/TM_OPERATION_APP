@@ -12,7 +12,7 @@ export class AnnouncementService {
      * Get all announcements (admin only)
      */
     static async getAll(currentUser, filters) {
-        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS', 'SM'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
         return await AnnouncementRepo.getAll(filters);
@@ -43,7 +43,7 @@ export class AnnouncementService {
      * Create announcement (admin only)
      */
     static async create(currentUser, announcementData) {
-        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS', 'SM'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
 
@@ -83,7 +83,7 @@ export class AnnouncementService {
         const announcement = await AnnouncementRepo.getById(id);
 
         // Check permission
-        const isAdmin = ['ADMIN', 'OPS'].includes(currentUser.role);
+        const isAdmin = ['ADMIN', 'IT', 'OPS'].includes(currentUser.role);
         const isCreator = announcement.created_by === currentUser.staff_id;
 
         if (!isAdmin && !isCreator) {
@@ -116,7 +116,7 @@ export class AnnouncementService {
         const announcement = await AnnouncementRepo.getById(id);
 
         // Check permission
-        const isAdmin = ['ADMIN', 'OPS'].includes(currentUser.role);
+        const isAdmin = ['ADMIN', 'IT', 'OPS'].includes(currentUser.role);
         const isCreator = announcement.created_by === currentUser.staff_id;
 
         if (!isAdmin && !isCreator) {
@@ -148,7 +148,7 @@ export class AnnouncementService {
      * Get read statistics (admin only)
      */
     static async getReadStats(currentUser, announcementId) {
-        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS', 'SM'].includes(currentUser.role)) {
             throw new Error('Unauthorized');
         }
 

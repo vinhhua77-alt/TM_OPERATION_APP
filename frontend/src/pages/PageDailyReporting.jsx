@@ -1,7 +1,8 @@
 import React from 'react';
 
-const PageDailyReporting = ({ user, onBack, onNavigate }) => {
-    const modules = [
+const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
+    // 1. Define all possible modules with their IT Feature Flags
+    const allModules = [
         {
             id: 'ops_report',
             label: 'Shift & Management',
@@ -9,7 +10,8 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
             desc: 'Nhật ký ca & Báo cáo quản lý.',
             color: 'from-blue-600 to-indigo-700',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'SHIFT_LOG'
+            target: 'SHIFT_LOG',
+            flag: 'MODULE_SHIFTLOG' // Core but still togglable
         },
         {
             id: 'sm',
@@ -18,7 +20,8 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
             desc: 'Chốt ngày & Doanh thu.',
             color: 'from-violet-500 to-violet-600',
             submitRoles: ['SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'SM_REPORT'
+            target: 'SM_REPORT',
+            flag: 'MODULE_SM_REPORT'
         },
         {
             id: '5s',
@@ -27,7 +30,8 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
             desc: 'Vệ sinh & Sắp xếp.',
             color: 'from-amber-500 to-amber-600',
             submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'REPORT_5S'
+            target: 'REPORT_5S',
+            flag: 'MODULE_5S'
         },
         {
             id: 'cashier',
@@ -36,7 +40,28 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
             desc: 'Đối soát quỹ tiền mặt.',
             color: 'from-rose-500 to-rose-600',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'REPORT_CASHIER'
+            target: 'REPORT_CASHIER',
+            flag: 'MODULE_CASHIER'
+        },
+        {
+            id: 'inventory',
+            label: 'Kiểm kho',
+            icon: '📦',
+            desc: 'Báo cáo kho cuối ngày.',
+            color: 'from-emerald-500 to-emerald-600',
+            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            target: 'REPORT_INVENTORY',
+            flag: 'MODULE_INVENTORY'
+        },
+        {
+            id: 'waste',
+            label: 'Hàng hủy',
+            icon: '🗑️',
+            desc: 'Báo cáo hàng hủy/hỏng.',
+            color: 'from-slate-500 to-slate-600',
+            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            target: 'REPORT_WASTE',
+            flag: 'MODULE_WASTE'
         },
         {
             id: 'm5m',
@@ -45,9 +70,19 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
             desc: 'Chuẩn bị đầu ca.',
             color: 'from-sky-500 to-sky-600',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'REPORT_M5M'
+            target: 'REPORT_M5M',
+            flag: 'MODULE_M5M'
         }
     ];
+
+    // 2. Filter modules based on sysConfig (Feature Flags)
+    // If sysConfig isn't loaded yet, we default to showing at least some core ones or empty
+    const enabledFlags = sysConfig?.featureFlags || [];
+
+    const modules = allModules.filter(m => {
+        // If flag is in activeFlags, it means it's enabled
+        return enabledFlags.includes(m.flag);
+    });
 
     const handleAction = (m) => {
         const canSubmit = m.submitRoles.includes(user?.role);
@@ -116,15 +151,17 @@ const PageDailyReporting = ({ user, onBack, onNavigate }) => {
                     })}
                 </div>
 
-                <div className="mt-6 bg-slate-900 rounded-[24px] p-4 text-white shadow-xl">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Quy trình V3</span>
+                {sysConfig?.featureFlags?.includes('MODULE_DECISION_ENGINE') && (
+                    <div className="mt-6 bg-slate-900 rounded-[24px] p-4 text-white shadow-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Quy trình V3</span>
+                        </div>
+                        <p className="text-[10px] font-bold leading-relaxed opacity-90">
+                            Báo cáo được quét bởi Decision Engine để tối ưu hóa vận hành thời gian thực.
+                        </p>
                     </div>
-                    <p className="text-[10px] font-bold leading-relaxed opacity-90">
-                        Báo cáo được quét bởi Decision Engine để tối ưu hóa vận hành thời gian thực.
-                    </p>
-                </div>
+                )}
             </div>
 
             <div className="p-6 text-center opacity-20">

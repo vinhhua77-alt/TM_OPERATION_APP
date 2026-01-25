@@ -12,7 +12,7 @@ export class StaffService {
      */
     static async getAllStaff(currentUser, filters = {}) {
         // Permission check: SM, OPS, ADMIN, LEADER, AM
-        const authorizedRoles = ['ADMIN', 'OPS', 'SM', 'LEADER', 'AM'];
+        const authorizedRoles = ['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'AM'];
         if (!authorizedRoles.includes(currentUser.role)) {
             throw new Error('Unauthorized: No access to staff management');
         }
@@ -43,7 +43,7 @@ export class StaffService {
      */
     static async getStatistics(currentUser) {
         // Permission check
-        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS', 'SM'].includes(currentUser.role)) {
             throw new Error('Unauthorized: No access to statistics');
         }
 
@@ -63,7 +63,7 @@ export class StaffService {
      */
     static async bulkActivate(currentUser, staffIds) {
         // Permission check
-        if (!['ADMIN', 'OPS', 'SM'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS', 'SM'].includes(currentUser.role)) {
             throw new Error('Unauthorized: No permission to activate staff');
         }
 
@@ -97,9 +97,29 @@ export class StaffService {
      * Update staff info (admin only)
      */
     static async updateStaff(currentUser, staffId, updates) {
-        // Permission check
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
-            throw new Error('Unauthorized: Only ADMIN or OPS can update staff');
+        // 1. Base Role Permission
+        const authorizedRoles = ['ADMIN', 'IT', 'OPS', 'SM', 'AM'];
+        if (!authorizedRoles.includes(currentUser.role)) {
+            throw new Error('Unauthorized: No permission to update staff');
+        }
+
+        // 2. Trainee Mode Governance: If toggling trainee status, must be SM+
+        if (updates.is_trainee !== undefined || updates.trainee_verified !== undefined) {
+            // Logic: Only SM, AM, OPS, ADMIN can touch these.
+            // If trainee_verified is being set to true, record who did it.
+            if (updates.trainee_verified === true) {
+                updates.trainee_verified_by = currentUser.id;
+                updates.trainee_verified_at = new Date().toISOString();
+            }
+        }
+
+        // 3. Store Isolation for SM
+        if (currentUser.role === 'SM') {
+            const target = await UserRepo.getByStaffId(staffId);
+            const userStore = (currentUser.storeCode || currentUser.store_code || '').toUpperCase();
+            if (target && target.store_code !== userStore) {
+                throw new Error('Unauthorized: SM can only update staff in their own store');
+            }
         }
 
         // Input validation
@@ -113,7 +133,7 @@ export class StaffService {
 
         // Validate role if being updated
         if (updates.role) {
-            const validRoles = ['ADMIN', 'BOD', 'OPS', 'AM', 'SM', 'LEADER', 'STAFF'];
+            const validRoles = ['ADMIN', 'IT', 'BOD', 'OPS', 'AM', 'SM', 'LEADER', 'STAFF'];
             if (!validRoles.includes(updates.role)) {
                 throw new Error(`Invalid role: ${updates.role}`);
             }
@@ -131,6 +151,23 @@ export class StaffService {
 
         try {
             const result = await UserRepo.updateStaffInfo(staffId, updates);
+
+            // Audit Log for sensitive changes
+            if (updates.is_trainee !== undefined || updates.role !== undefined || updates.active !== undefined) {
+                const { AuditRepo } = await import('../../infra/audit.repo.js'); // Dynamic import to avoid cycles or just use imported if available
+                await AuditRepo.log({
+                    userId: currentUser.id,
+                    action: 'UPDATE_STAFF_SENSITIVE_INFO',
+                    resourceType: 'staff_master',
+                    resourceId: staffId,
+                    details: {
+                        updates: Object.keys(updates).filter(k => k !== 'password_hash'),
+                        is_trainee: updates.is_trainee,
+                        trainee_verified: updates.trainee_verified
+                    }
+                });
+            }
+
             return result;
         } catch (error) {
             console.error('StaffService.updateStaff error:', error);
@@ -143,7 +180,7 @@ export class StaffService {
      */
     static async deactivateStaff(currentUser, staffId) {
         // Permission check
-        if (!['ADMIN', 'OPS'].includes(currentUser.role)) {
+        if (!['ADMIN', 'IT', 'OPS'].includes(currentUser.role)) {
             throw new Error('Unauthorized: Only ADMIN or OPS can deactivate staff');
         }
 
@@ -169,7 +206,7 @@ export class StaffService {
      * Bảo trì: Đồng bộ hóa status cho staff
      */
     static async syncStaffStatus(user) {
-        if (!['ADMIN', 'OPS'].includes(user.role)) {
+        if (!['ADMIN', 'IT', 'OPS'].includes(user.role)) {
             throw new Error('Unauthorized: Only Admin/OPS can sync data');
         }
         return await UserRepo.syncStaffStatus();

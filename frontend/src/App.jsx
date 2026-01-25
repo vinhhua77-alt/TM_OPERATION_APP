@@ -14,20 +14,26 @@ import PageGamification from './pages/PageGamification';
 import PageDailyReporting from './pages/PageDailyReporting';
 import AnnouncementPopup from './components/AnnouncementPopup';
 import { authAPI } from './api/auth';
+import client from './api/client';
 import TopMenu from './components/TopMenu';
 import AppBar from './components/AppBar';
 import LoadingSpinner from './components/LoadingSpinner';
 import Breadcrumbs from './components/Breadcrumbs';
 import PageGuide from './pages/PageGuide';
 import PageAbout from './pages/PageAbout';
+import PageRevenueConsole from './pages/PageRevenueConsole';
+import PageOperationMetrics from './pages/PageOperationMetrics'; // [NEW]
 import PageAdminConsole from './pages/PageAdminConsole';
 import PageAnalytics from './pages/PageAnalytics';
 import PageStoreSetup from './pages/PageStoreSetup';
+import PageDecisionConsole from './pages/PageDecisionConsole'; // [NEW]
 import Notification from './components/Notification';
+import RoleImpersonator from './components/RoleImpersonator'; // [NEW]
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
   const [user, setUser] = useState(null);
+  const [realUser, setRealUser] = useState(null); // [NEW] Store original admin info
   const [loading, setLoading] = useState(true);
   const [resetTokenInfo, setResetTokenInfo] = useState(null);
   const [showAnnouncements, setShowAnnouncements] = useState(true);
@@ -43,28 +49,22 @@ function App() {
     // 1. Check authentication
     // 2. Load System Config (Feature Flags) - Move inside login success logic or check role
     const loadSystemConfig = () => {
-      import('./api/admin.api').then(({ adminAPI }) => {
-        adminAPI.getConsoleData()
-          .then(res => {
-            if (res.success) {
-              const activeFlags = res.data.featureFlags
-                .filter(f => f.is_enabled)
-                .map(f => f.flag_key);
-              setSysConfig({ featureFlags: activeFlags, loaded: true });
-            }
-          })
-          .catch(err => console.warn('System config restricted or unavailable', err.message));
-      });
+      client.get('/master/active-features')
+        .then(res => {
+          if (res.success) {
+            setSysConfig({ featureFlags: res.data, loaded: true });
+          }
+        })
+        .catch(err => console.warn('System config restricted or unavailable', err.message));
     };
 
     authAPI.getMe()
       .then((res) => {
         if (res.success) {
           setUser(res.user);
+          setRealUser(res.user); // [NEW]
           restoreLastPage();
-          if (['ADMIN', 'OPS'].includes(res.user.role)) {
-            loadSystemConfig();
-          }
+          loadSystemConfig();
         } else {
           checkPasswordReset();
         }
@@ -76,7 +76,7 @@ function App() {
 
   const restoreLastPage = () => {
     const lastPage = localStorage.getItem('lastPage');
-    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_SETUP', 'ANNOUNCEMENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE', 'ANALYTICS', 'DAILY_HUB', 'QAQC_HUB'];
+    const validPages = ['HOME', 'SHIFT_LOG', 'DASHBOARD', 'LEADER_REPORT', 'STAFF_MANAGEMENT', 'STORE_SETUP', 'ANNOUNCEMENT_MANAGEMENT', 'CAREER', 'GAMIFICATION', 'GUIDE', 'ABOUT', 'ADMIN_CONSOLE', 'ANALYTICS', 'DAILY_HUB', 'QAQC_HUB', 'REVENUE_CONSOLE', 'OPERATION_METRICS', 'DECISION_CONSOLE'];
     setCurrentPage(validPages.includes(lastPage) ? lastPage : 'HOME');
   };
 
@@ -109,7 +109,25 @@ function App() {
       localStorage.setItem('token', token);
     }
     setUser(userData);
+    setRealUser(userData); // [NEW]
     handleNavigate('HOME');
+  };
+
+  const handleImpersonate = (role) => {
+    if (!realUser || realUser.role !== 'ADMIN') return;
+    setUser({ ...user, role });
+    notify(`🛡️ Chế độ giả lập: Đang hiển thị UI với vai trò ${role}`, 'warning');
+  };
+
+  const handleImpersonateUser = (userData) => {
+    if (!realUser || realUser.role !== 'ADMIN') return;
+    setUser(userData);
+    notify(`🎭 Giả lập: ${userData.staff_name} (${userData.role})`, 'warning');
+  };
+
+  const handleResetImpersonation = () => {
+    setUser(realUser);
+    notify('🔙 Đã quay lại vai trò Admin thực tế', 'info');
   };
 
   const handleLogout = async () => {
@@ -167,11 +185,23 @@ function App() {
       case 'ABOUT':
         return <PageAbout onBack={() => handleNavigate('HOME')} />;
       case 'ADMIN_CONSOLE':
+        if (user?.role !== 'ADMIN' && user?.role !== 'IT') return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
         return <PageAdminConsole user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'LAB_FEATURES':
+        if (user?.role !== 'ADMIN' && user?.role !== 'IT') return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
+        return <PageAdminConsole user={user} initialTab="lab" onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS':
         return <PageAnalytics user={user} onBack={() => handleNavigate('HOME')} />;
       case 'DAILY_HUB':
-        return <PageDailyReporting user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} />;
+        return <PageDailyReporting user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} sysConfig={sysConfig} />;
+      case 'QAQC_HUB':
+        return <PageQAQC user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'REVENUE_CONSOLE':
+        return <PageRevenueConsole user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'OPERATION_METRICS':
+        return <PageOperationMetrics user={user} onBack={() => handleNavigate('HOME')} />;
+      case 'DECISION_CONSOLE':
+        return <PageDecisionConsole user={user} onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS_LEADER':
         return <PageAnalytics user={user} viewMode="leader" onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS_SM':
@@ -244,7 +274,17 @@ function App() {
         />
       )}
 
-      {/* BottomNav REMOVED as requested */}
+      {/* BottonNav REMOVED as requested */}
+
+      {/* ADMIN ROLE IMPERSONATOR */}
+      {realUser?.role === 'ADMIN' && sysConfig.featureFlags.includes('MODULE_DIVINE_MODE') && (
+        <RoleImpersonator
+          currentRole={user?.role}
+          onRoleChange={handleImpersonate}
+          onUserChange={handleImpersonateUser}
+          onReset={handleResetImpersonation}
+        />
+      )}
     </div>
   );
 }

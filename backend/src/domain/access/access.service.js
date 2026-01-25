@@ -14,11 +14,28 @@ export class AccessService {
      */
     static async canAccess(user, featureKey, permKey) {
         try {
-            // 1. Check Feature Flag (System Level)
-            const activeFeatures = await AccessRepo.getActiveFeatures();
-            if (!activeFeatures.includes(featureKey)) {
-                console.warn(`Feature ${featureKey} is disabled at system level.`);
+            // 1. Check Feature Flag (System Level) from DB for real-time targeting
+            const { data: flag, error: flagError } = await AccessRepo.getFeatureFlag(featureKey);
+
+            if (flagError || !flag) {
+                console.warn(`Feature ${featureKey} not found.`);
                 return false;
+            }
+
+            if (!flag.is_enabled) {
+                console.warn(`Feature ${featureKey} is disabled.`);
+                return false;
+            }
+
+            // [CANARY ROLLOUT] Check Target Stores
+            if (flag.target_stores && Array.isArray(flag.target_stores) && flag.target_stores.length > 0) {
+                const userStore = user.store_code || user.storeCode || '';
+                const isAuthorizedRole = ['ADMIN', 'IT'].includes(user.role);
+
+                if (!isAuthorizedRole && !flag.target_stores.includes(userStore)) {
+                    console.warn(`Feature ${featureKey} restricted to specific stores. User store ${userStore} is not allowed.`);
+                    return false;
+                }
             }
 
             // 2. Check Permission (Role Level)
@@ -31,7 +48,7 @@ export class AccessService {
             return true;
         } catch (error) {
             console.error('Access check failed:', error);
-            return false; // Fail-safe: DENY
+            return false;
         }
     }
 
@@ -61,6 +78,17 @@ export class AccessService {
                 resourceType: 'system_config',
                 resourceId: payload.key,
                 details: { newValue: payload.enabled }
+            });
+            return result;
+        } else if (type === 'TARGETING') {
+            const result = await AccessRepo.updateFeatureFlagTargeting(payload.key, payload.targetStores);
+            // Log Audit
+            await AuditRepo.log({
+                userId: currentUser.id,
+                action: 'UPDATE_FEATURE_TARGETING',
+                resourceType: 'system_config',
+                resourceId: payload.key,
+                details: { targetStores: payload.targetStores }
             });
             return result;
         } else if (type === 'PERMISSION') {
