@@ -12,7 +12,7 @@ const PageAbout = ({ onBack }) => {
             <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
                 <div style={{ marginBottom: '15px' }}>
                     <h3 style={{ fontSize: '12px', fontWeight: '800', color: '#004AAD', marginBottom: '5px' }}>PHIÊN BẢN</h3>
-                    <p style={{ fontSize: '11px', color: '#666' }}>v2.1.0 (Mobile Optimized)</p>
+                    <p style={{ fontSize: '11px', color: '#666' }}>v3.0.0 (Decision Engine Core)</p>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>

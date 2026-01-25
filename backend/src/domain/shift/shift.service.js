@@ -73,7 +73,7 @@ export class ShiftService {
         payload.lead !== '';
 
       const shiftData = {
-        version: 'v2.0.0',
+        version: 'v3.0.0',
         store_id: payload.storeId,
         date: payload.date || new Date().toISOString().split('T')[0],
         staff_id: payload.staffId || user.id || user.staff_id,

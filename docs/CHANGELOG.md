@@ -1,8 +1,24 @@
-**Date**: 2026-01-24  
-**Migration**: Google Apps Script → Supabase  
-**Current Version**: v3.4
+**Date**: 2026-01-25  
+**Migration**: Decision Engine Integration
+**Current Version**: v3.0 (Official Decision Engine Core)
 
 ---
+
+## [3.0.0] - 2026-01-25
+### 🚀 Official Decision Engine Foundation Release
+- **Decision Engine Core (v3):** Integrated `SignalService` for real-time operational flag extraction (Late starts, Execution neglect).
+- **Ultra-Compact Mobile UI:** Overhauled entire frontend for maximum mobile efficiency (10-11px font standards).
+- **Feature Lab:** Added 🧪 Feature Lab section for upcoming Decision Engine modules (Auto-promotion, Predictive Labor).
+- **Communication Architecture:** Replaced legacy alerts with an integrated `Notification` (Toast) system in `App.jsx`.
+- **UI Optimizations:** 
+  - Checklist: Replaced text buttons with compact `✔️`/`❌` icons.
+  - Analytics: Streamlined padding/margins for 80% more screen utility.
+  - Leader Report: Redesigned for one-hand operation with "Leader Log" styling.
+- **Backend Stability:** Hardened `ShiftService` and `LeaderService` with V3 logic hooks.
+
+---
+
+## [2.x Archive] - Previous Migration History
 
 ## Overview
 

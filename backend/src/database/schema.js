@@ -166,6 +166,27 @@ export function createTables(db) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_staff (staff_id)
     );
+
+    -- V3 DECISION ENGINE TABLES
+    CREATE TABLE IF NOT EXISTS raw_operational_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      staff_id TEXT,
+      store_code TEXT,
+      data TEXT,
+      event_time DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS operational_signals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id INTEGER,
+      rule_code TEXT,
+      flag_key TEXT,
+      severity TEXT,
+      metadata TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (event_id) REFERENCES raw_operational_events(id)
+    );
   `);
 
   console.log('✅ All tables created');
