@@ -141,7 +141,9 @@ const PageShiftLog = ({ user, onBack }) => {
             if (isActingLeader) {
                 res = await leaderAPI.submitReport({
                     ...payload,
-                    leaderId: payload.staffId, leaderName: payload.staffName,
+                    store_id: form.storeId,
+                    leaderId: payload.staffId,
+                    leaderName: payload.staffName,
                     area_code: form.layout,
                     report_data: {
                         shift_code: shiftInfo?.match?.name || 'CUSTOM',
@@ -155,9 +157,14 @@ const PageShiftLog = ({ user, onBack }) => {
                     }
                 });
             } else { res = await shiftAPI.submit(payload); }
+
             if (res.success) setShowSuccess(true);
-            else setError("Lỗi: " + res.message);
-        } catch (e) { setError("Lỗi kết nối máy chủ"); }
+            else setError("Lỗi: " + (res.message || "Unknown error"));
+        } catch (e) {
+            console.error("Submit error:", e);
+            const msg = e.message || "Lỗi kết nối máy chủ";
+            setError(`⚠️ ${msg}`);
+        }
         setLoading(false);
     };
 
@@ -174,8 +181,8 @@ const PageShiftLog = ({ user, onBack }) => {
 
     return (
         <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
-            {/* HEADER */}
-            <div className={`shrink-0 ${isLeader ? 'bg-emerald-600' : 'bg-blue-600'} p-4 pb-8 text-white relative overflow-hidden shadow-lg`}>
+            {/* HEADER GRADIENT (CŨ) */}
+            <div className={`shrink-0 ${isLeader ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-blue-600 to-indigo-600'} p-4 pb-8 text-white relative overflow-hidden shadow-lg`}>
                 <div className="relative z-10 flex flex-col gap-3">
                     <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full border border-white/5 uppercase tracking-tighter w-fit">← Dashboard</button>
                     <div className="flex items-center gap-3">
@@ -192,40 +199,80 @@ const PageShiftLog = ({ user, onBack }) => {
             </div>
 
             <div className="flex-1 px-2.5 -mt-5 relative z-20 space-y-2.5">
-                {/* 0. TRAINEE TOGGLE (STAFF, LEADER, ADMIN, OPS) */}
+                {/* 0. TRAINEE TOGGLE (LOGIC MỚI) */}
                 {['STAFF', 'LEADER', 'ADMIN', 'OPS', 'AM'].includes(user?.role?.toString().toUpperCase().trim()) && (
                     <div className={`p-3 rounded-[20px] border transition-all duration-500 shadow-sm ${form.isTraineeMode ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-slate-400 border-slate-100'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
-                                <span className={`text-[9px] font-black uppercase tracking-widest ${form.isTraineeMode ? 'text-indigo-200' : 'text-slate-400'}`}>Lộ trình thăng tiến</span>
-                                <span className={`text-[11px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>💎 TẬP SỰ QUẢN LÝ</span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${form.isTraineeMode ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                    Lộ trình thăng tiến {form.isTraineeMode ? '(ACTIVE)' : ''}
+                                </span>
+                                <span className={`text-[11px] font-black uppercase tracking-tighter ${form.isTraineeMode ? 'text-white' : 'text-slate-600'}`}>
+                                    💎 TẬP SỰ QUẢN LÝ
+                                </span>
                             </div>
                             <button onClick={() => {
+                                // Logic check active
+                                if (!form.isTraineeMode) {
+                                    const confirm = window.confirm("YÊU CẦU XÁC NHẬN:\n\nVui lòng đảm bảo SM/Quản lý đã đồng ý cho bạn tập sự vị trí này hôm nay.\n\nTiếp tục?");
+                                    if (!confirm) return;
+                                }
+
                                 const role = user?.role?.toString().toUpperCase().trim();
-                                const options = role === 'STAFF' ? ['CASHIER', 'LEADER'] : ['SM', 'AM'];
-                                setForm({ ...form, isTraineeMode: !form.isTraineeMode, traineePos: !form.isTraineeMode ? options[0] : '' });
+                                let options = [];
+                                if (role === 'STAFF') options = ['CASHIER_TRAINEE', 'LEADER_TRAINEE'];
+                                else if (['LEADER', 'SM'].includes(role)) options = ['SM_TRAINEE', 'AM_TRAINEE'];
+                                else options = ['OPS_TRAINEE'];
+
+                                setForm({
+                                    ...form,
+                                    isTraineeMode: !form.isTraineeMode,
+                                    traineePos: !form.isTraineeMode ? options[0] : ''
+                                });
                             }} className={`w-12 h-6 rounded-full relative transition-all duration-300 shadow-inner ${form.isTraineeMode ? 'bg-indigo-400' : 'bg-slate-200'}`}>
                                 <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${form.isTraineeMode ? 'left-6.5' : 'left-0.5'}`}></div>
                             </button>
                         </div>
+
+                        {/* OPTIONS MATRIX */}
                         {form.isTraineeMode && (
                             <div className="mt-3 grid grid-cols-2 gap-2 animate-in zoom-in duration-300">
-                                {(user?.role?.toString().toUpperCase().trim() === 'STAFF' ? [
-                                    { id: 'CASHIER', label: '💎 TS THU NGÂN' },
-                                    { id: 'LEADER', label: '💎 TS LEADER' }
-                                ] : [
-                                    { id: 'SM', label: '💎 TRỢ LÝ SM' },
-                                    { id: 'AM', label: '💎 TS AM' }
-                                ]).map(opt => (
-                                    <button key={opt.id} onClick={() => setForm({ ...form, traineePos: opt.id })} className={`py-2 rounded-xl text-[9px] font-black border transition-all ${form.traineePos === opt.id ? 'bg-white text-indigo-600 border-white shadow-lg' : 'bg-indigo-500/30 text-indigo-100 border-indigo-400/30'}`}>
-                                        {opt.label}
-                                    </button>
-                                ))}
+                                {(() => {
+                                    const role = user?.role?.toString().toUpperCase().trim();
+                                    let options = [];
+                                    if (role === 'STAFF') {
+                                        options = [
+                                            { id: 'CASHIER_TRAINEE', label: '💎 TS THU NGÂN' },
+                                            { id: 'LEADER_TRAINEE', label: '💎 TS LEADER' }
+                                        ];
+                                    } else if (['LEADER', 'SM'].includes(role)) {
+                                        options = [
+                                            { id: 'SM_TRAINEE', label: '💎 TS CỬA HÀNG TRƯỞNG' },
+                                            { id: 'AM_TRAINEE', label: '💎 TS QUẢN LÝ VÙNG' }
+                                        ];
+                                    } else {
+                                        options = [{ id: 'OPS_TRAINEE', label: '💎 OPS TRAINEE' }];
+                                    }
+
+                                    return options.map(opt => (
+                                        <button key={opt.id} onClick={() => setForm({ ...form, traineePos: opt.id })} className={`py-2 rounded-xl text-[9px] font-black border transition-all ${form.traineePos === opt.id ? 'bg-white text-indigo-600 border-white shadow-lg' : 'bg-indigo-500/30 text-indigo-100 border-indigo-400/30'}`}>
+                                            {opt.label}
+                                        </button>
+                                    ));
+                                })()}
                             </div>
                         )}
+
+                        {/* MOCK HOURS CHECK ALERT (HIDDEN FOR NOW, BUT LOGIC READY) */}
+                        {/* 
+                         <div className="mt-2 text-[8px] font-bold text-slate-300 text-center">
+                            Giờ bay hiện tại: {user?.total_hours || 0}H / 300H (Điều kiện kích hoạt)
+                         </div> 
+                        */}
                     </div>
                 )}
-                {/* 1. STORE & CONTEXT */}
+
+                {/* 1. STORE & CONTEXT (STYLE CŨ) */}
                 <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
                     <div className="grid grid-cols-2 gap-2">
                         <select className={`bg-slate-50 border-none text-[8.5px] font-black p-2.5 rounded-xl focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : (isLeader ? 'ring-emerald-500/20' : 'ring-blue-500/20')}`} value={form.storeId} onChange={e => setForm({ ...form, storeId: e.target.value, lead: '' })}>
@@ -293,9 +340,16 @@ const PageShiftLog = ({ user, onBack }) => {
                                         <span>XÁC NHẬN GIỜ THỰC TẾ</span>
                                     </label>
                                     {form.confirmWrongShift && (
-                                        <select className="bg-white border-none p-1.5 rounded-lg text-[8px]" value={form.shiftErrorReason} onChange={e => setForm({ ...form, shiftErrorReason: e.target.value })}>
-                                            <option value="">-- LÝ DO SAI CA --</option>
-                                            <option value="ĐỔI CA">ĐỔI CA</option><option value="ĐI TRỄ">ĐI TRỄ</option><option value="VỀ SỚM">VỀ SỚM</option><option value="TĂNG CA">TĂNG CA</option>
+                                        <select className="bg-white border-none p-2 rounded-lg text-[9px] font-bold shadow-inner" value={form.shiftErrorReason} onChange={e => setForm({ ...form, shiftErrorReason: e.target.value })}>
+                                            <option value="">-- CHỌN LÝ DO --</option>
+                                            <option value="DOI_CA">1. Đổi Ca (Swap)</option>
+                                            <option value="TANG_CA">2. Tăng Ca (Overtime)</option>
+                                            <option value="VE_SOM">3. Về Sớm (Early Leave)</option>
+                                            <option value="DI_TRE">4. Đi Trễ (Late)</option>
+                                            <option value="HO_TRO">5. Hỗ Trợ (Support)</option>
+                                            <option value="DAO_TAO">6. Đào Tạo (Training)</option>
+                                            <option value="HOP_TEAM">7. Họp Team (Meeting)</option>
+                                            <option value="LOI_LICH">8. Lỗi Lịch (Schedule Error)</option>
                                         </select>
                                     )}
                                 </div>
@@ -304,7 +358,7 @@ const PageShiftLog = ({ user, onBack }) => {
                     )}
                 </div>
 
-                {/* 2. LEADER STATUS */}
+                {/* 2. LEADER STATUS (STYLE CŨ) */}
                 {(isLeader || form.isTraineeMode) && (
                     <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
                         <div className="flex items-center gap-2 mb-0.5">
@@ -342,7 +396,7 @@ const PageShiftLog = ({ user, onBack }) => {
                     </div>
                 )}
 
-                {/* 3. LAYOUT & CHECKLIST - STAFF UI ONLY */}
+                {/* 3. LAYOUT & CHECKLIST (STYLE CŨ) */}
                 <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-2.5">
                     {!(isLeader || form.isTraineeMode) ? (
                         <>
@@ -452,7 +506,7 @@ const PageShiftLog = ({ user, onBack }) => {
                     )}
                 </div>
 
-                {/* 4. INCIDENT & MOOD */}
+                {/* 4. INCIDENT & MOOD (STYLE CŨ) */}
                 <div className="bg-white p-3.5 rounded-[20px] shadow-sm border border-slate-100 space-y-3.5">
                     {hasNoCheck && (
                         <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-100 space-y-1.5">
@@ -493,19 +547,22 @@ const PageShiftLog = ({ user, onBack }) => {
                         </div>
                     )}
 
-
-                    {(isLeader || form.isTraineeMode) && (
-                        <div className="grid grid-cols-2 gap-2">
-                            <select className={`bg-slate-50 border-none text-[10px] font-black p-2.5 rounded-xl text-slate-700 font-sans focus:ring-2 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.nextShiftRisk} onChange={e => setForm({ ...form, nextShiftRisk: e.target.value })}>
-                                <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
-                            </select>
-                            <textarea className="bg-slate-50 border-none text-[10px] p-2.5 rounded-xl min-h-[40px] focus:ring-0" placeholder="Dặn dò ca sau..." value={form.nextShiftNote} onChange={e => setForm({ ...form, nextShiftNote: e.target.value })} />
-                            <div className="col-span-2 space-y-2 mt-1">
-                                <div className={`text-[9px] font-black uppercase tracking-widest ml-1 ${form.isTraineeMode ? 'text-indigo-600' : 'text-emerald-600'}`}>💡 Sáng kiến & Cải tiến hôm nay?</div>
-                                <textarea className={`w-full border-none text-[10px] p-3 rounded-xl min-h-[60px] focus:ring-2 font-medium italic ${form.isTraineeMode ? 'bg-indigo-50/30 ring-indigo-500/20' : 'bg-emerald-50/30 ring-emerald-500/20'}`} placeholder="Góp ý hoặc sáng kiến để Team mình xịn hơn... (Gamification reward 🎁)" value={form.improvementNote} onChange={e => setForm({ ...form, improvementNote: e.target.value })} />
-                            </div>
+                    {/* IMPROVEMENT NOTE (UNIVERSAL - NEW FEATURE) */}
+                    <div className="col-span-2 space-y-2 mt-1">
+                        <div className="text-[9px] font-black uppercase tracking-widest ml-1 text-blue-500">
+                            💡 GÓP Ý & SÁNG KIẾN (OPTIONAL)
                         </div>
-                    )}
+                        {/* Risk fields only for Leader/Trainee */}
+                        {(isLeader || form.isTraineeMode) && (
+                            <div className="flex gap-2 mb-2">
+                                <select className={`bg-slate-50 border-none text-[10px] font-black p-2 rounded-xl text-slate-700 font-sans focus:ring-2 w-1/3 ${form.isTraineeMode ? 'ring-indigo-500/20' : 'ring-emerald-500/20'}`} value={form.nextShiftRisk} onChange={e => setForm({ ...form, nextShiftRisk: e.target.value })}>
+                                    <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
+                                </select>
+                                <textarea className="bg-slate-50 border-none text-[10px] p-2 rounded-xl min-h-[40px] focus:ring-0 w-2/3" placeholder="Dặn dò ca sau..." value={form.nextShiftNote} onChange={e => setForm({ ...form, nextShiftNote: e.target.value })} />
+                            </div>
+                        )}
+                        <textarea className="w-full border-none text-[10px] p-3 rounded-xl min-h-[60px] focus:ring-2 font-medium italic bg-blue-50/30 ring-blue-500/10 placeholder-blue-300 text-slate-700" placeholder="Góp ý hoặc sáng kiến để Team mình xịn hơn..." value={form.improvementNote} onChange={e => setForm({ ...form, improvementNote: e.target.value })} />
+                    </div>
                 </div>
 
                 <div className="bg-white p-3.5 rounded-[24px] shadow-sm border border-slate-100 space-y-3.5">
@@ -521,7 +578,7 @@ const PageShiftLog = ({ user, onBack }) => {
                 </div>
             </div>
 
-            {/* MOOD MODAL */}
+            {/* MOOD MODAL (STYLE CŨ - COLORFUL) */}
             {showMoodModal && (
                 <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 ${MOOD_CONFIG[form.rating]?.modalBg} backdrop-blur-md animate-in fade-in duration-300`}>
                     <div className="text-center animate-in zoom-in duration-500 max-w-sm w-full">

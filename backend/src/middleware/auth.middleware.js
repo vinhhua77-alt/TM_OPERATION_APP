@@ -5,6 +5,7 @@
 
 import jwt from 'jsonwebtoken';
 import { UserRepo } from '../infra/user.repo.supabase.js';
+import { userCache } from '../infra/user.cache.js';
 
 export async function authenticateToken(req, res, next) {
   // SECURITY: Read token from HttpOnly cookie (preferred) or Authorization header (backward compatibility)
@@ -27,8 +28,16 @@ export async function authenticateToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Lấy user từ Google Sheet
-    const user = await UserRepo.getById(decoded.userId);
+    // 1. Try Cache First (Fast path)
+    let user = userCache.get(`ID:${decoded.userId}`);
+
+    // 2. Fallback to DB if missing
+    if (!user) {
+      user = await UserRepo.getById(decoded.userId);
+      if (user) {
+        userCache.cacheUser(user);
+      }
+    }
 
     if (!user || !user.active) {
       return res.status(403).json({
@@ -41,7 +50,7 @@ export async function authenticateToken(req, res, next) {
     // Set user context cho các middleware/controller tiếp theo
     req.user = user;
     req.userId = user.id;
-    req.tenantId = user.tenant_id;
+    req.tenantId = user.tenant_id || user.store_code; // Fallback for legacy
 
     next();
   } catch (error) {

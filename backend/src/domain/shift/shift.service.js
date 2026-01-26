@@ -15,20 +15,31 @@ export class ShiftService {
   static async submit(user, payload) {
     try {
       console.log('Shift submit - received payload:', JSON.stringify(payload, null, 2));
-      console.log('Shift submit - user:', JSON.stringify(user, null, 2));
+
+      const userId = user.id || user.sub; // Ensure UUID
 
       // 1. Validate required fields
       if (!payload.storeId || !payload.layout) {
-        return {
-          success: false,
-          message: 'Thiếu thông tin nhà hàng hoặc khu vực.'
-        };
+        return { success: false, message: 'Thiếu thông tin nhà hàng hoặc khu vực.' };
       }
 
-      // 2. Check if staff already submitted shifts today (max 2 for split shifts)
-      const today = payload.date || new Date().toISOString().split('T')[0];
-      const staffId = payload.staffId || user.id || user.staff_id;
+      // --- STANDARDIZATION: STORE CODE ---
+      let storeCodeToSave = payload.storeId;
+      // If payload sends UUID (length > 30), resolve to Code
+      if (storeCodeToSave.length > 30) {
+        const { data: store } = await supabase
+          .from('master_store_list') // or whatever master table
+          .select('store_code')
+          .eq('id', storeCodeToSave)
+          .single();
+        if (store) storeCodeToSave = store.store_code;
+        else console.warn(`⚠️ Could not resolve Store UUID ${storeCodeToSave} to Code. Using raw value.`);
+      }
 
+      const today = payload.date || new Date().toISOString().split('T')[0];
+      const staffId = userId; // Always use UUID
+
+      // 2. Check if staff already submitted shifts today (max 2 for split shifts)
       const { data: existingShifts, error: checkError } = await supabase
         .from('raw_shiftlog')
         .select('id, start_time, end_time, created_at')
@@ -36,15 +47,10 @@ export class ShiftService {
         .eq('date', today)
         .order('created_at', { ascending: false });
 
-      if (checkError) {
-        console.error('Error checking existing shifts:', checkError);
-      }
+      if (checkError) console.error('Error checking existing shifts:', checkError);
 
       if (existingShifts && existingShifts.length >= 2) {
-        return {
-          success: false,
-          message: '⚠️ Bạn đã gửi đủ 2 ca trong ngày! (Ca gãy tối đa 2 lần/ngày)'
-        };
+        return { success: false, message: '⚠️ Bạn đã gửi đủ 2 ca trong ngày! (Ca gãy tối đa 2 lần/ngày)' };
       }
 
       // Check time gap between submissions (must be >= 2 hours)
@@ -55,42 +61,31 @@ export class ShiftService {
 
         if (hoursSinceLastSubmit < 2) {
           const minutesRemaining = Math.ceil((2 - hoursSinceLastSubmit) * 60);
-          return {
-            success: false,
-            message: `⏰ Vui lòng đợi ${minutesRemaining} phút nữa để gửi ca thứ 2! (Cần cách nhau tối thiểu 2 giờ)`
-          };
+          return { success: false, message: `⏰ Vui lòng đợi ${minutesRemaining} phút nữa để gửi ca thứ 2! (Cần cách nhau tối thiểu 2 giờ)` };
         }
-
-        console.log(`⚠️ Staff ${staffId} đang gửi ca thứ 2 (ca gãy) cho ngày ${today} - Cách ca 1: ${hoursSinceLastSubmit.toFixed(1)}h`);
       }
 
-      // 2. Prepare data for raw_shiftlog table
-      // Handle lead field: convert string values to boolean
-      // 'no_lead' or empty string = false, any other value = true
-      const isLead = payload.lead &&
-        payload.lead !== 'KHÔNG CÓ LEAD' &&
-        payload.lead !== 'no_lead' &&
-        payload.lead !== '';
+      // 3. Prepare data for raw_shiftlog table
+      const isLead = payload.lead && payload.lead !== 'KHÔNG CÓ LEAD' && payload.lead !== 'no_lead' && payload.lead !== '';
 
       const shiftData = {
         version: 'v3.0.0',
-        store_id: payload.storeId,
-        date: payload.date || new Date().toISOString().split('T')[0],
-        staff_id: payload.staffId || user.id || user.staff_id,
+        store_id: storeCodeToSave, // ALWAYS STORE CODE
+        date: today,
+        staff_id: staffId, // ALWAYS UUID
         staff_name: payload.staffName || user.staff_name || user.name || 'Unknown',
         role: payload.role || user.role || 'STAFF',
-        lead: isLead, // Boolean: true if there's a lead
+        lead: isLead,
         start_time: payload.startTime || '',
         end_time: payload.endTime || '',
         duration: parseFloat(payload.duration) || 0,
-        layout: payload.layout || 'Unknown', // Updated to include default
+        layout: payload.layout || 'Unknown',
         sub_pos: payload.subPos || '',
         checks: typeof payload.checks === 'string' ? payload.checks : JSON.stringify(payload.checks || {}),
         incident_type: payload.incidentType || '',
-        // Sanitize incident notes
         incident_note: Sanitizer.sanitizeText(payload.incidentNote || ''),
         improvement_note: Sanitizer.sanitizeText(payload.improvementNote || ''),
-        rating: payload.rating || 0, // Updated to include default
+        rating: payload.rating || 0,
         selected_reasons: typeof payload.selectedReasons === 'string' ? payload.selectedReasons : JSON.stringify(payload.selectedReasons || []),
         is_valid: true,
         photo_url: payload.photoUrl || '',
@@ -99,50 +94,29 @@ export class ShiftService {
 
       console.log('Shift submit - prepared data:', JSON.stringify(shiftData, null, 2));
 
-      // 3. Insert into raw_shiftlog (append-only)
+      // 4. Insert into raw_shiftlog (append-only)
       const { data, error } = await supabase
         .from('raw_shiftlog')
         .insert([shiftData])
         .select();
 
-      if (error) {
-        console.error('Error inserting shift log:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       console.log('Shift log inserted successfully:', data);
 
       // --- V3 DECISION ENGINE INTEGRATION ---
       try {
-        // 4. Log Raw Event (Append-only Fact)
-        const rawEvent = await SignalService.logRawEvent(
-          'SHIFT_LOG',
-          shiftData,
-          staffId,
-          payload.storeId
-        );
-
-        if (rawEvent) {
-          // 5. Extract Operational Signals (Flags)
-          await SignalService.extractFromShiftLog(rawEvent.id, shiftData);
-        }
+        const rawEvent = await SignalService.logRawEvent('SHIFT_LOG', shiftData, staffId, storeCodeToSave);
+        if (rawEvent) await SignalService.extractFromShiftLog(rawEvent.id, shiftData);
       } catch (v3Error) {
         console.error('V3 Decision Engine Integration Error (Non-blocking):', v3Error);
       }
-      // --------------------------------------
 
-      return {
-        success: true,
-        message: 'Gửi báo cáo thành công!',
-        data: data[0]
-      };
+      return { success: true, message: 'Gửi báo cáo thành công!', data: data[0] };
 
     } catch (error) {
       console.error('ShiftService.submit error:', error);
-      return {
-        success: false,
-        message: error.message || 'Lỗi khi gửi báo cáo'
-      };
+      return { success: false, message: error.message || 'Lỗi khi gửi báo cáo' };
     }
   }
 

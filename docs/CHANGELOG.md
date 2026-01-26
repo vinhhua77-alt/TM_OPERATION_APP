@@ -1,8 +1,27 @@
 **Date**: 2026-01-25  
-**Migration**: Decision Engine Integration
-**Current Version**: v3.0 (Official Decision Engine Core)
+**Migration**: Compliance & SaaS Hub (v3.6)
+**Current Version**: v3.6 (Hub & Compliance)
 
 ---
+
+## [3.6.0] - 2026-01-25
+### 🏗️ SaaS Hub & Pillar Architecture
+- **Admin Hub Redesign**: Overhauled `PageAdminConsole` into a 4-Pillar centralized cockpit (Operations, People, Platform, Entity).
+- **Module Consolidation**: Integrated `PageStoreSetup` and `Page5SCompliance` into the Hub structure.
+- **Enhanced Feature Management**: Redesigned Feature Flags UI with domain-based coloring and compact table grouping.
+- **Permission Matrix UX**: Implemented card-based accordion UI for role-permission management to improve mobile utility.
+
+---
+
+## [3.5.0] - 2026-01-25
+### 🛡️ Compliance & 5S Module (Decision Intelligence Expansion)
+- **Schema Implementation:** Created `v3_23` and `v3_24` migrations with `compliance_signals`, `compliance_checks`, and HACCP logs.
+- **Signal Flow:** Implemented Time-based Staff Assignments for 5S confirmation (staff no longer manually select areas).
+- **5S Decision Engine Logic:** Designed risk-weighted scoring (Severity x1.5 during peaks).
+- **Renaming:** Standardized module names (`PageQAQC` -> `Page5SCompliance`) to prepare for future QA audit expansion.
+
+---
+
 
 ## [3.0.0] - 2026-01-25
 ### 🚀 Official Decision Engine Foundation Release
@@ -380,4 +399,4 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 **Current Version**: v3.4 (Supabase + Enhancements)
 
-**Last Updated**: 2026-01-24
+**Last Updated**: 2026-01-25

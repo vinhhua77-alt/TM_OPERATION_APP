@@ -1,276 +1,474 @@
 import React, { useState, useEffect } from 'react';
-import StoreGridSelector from '../components/analytics/StoreGridSelector';
-import TimeRangePicker from '../components/analytics/TimeRangePicker';
-import { masterDataAPI } from '../api/master-data';
-import { analyticsAPI } from '../api/analytics.api';
+import StatCard from '../components/StatCard';
+import { dashboardAPI } from '../api/dashboard';
+import { masterAPI } from '../api/master'; // [NEW] Import Master API
+import Modal from '../components/Modal';
 
-const PageAnalytics = ({ user, onBack }) => {
-    // 1. PHÂN QUYỀN MẶC ĐỊNH
-    const isSM = user?.role === 'SM' || user?.role === 'LEADER';
-    const userStore = user?.storeCode || 'ALL';
-
-    const [activeTab, setActiveTab] = useState('leader');
-    const [selectedStore, setSelectedStore] = useState(isSM ? userStore : 'ALL');
-    const [mode, setMode] = useState('day');
-    const [date, setDate] = useState(new Date());
+const PageAnalytics = ({ user, viewMode = 'leader', onBack }) => {
+    // State
+    const [periodMode, setPeriodMode] = useState('day');
+    const [anchorDate, setAnchorDate] = useState(new Date());
+    const [selectedStore, setSelectedStore] = useState('ALL');
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [currentView, setCurrentView] = useState(viewMode); // [NEW] Switchable View
 
-    // Hệ màu thương hiệu nâng cấp (Sáng, Nhẹ, Sang trọng)
-    const colorMap = {
-        'ALL': 'from-blue-600 to-indigo-700',
-        'TMG01': 'from-blue-400 to-blue-600',
-        'TMG02': 'from-emerald-400 to-emerald-600',
-        'TMG03': 'from-violet-400 to-violet-600',
-        'TMG04': 'from-amber-400 to-orange-500',
-        'TMG05': 'from-rose-400 to-rose-600',
-        'TMG06': 'from-sky-400 to-sky-600',
-        'TMG07': 'from-indigo-400 to-indigo-600',
-        'TMG08': 'from-orange-400 to-red-500',
-        'TMG09': 'from-teal-400 to-teal-600',
-        'TMG10': 'from-pink-400 to-pink-600',
+    // Modal State
+    const [activeModal, setActiveModal] = useState(null);
+    const [moodFilter, setMoodFilter] = useState(null); // [NEW] Filter inside Mood Modal
+
+    // CONFIGURATION: METRICS PER VIEW MODE
+    const METRIC_CONFIGS = {
+        'leader': [
+            { id: 'TOTAL_SHIFTS', label: 'TỔNG CA', icon: '📅', color: 'blue', valKey: 'totalShifts' },
+            { id: 'WRONG_SHIFT', label: 'SAI CA', icon: '🚫', color: 'red', valKey: 'wrongShiftsCount' },
+            { id: 'HOURS', label: 'TỔNG GIỜ', icon: '⏱️', color: 'indigo', valKey: 'hours.total' },
+            { id: 'INCIDENT', label: 'SỰ CỐ', icon: '⚠️', color: 'yellow', valKey: 'incidentsCount' },
+
+            { id: 'HOURS_AM', label: 'GIỜ SÁNG', icon: '☀️', color: 'orange', valKey: 'hours.am' },
+            { id: 'HOURS_PM', label: 'GIỜ CHIỀU', icon: '🌙', color: 'purple', valKey: 'hours.pm' },
+            { id: 'CHECKLIST', label: 'CHECKLIST', icon: '✅', color: 'green', valKey: 'checklistScore', mock: '100%' },
+            { id: 'MOOD', label: 'CẢM XÚC', icon: '😊', color: 'cyan', valKey: 'mood.avg' },
+        ],
+        'sm': [
+            { id: 'HEADCOUNT', label: 'NHÂN SỰ', icon: '👥', color: 'green', valKey: 'headcount.today' },
+            { id: 'WRONG_SHIFT', label: 'SAI CA', icon: '🚫', color: 'red', valKey: 'wrongShiftsCount' },
+            { id: 'HOURS', label: 'GIỜ LÀM', icon: '⏱️', color: 'indigo', valKey: 'hours.total' },
+            { id: 'INCIDENT', label: 'SỰ CỐ', icon: '⚠️', color: 'orange', valKey: 'incidentsCount' },
+            { id: 'FEEDBACK', label: 'GÓP Ý', icon: '💡', color: 'cyan', valKey: 'feedbacksCount' },
+            { id: 'MOOD', label: 'CẢM XÚC', icon: '😊', color: 'yellow', valKey: 'mood.avg' },
+            { id: 'LAYOUT', label: 'LAYOUT', icon: '🗺️', color: 'blue', valKey: 'layoutCoverage', mock: 'View' },
+            { id: 'CHECKLIST', label: 'CHECKLIST', icon: '✅', color: 'purple', valKey: 'checklistScore', mock: '100%' },
+        ],
+        'ops': [
+            { id: 'REVENUE', label: 'DOANH THU', icon: '💰', color: 'green', valKey: 'revenue', mock: '1.2B' },
+            { id: 'TOTAL_SHIFTS', label: 'TỔNG CA', icon: '📅', color: 'blue', valKey: 'totalShifts' },
+            { id: 'HOURS', label: 'TỔNG GIỜ', icon: '⏱️', color: 'purple', valKey: 'hours.total' },
+            { id: 'INCIDENT', label: 'SỰ CỐ', icon: '⚠️', color: 'red', valKey: 'incidentsCount' },
+            { id: 'AUDIT', label: 'AUDIT', icon: '🛡️', color: 'indigo', valKey: 'auditScore', mock: '95/100' },
+            { id: 'CSAT', label: 'CSAT', icon: '❤️', color: 'rose', valKey: 'csat', mock: '4.9' },
+            { id: 'COST_LABOR', label: 'LABOR COST', icon: '📉', color: 'orange', valKey: 'laborCost', mock: '18%' },
+            { id: 'COST_COGS', label: 'COGS', icon: '📦', color: 'gray', valKey: 'cogs', mock: '32%' },
+        ],
+        'bod': [
+            { id: 'REVENUE_MONTH', label: 'DOANH THU', icon: '💰', color: 'green', valKey: 'revenueMonth', mock: '4.5B' },
+            { id: 'PROFIT', label: 'LỢI NHUẬN', icon: '📈', color: 'blue', valKey: 'profit', mock: '850M' },
+            { id: 'GROWTH', label: 'TĂNG TRƯỞNG', icon: '🚀', color: 'purple', valKey: 'growth', mock: '+12%' },
+            { id: 'ENPS', label: 'eNPS', icon: '😊', color: 'yellow', valKey: 'mood.avg' },
+            { id: 'RUNWAY', label: 'RUNWAY', icon: '⏳', color: 'red', valKey: 'runway', mock: '18M' },
+            { id: 'CAC', label: 'CAC', icon: '💸', color: 'orange', valKey: 'cac', mock: '$12' },
+            { id: 'LTV', label: 'LTV', icon: '💎', color: 'cyan', valKey: 'ltv', mock: '$450' },
+            { id: 'BURN', label: 'BURN RATE', icon: '🔥', color: 'rose', valKey: 'burn', mock: '$50k' },
+        ]
     };
 
-    const currentTheme = colorMap[selectedStore] || 'from-slate-400 to-slate-600';
-    const textColor = currentTheme.replace('bg-', 'text-');
+    // Default active metrics based on currentView
+    const activeMetrics = METRIC_CONFIGS[currentView] || METRIC_CONFIGS['sm'];
 
-    const availableTabs = [
-        { id: 'leader', label: 'Điều Hành', icon: '⚡', role: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'] },
-        { id: 'sm', label: 'Cửa Hàng', icon: '🏢', role: ['SM', 'OPS', 'ADMIN', 'BOD'] },
-        { id: 'ops', label: 'Hệ Thống', icon: '📊', role: ['OPS', 'ADMIN', 'BOD'] },
-        { id: 'bod', label: 'Tầm Nhìn', icon: '💎', role: ['ADMIN', 'BOD'] }
-    ].filter(t => t.role.includes(user?.role));
+    // Helper: Deep get value
+    const getVal = (path, fallback) => {
+        if (!data) return 0;
+        return path.split('.').reduce((acc, part) => acc && acc[part], data) || fallback || 0;
+    };
+
+    // Helper: Format Date
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    // Auto-select ALL stores for High-Level views (Only if allowed)
+    useEffect(() => {
+        if (['ops', 'bod'].includes(currentView)) {
+            // Only auto-select ALL if user has access to multiple stores
+            if (stores.length > 1) setSelectedStore('ALL');
+        }
+    }, [currentView, stores]);
+
+    // Sync prop viewMode into state if prop changes
+    useEffect(() => {
+        setCurrentView(viewMode);
+    }, [viewMode]);
+
+    // Load Stores on Mount with PERMISSION CHECK
+    useEffect(() => {
+        const loadStores = async () => {
+            try {
+                const res = await masterAPI.getStores();
+                if (res.success) {
+                    let allStores = res.data || [];
+
+                    // PERMISSION FILTER
+                    // Allowed Roles: ADMIN, IT, OPS -> See All
+                    // Others (LEADER, SM, STAFF) -> See Assigned Only
+                    const allowedRoles = ['ADMIN', 'IT', 'OPS', 'BOD'];
+                    const userRole = user?.role || 'STAFF'; // Default to restricted
+
+                    let filteredStores = [];
+                    if (allowedRoles.includes(userRole)) {
+                        filteredStores = allStores;
+                    } else {
+                        // User can only see their assigned store
+                        // Verify against user.store_code or user.store_id
+                        const userStoreCode = user?.store_code || 'TMG'; // Fallback for safety/dev
+                        filteredStores = allStores.filter(s => s.store_code === userStoreCode);
+                    }
+
+                    setStores(filteredStores);
+
+                    // Auto-select if only 1 option
+                    if (filteredStores.length === 1) {
+                        setSelectedStore(filteredStores[0].store_code);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load stores", e);
+            }
+        };
+        loadStores();
+    }, [user]); // Re-run if user changes
 
     useEffect(() => {
-        if (!isSM) loadStores();
-    }, [user]);
+        loadData();
+    }, [periodMode, anchorDate, selectedStore, currentView]);
 
-    useEffect(() => { loadData(); }, [selectedStore, mode, date, activeTab]);
+    // Helper: Calculate Range
+    const getRangeFromMode = () => {
+        const start = new Date(anchorDate);
+        const end = new Date(anchorDate);
 
-    const loadStores = async () => {
-        try {
-            const res = await masterDataAPI.getAllStores();
-            if (res.success) setStores(res.data.slice(0, 10));
-        } catch (e) { console.error(e); }
+        if (periodMode === 'day') {
+            // keep as is
+        } else if (periodMode === 'month') {
+            start.setDate(1);
+            end.setMonth(end.getMonth() + 1);
+            end.setDate(0);
+        } else if (periodMode === 'year') {
+            start.setMonth(0, 1);
+            end.setMonth(11, 31);
+        }
+        return {
+            startDate: start.toISOString().split('T')[0],
+            endDate: end.toISOString().split('T')[0]
+        };
     };
 
     const loadData = async () => {
         setLoading(true);
         try {
-            // 1. Tính toán Range Date (Dựa trên mode & date hiện tại)
-            let start, end;
-            const d = new Date(date);
-            if (mode === 'day') {
-                start = end = d.toISOString().split('T')[0];
-            } else if (mode === 'week') {
-                const day = d.getDay() || 7;
-                const Monday = new Date(d);
-                Monday.setDate(d.getDate() - day + 1);
-                const Sunday = new Date(Monday);
-                Sunday.setDate(Monday.getDate() + 6);
-                start = Monday.toISOString().split('T')[0];
-                end = Sunday.toISOString().split('T')[0];
+            const periodConfig = getRangeFromMode();
+            const res = await dashboardAPI.getLeaderAnalytics(user.id, periodConfig, selectedStore);
+
+            if (res.success) {
+                setData(res.data);
             } else {
-                start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-                end = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
-            }
-
-            // 2. Gọi API
-            const res = await analyticsAPI.getStoreMetrics(selectedStore, start, end);
-
-            if (res.success && res.data) {
-                const rawData = res.data;
-                const count = rawData.length || 1;
-
-                // Aggregator
-                const sums = rawData.reduce((acc, curr) => {
-                    const ext = curr.extended_metrics || {};
-                    return {
-                        health: acc.health + (curr.health_score || 0),
-                        incidents: acc.incidents + (curr.incident_count || 0),
-                        checklist: acc.checklist + (curr.avg_checklist_score || 0),
-                        mood: acc.mood + (curr.avg_mood_score || 0),
-                        late: acc.late + (ext.late_count || 0),
-                        headcount: acc.headcount + (ext.headcount || 0),
-                        cagay: acc.cagay + (ext.split_shift_count || 0),
-                        uniform: acc.uniform + (ext.uniform_violations || 0),
-                        training: acc.training + (ext.training_hours || 0)
-                    };
-                }, { health: 0, incidents: 0, checklist: 0, mood: 0, late: 0, headcount: 0, cagay: 0, uniform: 0, training: 0 });
-
-                const avg = {
-                    health: Math.round(sums.health / count),
-                    incidents: sums.incidents,
-                    checklist: Math.round(sums.checklist / count),
-                    mood: (sums.mood / count).toFixed(1),
-                    late: sums.late,
-                    headcount: Math.round(sums.headcount / count), // Average headcount per day
-                    cagay: sums.cagay,
-                    uniform: sums.uniform,
-                    training: Math.round(sums.training)
-                };
-
-                const isAll = selectedStore === 'ALL';
-                const formattedData = {
-                    leader: [
-                        { n: 'Checklist', v: `${avg.checklist}%`, i: '✅' },
-                        { n: 'Mood', v: avg.mood, i: '😊' },
-                        { n: 'Sự cố', v: avg.incidents.toString(), i: '⚠️' },
-                        { n: 'Đi muộn', v: avg.late.toString(), i: '⏰' },
-                        { n: 'Sức khỏe', v: `${avg.health}%`, i: '🌡️' },
-                        { n: 'Headcount', v: avg.headcount.toString(), i: '👥' },
-                        { n: 'Ca gãy', v: avg.cagay.toString(), i: '📉' },
-                        { n: 'Đồng phục', v: avg.uniform.toString(), i: '👔' },
-                        { n: 'Training', v: `${avg.training}h`, i: '📖' }
-                    ],
-                    sm: [
-                        { n: 'Hiệu suất', v: avg.health > 80 ? 'Cao' : 'Khá', i: '⚡' },
-                        { n: 'Giờ công', v: `${Math.round(sums.training + (avg.headcount * 8))}h`, i: '⏱️' },
-                        { n: 'Checklist', v: `${avg.checklist}%`, i: '📋' },
-                        { n: 'Mood', v: avg.mood, i: '🌟' },
-                        { n: 'Sự cố', v: avg.incidents.toString(), i: '🎯' },
-                        { n: 'Vệ sinh', v: 'Ổn', i: '🧹' },
-                        { n: 'Nhân sự', v: avg.headcount.toString(), i: '👥' },
-                        { n: 'OT', v: '0h', i: '🔥' },
-                        { n: 'Late/Fail', v: avg.late.toString(), i: '🚫' }
-                    ],
-                    ops: [
-                        { n: 'Năng suất', v: (avg.health / 80).toFixed(1), i: '⚡' },
-                        { n: 'Tuân thủ', v: `${avg.checklist}%`, i: '🛡️' },
-                        { n: 'Rủi ro', v: avg.incidents > 5 ? 'Cao' : 'Thấp', i: '🛡️' },
-                        { n: 'Lỗi quy trình', v: (avg.late + avg.uniform).toString(), i: '🚫' },
-                        { n: 'Health', v: avg.health >= 80 ? 'A+' : 'B', i: '🌡️' },
-                        { n: 'Top Store', v: isAll ? 'TMG01' : selectedStore, i: '🏆' },
-                        { n: 'Đào tạo', v: `${avg.checklist}%`, i: '🎓' },
-                        { n: 'QA/QC', v: (avg.checklist / 10).toFixed(1), i: '🔍' },
-                        { n: 'Tăng trưởng', v: '+2%', i: '📈' }
-                    ],
-                    bod: [
-                        { n: 'EBITDA', v: '18%', i: '💎' },
-                        { n: 'ROI', v: '15%', i: '🏦' },
-                        { n: 'Tăng trưởng', v: '+12%', i: '🚀' },
-                        { n: 'Sức khỏe', v: avg.health >= 80 ? 'Ổn định' : 'Cần chú ý', i: '🌈' },
-                        { n: 'Thương hiệu', v: avg.mood, i: '⭐' },
-                        { n: 'Mở rộng', v: 'TMG11', i: '🏗️' },
-                        { n: 'Công suất', v: `${avg.health}%`, i: '⚡' },
-                        { n: 'Thị phần', v: '11%', i: '🌍' },
-                        { n: 'Ổn định', v: avg.incidents === 0 ? 'Cao' : 'Vừa', i: '⚓' }
-                    ]
-                };
-                setData(formattedData);
+                console.error("Failed to load analytics");
             }
         } catch (e) {
-            console.error("Analytics load error:", e);
+            console.error(e);
         } finally {
             setLoading(false);
         }
     };
 
-    const currentTabInfo = availableTabs.find(t => t.id === activeTab);
-    const activeStats = data ? data[activeTab] : [];
+    // ... (Navigation Helpers kept same) ...
+    const handleNavigateDate = (dir) => {
+        const newDate = new Date(anchorDate);
+        if (periodMode === 'day') newDate.setDate(newDate.getDate() + dir);
+        if (periodMode === 'month') newDate.setMonth(newDate.getMonth() + dir);
+        if (periodMode === 'year') newDate.setFullYear(newDate.getFullYear() + dir);
+        setAnchorDate(newDate);
+    };
+
+    const getPeriodLabel = () => {
+        if (periodMode === 'day') return `${anchorDate.getDate()}/${anchorDate.getMonth() + 1}/${anchorDate.getFullYear()}`;
+        if (periodMode === 'month') return `Tháng ${anchorDate.getMonth() + 1}/${anchorDate.getFullYear()}`;
+        return `Năm ${anchorDate.getFullYear()}`;
+    };
+
+    // Render Modal Content based on activeModal
+    const renderModalContent = () => {
+        if (!data) return null;
+
+        const tableClass = "w-full text-left text-sm text-slate-700";
+        const thClass = "bg-slate-50 p-2 font-black text-xs uppercase text-slate-500 border-b border-slate-100";
+        const tdClass = "p-2 border-b border-slate-50";
+
+        switch (activeModal) {
+            case 'WRONG_SHIFT':
+                return (
+                    <table className={tableClass}>
+                        <thead><tr><th className={thClass}>Ngày</th><th className={thClass}>Nhân viên</th><th className={thClass}>Lý do</th></tr></thead>
+                        <tbody>
+                            {data.wrongShifts?.map((item, i) => (
+                                <tr key={i}>
+                                    <td className={tdClass}>{new Date(item.date).toLocaleDateString('vi-VN')}</td>
+                                    <td className={tdClass}><div className="font-bold">{item.name}</div><div className="text-[10px] text-slate-400">{item.store}</div></td>
+                                    <td className={`font-bold text-red-600 ${tdClass}`}>{item.reason}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                );
+            case 'INCIDENT':
+                return (
+                    <table className={tableClass}>
+                        <thead><tr><th className={thClass}>Ngày</th><th className={thClass}>Nhân viên</th><th className={thClass}>Nội dung</th></tr></thead>
+                        <tbody>
+                            {data.incidents?.map((item, i) => (
+                                <tr key={i}>
+                                    <td className={tdClass}>{new Date(item.date).toLocaleDateString('vi-VN')}</td>
+                                    <td className={tdClass}><div className="font-bold">{item.name}</div><div className="text-[10px] text-slate-400">{item.store}</div></td>
+                                    <td className={tdClass}>{item.content}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                );
+            case 'HOURS':
+                return (
+                    <div className="p-4 space-y-4">
+                        <div className="bg-orange-50 p-4 rounded-xl flex justify-between items-center text-orange-700">
+                            <span className="font-bold">☀️ Ca Sáng (AM)</span>
+                            <span className="text-2xl font-black">{data.hours?.am || 0}h</span>
+                        </div>
+                        <div className="bg-indigo-50 p-4 rounded-xl flex justify-between items-center text-indigo-700">
+                            <span className="font-bold">🌙 Ca Chiều (PM)</span>
+                            <span className="text-2xl font-black">{data.hours?.pm || 0}h</span>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-xl flex justify-between items-center text-green-700">
+                            <span className="font-bold">∑ TỔNG CỘNG</span>
+                            <span className="text-2xl font-black">{data.hours?.total || 0}h</span>
+                        </div>
+                    </div>
+                );
+            case 'MOOD':
+                // Filter details if a mood is selected, otherwise show all or none?
+                // Default: Show none or show all? Let's show filtered list.
+                const filteredMoods = moodFilter
+                    ? data.moodDetails?.filter(m => String(m.rating) === String(moodFilter))
+                    : [];
+
+                return (
+                    <div className="p-4">
+                        <div className="flex justify-around mb-6">
+                            {Object.entries(data.mood?.distribution || {}).map(([rating, count]) => (
+                                <div
+                                    key={rating}
+                                    className={`text-center cursor-pointer p-2 rounded-xl transition-all ${String(moodFilter) === String(rating) ? 'bg-blue-50 ring-2 ring-blue-500' : 'hover:bg-slate-50'}`}
+                                    onClick={() => setMoodFilter(String(moodFilter) === String(rating) ? null : rating)} // Toggle filter
+                                >
+                                    <div className="text-3xl mb-1">{rating >= 5 ? '🔥' : rating >= 4 ? '😄' : '😐'}</div>
+                                    <div className="font-black text-slate-700">{count}</div>
+                                    <div className="text-[10px] text-slate-400 uppercase">Rate {rating}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="text-center p-4 bg-slate-50 rounded-xl mb-4">
+                            <h3 className="text-sm font-bold text-slate-500 uppercase mb-1">Điểm TB Cảm Xúc</h3>
+                            <div className="text-4xl font-black text-blue-600">{data.mood?.avg} / 5.0</div>
+                        </div>
+
+                        {/* Detail List */}
+                        {moodFilter && (
+                            <div className="animate-fade-in">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">
+                                    Danh sách nhân viên ({filteredMoods?.length})
+                                </h4>
+                                <div className="max-h-60 overflow-y-auto space-y-2">
+                                    {filteredMoods?.length > 0 ? filteredMoods.map((item, i) => (
+                                        <div key={i} className="flex justify-between items-center bg-white p-2 rounded border border-slate-100 shadow-sm">
+                                            <div>
+                                                <div className="font-bold text-sm text-slate-700">{item.name}</div>
+                                                <div className="text-[10px] text-slate-400">{new Date(item.date).toLocaleTimeString('vi-VN')} - {item.store}</div>
+                                            </div>
+                                            <div className="text-sm font-bold text-blue-600">{item.rating}/5</div>
+                                        </div>
+                                    )) : (
+                                        <div className="text-center text-slate-400 text-xs py-4">Chưa có dữ liệu chi tiết</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            case 'FEEDBACK':
+                return (
+                    <table className={tableClass}>
+                        <thead><tr><th className={thClass}>Ngày</th><th className={thClass}>NV</th><th className={thClass}>Góp ý</th></tr></thead>
+                        <tbody>
+                            {data.feedbacks?.map((item, i) => (
+                                <tr key={i}>
+                                    <td className={tdClass}>{new Date(item.date).toLocaleDateString('vi-VN')}</td>
+                                    <td className={tdClass}><div className="font-bold">{item.name}</div></td>
+                                    <td className={`text-blue-600 italic ${tdClass}`}>"{item.content}"</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                );
+            case 'HEADCOUNT':
+                return (
+                    <div className="p-4 grid grid-cols-2 gap-4">
+                        <div className="bg-slate-100 p-4 rounded-xl text-center">
+                            <div className="text-slate-400 text-xs font-bold uppercase mb-1">Sáng</div>
+                            <div className="text-3xl font-black text-slate-800">{data.headcount?.am}</div>
+                            <div className="text-[10px] text-slate-400">Nhân sự</div>
+                        </div>
+                        <div className="bg-slate-100 p-4 rounded-xl text-center">
+                            <div className="text-slate-400 text-xs font-bold uppercase mb-1">Chiều</div>
+                            <div className="text-3xl font-black text-slate-800">{data.headcount?.pm}</div>
+                            <div className="text-[10px] text-slate-400">Nhân sự</div>
+                        </div>
+                    </div>
+                );
+            case 'LAYOUT':
+                return (
+                    <div className="space-y-4">
+                        {/* Summary Header requested by User */}
+                        <div className="grid grid-cols-2 gap-4 pt-2 px-2">
+                            <div className="bg-orange-50 p-3 rounded-xl text-center border border-orange-100">
+                                <span className="block text-xs font-bold text-orange-400 uppercase">Tổng Giờ Sáng</span>
+                                <span className="text-xl font-black text-orange-600">{data.hours?.am || 0}h</span>
+                            </div>
+                            <div className="bg-indigo-50 p-3 rounded-xl text-center border border-indigo-100">
+                                <span className="block text-xs font-bold text-indigo-400 uppercase">Tổng Giờ Chiều</span>
+                                <span className="text-xl font-black text-indigo-600">{data.hours?.pm || 0}h</span>
+                            </div>
+                        </div>
+
+                        <table className={tableClass}>
+                            <thead>
+                                <tr>
+                                    <th className={thClass}>Vị trí</th>
+                                    <th className="bg-orange-50 p-2 font-black text-xs uppercase text-orange-600 border-b border-orange-100 text-center">NV Sáng</th>
+                                    <th className="bg-indigo-50 p-2 font-black text-xs uppercase text-indigo-600 border-b border-indigo-100 text-center">NV Chiều</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(data.layoutMatrix || {}).map(([layout, counts], i) => (
+                                    <tr key={i}>
+                                        <td className={`font-bold ${tdClass}`}>{layout}</td>
+                                        <td className={`text-center font-mono font-bold text-orange-600 ${tdClass}`}>{counts.AM || 0}</td>
+                                        <td className={`text-center font-mono font-bold text-indigo-600 ${tdClass}`}>{counts.PM || 0}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            default: return null;
+        }
+    };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
-            {/* FRAMEWORK HEADER - DYNAMIC GRADIENT */}
-            <div className={`shrink-0 bg-gradient-to-br ${currentTheme} p-4 pb-8 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
-                <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[8px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-3 active:scale-95">
-                        ← Dashboard
-                    </button>
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-2xl shadow-xl rotate-2 leading-none animate-in zoom-in duration-500">
-                            {currentTabInfo?.icon || '📈'}
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-black uppercase tracking-tight leading-none mb-0.5">TM ANALYTICS</h1>
-                            <p className="text-[8px] font-bold opacity-80 uppercase tracking-widest">
-                                {selectedStore === 'ALL' ? 'Chain Overview' : `Branch: ${selectedStore}`}
-                            </p>
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-slate-50 pb-20 fade-in">
+            {/* HEADER & CONTROLS */}
+            <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100 px-3 py-3 space-y-3">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                        {currentView === 'sm' ? 'STORE MANAGER' : currentView} DASHBOARD
+                    </h1>
+                    <button onClick={onBack} className="text-sm text-slate-500 font-bold">Thoát</button>
                 </div>
-                <div className="absolute -right-16 -top-16 w-56 h-56 bg-white/10 rounded-full blur-[70px]"></div>
-                <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-black/5 rounded-full blur-[50px]"></div>
+
+                {/* VIEW SWITCHER (DEV ONLY - FOR DEMO) */}
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                    {(() => {
+                        // ROLE-BASED VIEW VISIBILITY
+                        // Higher roles see their view AND all lower views
+                        const role = user?.role || 'STAFF';
+                        let availableViews = ['leader']; // Everyone sees Leader view
+
+                        if (['SM', 'OPS', 'BOD', 'ADMIN', 'IT'].includes(role)) {
+                            availableViews.push('sm');
+                        }
+                        if (['OPS', 'BOD', 'ADMIN', 'IT'].includes(role)) {
+                            availableViews.push('ops');
+                        }
+                        if (['BOD', 'ADMIN', 'IT'].includes(role)) {
+                            availableViews.push('bod');
+                        }
+
+                        // For Demo Purpose (If role is not set correctly in dev, force all)
+                        // Remove this in prod if roles are strict
+                        if (role === 'STAFF' && !user?.role) availableViews = ['leader', 'sm', 'ops', 'bod'];
+
+                        return availableViews.map(v => (
+                            <button
+                                key={v}
+                                onClick={() => setCurrentView(v)}
+                                className={`flex-1 py-1 text-[10px] font-bold uppercase rounded transition-all ${currentView === v ? 'bg-white shadow text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                {v}
+                            </button>
+                        ));
+                    })()}
+                </div>
+
+                {/* FILTERS */}
+                <div className="flex gap-2">
+                    {/* Period Selector */}
+                    <div className="bg-slate-100 p-1 rounded-lg flex text-[10px] font-bold">
+                        {['day', 'month', 'year'].map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setPeriodMode(m)}
+                                className={`px-3 py-1.5 rounded-md uppercase transition-all ${periodMode === m ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}
+                            >
+                                {m === 'day' ? 'Ngày' : m === 'month' ? 'Tháng' : 'Năm'}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Store Selector */}
+                    <select
+                        className="bg-slate-100 border-none text-[11px] font-bold rounded-lg px-2 py-1 flex-1 text-slate-700 outline-none"
+                        value={selectedStore}
+                        onChange={(e) => setSelectedStore(e.target.value)}
+                        disabled={['ops', 'bod'].includes(currentView) && selectedStore === 'ALL'} // Optional locking
+                    >
+                        <option value="ALL">Tất cả nhà hàng</option>
+                        {stores && stores.map((store, i) => (
+                            <option key={store.id || i} value={store.store_code}>
+                                {store.store_code} - {store.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Date Navigator */}
+                <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <button onClick={() => handleNavigateDate(-1)} className="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-400">◀</button>
+                    <span className="font-black text-slate-700">{getPeriodLabel()}</span>
+                    <button onClick={() => handleNavigateDate(1)} className="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-400">▶</button>
+                </div>
             </div>
 
-            {/* CONTENT AREA */}
-            <div className="flex-1 px-4 -mt-6 relative z-20 space-y-4">
-
-                {/* ROLE TABS */}
-                <div className="flex bg-white p-1 rounded-[20px] shadow-xl flex gap-1 border border-slate-100/50">
-                    {availableTabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-2.5 rounded-xl text-[8.5px] font-black uppercase tracking-tighter transition-all duration-500 ${activeTab === tab.id ? `bg-gradient-to-r ${currentTheme} text-white shadow-lg scale-[1.02]` : 'text-slate-400'
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
+            {/* MAIN GRID - COMPACT 4x2 */}
+            <div className="p-2">
+                <div className={`grid grid-cols-4 gap-1.5 transition-opacity ${loading ? 'opacity-50' : 'opacity-100'}`}>
+                    {activeMetrics.map((metric, index) => (
+                        <div key={metric.id + index} onClick={() => setActiveModal(metric.id)} className={
+                            (metric.span ? `col-span-${metric.span}` : '')
+                        }>
+                            <StatCard
+                                label={metric.label}
+                                value={metric.mock || getVal(metric.valKey)}
+                                icon={metric.icon}
+                                color={metric.color}
+                                compactClickable
+                            />
+                        </div>
                     ))}
                 </div>
-
-                {/* LƯỚI CHỈ SỐ SIÊU TINH GỌN (4 CỘT) */}
-                <div className="grid grid-cols-4 gap-1.5 relative min-h-[140px]">
-                    {loading && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-50/40 backdrop-blur-[2px] rounded-[24px]">
-                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    )}
-                    {activeStats.map((s, i) => {
-                        return (
-                            <div
-                                key={i}
-                                className={`
-                                    py-1.5 px-0.5 rounded-xl shadow-sm flex flex-col items-center text-center active:scale-95 transition-all duration-500
-                                    bg-gradient-to-br ${currentTheme} border border-white/5
-                                `}
-                                style={{ animationDelay: `${i * 15}ms` }}
-                            >
-                                <span className={`text-[13px] mb-0`}>{s.i}</span>
-                                <div className={`text-[9.5px] font-black leading-none mb-0.5 text-white`}>{s.v}</div>
-                                <div className={`text-[5px] font-extrabold uppercase tracking-tighter text-white/80`}>{s.n}</div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* SELECTORS (Only for OPS+) */}
-                {!isSM && (
-                    <div className="bg-white p-4 rounded-[28px] shadow-xl border border-slate-100/80 space-y-3">
-                        <div className="flex items-center gap-2 px-1">
-                            <div className={`w-1 h-3.5 rounded-full bg-gradient-to-b ${currentTheme}`}></div>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hệ Thống Chi Nhánh</span>
-                        </div>
-                        <StoreGridSelector stores={stores} selectedStore={selectedStore} onSelect={setSelectedStore} />
-                    </div>
-                )}
-
-                {/* TIME PICKER */}
-                <div className="bg-white p-4 rounded-[24px] shadow-sm border border-slate-100">
-                    <TimeRangePicker mode={mode} setMode={setMode} date={date} setDate={setDate} />
-                </div>
-
-                {/* INSIGHT CARD */}
-                <div className="bg-slate-900 rounded-[24px] p-5 text-white shadow-2xl relative overflow-hidden">
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className={`w-1.5 h-1.5 rounded-full ${currentTheme} animate-pulse`}></span>
-                            <h3 className="text-[9px] font-black uppercase tracking-widest opacity-40">Insight Hệ Thống</h3>
-                        </div>
-                        <p className="text-[11px] font-bold leading-relaxed opacity-90 italic">
-                            "{selectedStore === 'ALL'
-                                ? `Toàn chuỗi đang vận hành ổn định. Chú ý điểm nóng trung tâm.`
-                                : `Chi nhánh ${selectedStore} đang ${activeTab === 'leader' ? 'thực thi tốt' : 'tăng trưởng ổn định'}. Duy trì phong độ.`}"
-                        </p>
-                    </div>
-                </div>
             </div>
 
-            <div className="p-6 text-center opacity-20">
-                <p className="text-[7.5px] font-bold text-slate-400 uppercase tracking-[0.2em]">TMG Decision Engine v3.0</p>
-            </div>
+            {/* MODAL */}
+            {activeModal && (
+                <Modal title={`${activeModal.replace('_', ' ')} DETAIL`} onClose={() => setActiveModal(null)}>
+                    {renderModalContent()}
+                </Modal>
+            )}
         </div>
     );
 };

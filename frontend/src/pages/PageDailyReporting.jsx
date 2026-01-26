@@ -5,70 +5,70 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
     const allModules = [
         {
             id: 'ops_report',
-            label: 'Shift & Management',
+            label: 'NHẬT KÝ CA',
             icon: '📝',
             desc: 'Nhật ký ca & Báo cáo quản lý.',
-            color: 'from-blue-600 to-indigo-700',
+            color: 'blue',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'SHIFT_LOG',
-            flag: 'MODULE_SHIFTLOG' // Core but still togglable
+            flag: 'MODULE_SHIFTLOG'
         },
         {
             id: 'sm',
-            label: 'SM Report',
+            label: 'CHỐT SỐ (SM)',
             icon: '👑',
             desc: 'Chốt ngày & Doanh thu.',
-            color: 'from-violet-500 to-violet-600',
+            color: 'purple',
             submitRoles: ['SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'SM_REPORT',
             flag: 'MODULE_SM_REPORT'
         },
         {
             id: '5s',
-            label: 'Báo cáo 5S',
-            icon: '🧹',
-            desc: 'Vệ sinh & Sắp xếp.',
-            color: 'from-amber-500 to-amber-600',
-            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
-            target: 'REPORT_5S',
+            label: 'TUÂN THỦ 5S',
+            icon: '🛡️',
+            desc: 'Vệ sinh & ATTP & Sẵn sàng.',
+            color: 'orange',
+            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            target: 'QAQC_HUB',
             flag: 'MODULE_5S'
         },
         {
             id: 'cashier',
-            label: 'Thu ngân',
+            label: 'THU NGÂN',
             icon: '💰',
             desc: 'Đối soát quỹ tiền mặt.',
-            color: 'from-rose-500 to-rose-600',
+            color: 'rose',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'REPORT_CASHIER',
             flag: 'MODULE_CASHIER'
         },
         {
             id: 'inventory',
-            label: 'Kiểm kho',
+            label: 'KIỂM KHO',
             icon: '📦',
             desc: 'Báo cáo kho cuối ngày.',
-            color: 'from-emerald-500 to-emerald-600',
+            color: 'emerald',
             submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'REPORT_INVENTORY',
             flag: 'MODULE_INVENTORY'
         },
         {
             id: 'waste',
-            label: 'Hàng hủy',
+            label: 'HÀNG HỦY',
             icon: '🗑️',
             desc: 'Báo cáo hàng hủy/hỏng.',
-            color: 'from-slate-500 to-slate-600',
+            color: 'slate',
             submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'REPORT_WASTE',
             flag: 'MODULE_WASTE'
         },
         {
             id: 'm5m',
-            label: 'Báo cáo M5M',
+            label: 'CHECK M5M',
             icon: '🌅',
             desc: 'Chuẩn bị đầu ca.',
-            color: 'from-sky-500 to-sky-600',
+            color: 'cyan',
             submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
             target: 'REPORT_M5M',
             flag: 'MODULE_M5M'
@@ -76,20 +76,12 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
     ];
 
     // 2. Filter modules based on sysConfig (Feature Flags)
-    // If sysConfig isn't loaded yet, we default to showing at least some core ones or empty
     const enabledFlags = sysConfig?.featureFlags || [];
-
-    const modules = allModules.filter(m => {
-        // If flag is in activeFlags, it means it's enabled
-        return enabledFlags.includes(m.flag);
-    });
+    const modules = allModules.filter(m => enabledFlags.includes(m.flag));
 
     const handleAction = (m) => {
         const canSubmit = m.submitRoles.includes(user?.role);
-
         if (canSubmit) {
-            // Since we merged ShiftLog and Leader Report, both now point to SHIFT_LOG/LEADER_REPORT
-            // which both render PageShiftLog in App.jsx.
             onNavigate(m.target);
         } else {
             alert(`Vai trò ${user?.role} không có quyền thực hiện báo cáo này.`);
@@ -97,54 +89,42 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans">
-            {/* HEADER */}
-            <div className="shrink-0 bg-blue-600 p-4 pb-10 text-white relative overflow-hidden shadow-lg">
-                <div className="relative z-10 flex flex-col items-start gap-3">
-                    <button
-                        onClick={onBack}
-                        className="bg-white/20 hover:bg-white/30 text-white text-[9px] font-bold px-3 py-1 rounded-full transition-all backdrop-blur-md border border-white/20 uppercase tracking-tighter active:scale-95"
-                    >
-                        ← Dashboard
-                    </button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white rounded-2xl bg-opacity-100 flex items-center justify-center text-3xl shadow-xl rotate-3">
-                            📊
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-xl font-black leading-none mb-0.5 uppercase tracking-tight">BÁO CÁO NGÀY</h1>
-                            <p className="text-[10px] font-bold opacity-80 leading-tight">Trung tâm báo cáo vận hành.</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-            </div>
-
-            {/* ROLE BADGE */}
-            <div className="px-4 -mt-4 relative z-20">
-                <div className="bg-white px-3 py-1.5 rounded-xl shadow-md border border-black/5 flex items-center justify-between">
-                    <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-widest">Vai trò:</span>
-                    <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md uppercase">{user?.role}</span>
+        <div className="min-h-screen bg-slate-50 pb-20 fade-in">
+            {/* HEADER & CONTROLS */}
+            <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100 px-3 py-3 space-y-3">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                        BÁO CÁO NGÀY
+                    </h1>
+                    <button onClick={onBack} className="text-sm text-slate-500 font-bold">Thoát</button>
                 </div>
             </div>
 
-            {/* CONTENT */}
-            <div className="flex-1 p-4 mt-1">
-                <div className="grid grid-cols-3 gap-2.5">
+            {/* ROLE INFO */}
+            <div className="px-3 pt-3">
+                <div className="bg-slate-100 px-3 py-2 rounded-lg flex items-center justify-between border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Vai trò hiện tại:</span>
+                    <span className="text-[10px] font-black text-blue-600 bg-white px-2 py-0.5 rounded shadow-sm uppercase border border-blue-100">{user?.role}</span>
+                </div>
+            </div>
+
+            {/* MODULE GRID */}
+            <div className="p-3">
+                <div className="grid grid-cols-2 gap-3">
                     {modules.map(m => {
                         const canSubmit = m.submitRoles.includes(user?.role);
                         return (
                             <div
                                 key={m.id}
                                 onClick={() => handleAction(m)}
-                                className="bg-white rounded-[20px] p-2.5 border border-black/5 shadow-sm active:scale-[0.96] transition-all flex flex-col items-center text-center group cursor-pointer hover:shadow-md"
+                                className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm active:scale-[0.98] transition-all flex flex-col items-center text-center group cursor-pointer"
                             >
-                                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.color} text-white flex items-center justify-center text-lg shadow-lg mb-2 group-hover:rotate-6 transition-transform`}>
+                                <div className={`w-12 h-12 rounded-2xl bg-${m.color}-50 text-${m.color}-600 flex items-center justify-center text-2xl mb-3`}>
                                     {m.icon}
                                 </div>
-                                <h3 className="text-[10px] font-black text-slate-800 leading-tight mb-0.5">{m.label}</h3>
-                                <div className={`text-[7.5px] font-black px-1.5 py-0 rounded-full uppercase tracking-tighter ${canSubmit ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-slate-300'}`}>
-                                    {canSubmit ? 'Submit' : 'View'}
+                                <h3 className="text-xs font-black text-slate-700 uppercase tracking-tight mb-1">{m.label}</h3>
+                                <div className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${canSubmit ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-300'}`}>
+                                    {canSubmit ? 'Truy cập' : 'View Only'}
                                 </div>
                             </div>
                         );
@@ -152,22 +132,11 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
                 </div>
 
                 {sysConfig?.featureFlags?.includes('MODULE_DECISION_ENGINE') && (
-                    <div className="mt-6 bg-slate-900 rounded-[24px] p-4 text-white shadow-xl">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Quy trình V3</span>
-                        </div>
-                        <p className="text-[10px] font-bold leading-relaxed opacity-90">
-                            Báo cáo được quét bởi Decision Engine để tối ưu hóa vận hành thời gian thực.
-                        </p>
+                    <div className="mt-6 p-4 bg-slate-900 rounded-xl text-white shadow-lg text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1 animate-pulse">● Decision Engine Active</p>
+                        <p className="text-[9px] text-slate-400">Dữ liệu được phân tích thời gian thực</p>
                     </div>
                 )}
-            </div>
-
-            <div className="p-6 text-center opacity-20">
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    TMG OPERATION v3.0
-                </p>
             </div>
         </div>
     );

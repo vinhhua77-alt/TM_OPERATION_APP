@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## ARCHITECTURE.md (v2 - Supabase)
 
-**Version**: 4.0  
-**Last Updated**: 2026-01-23  
+**Version**: 5.0 (v3.5 Decision Intelligence)  
+**Last Updated**: 2026-01-25  
 **Status**: Production
 
 ---
@@ -38,6 +38,7 @@
 │  │  - staff.routes.js                                     │ │
 │  │  - dashboard.routes.js                                 │ │
 │  │  - master.routes.js                                    │ │
+- compliance.routes.js                                │ │
 │  └────────────────────────┬───────────────────────────────┘ │
 │                           │                                  │
 │  ┌────────────────────────▼───────────────────────────────┐ │
@@ -53,6 +54,7 @@
 │  │  - ShiftService                                        │ │
 │  │  - LeaderService                                       │ │
 │  │  - StaffService                                        │ │
+- ComplianceService                                    │ │
 │  └────────────────────────┬───────────────────────────────┘ │
 │                           │                                  │
 │  ┌────────────────────────▼───────────────────────────────┐ │
@@ -61,6 +63,7 @@
 │  │  - StaffRepo                                           │ │
 │  │  - ShiftRepo                                           │ │
 │  │  - AuditRepo                                           │ │
+│  │  - ComplianceRepo                                       │ │
 │  │  - EmailService (Nodemailer/SendGrid)                  │ │
 │  │  - Supabase client (service role key)                 │ │
 │  └────────────────────────┬───────────────────────────────┘ │
@@ -106,6 +109,7 @@ The application employs a "Flat Navigation" structure with responsive design pri
 *   **Global AppBar**: Fixed top header containing the Hamburger menu (left) and Notification/Profile (right).
 *   **Sidebar (TopMenu)**: Primary navigation for Desktop. Collapsible accordion menu for efficient space usage.
 *   **Bottom Navigation**: Mobile-only sticky footer providing quick access to core modules (Home, Shift Log, Leader Report).
+*   **Hub & Pillar Navigation**: High-stakes modules (Operations, People, Platform, Entity) are grouped into a central "Settings Hub", providing a unified administrative cockpit while maintaining mobile-first accessibility.
 *   **Breadcrumbs**: Hierarchical context (Home > Module) replacing the need for explicit "Back" buttons.
 *   **Floating Action Button (FAB)**: Context-aware primary actions (e.g., "Add Staff") for mobile efficiency.
 *   **Time Selection UX**: Standardized 30-minute interval selection (e.g., 08:00, 08:30) for all time inputs in reporting modules to ensure data consistency and reduce input errors.
@@ -611,6 +615,8 @@ GitHub Repository
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-25 | **Feature: Compliance & 5S Module** | Implemented state-machine signal flow and operational audits |
+| 2026-01-25 | **UX: Hub & Pillar Architecture** | Redesigned Admin Console into a 4-pillar centralized hub |
 | 2026-01-23 | **Auth: Self-Service Password Reset** | Implemented email-based password recovery flow |
 | 2026-01-23 | **Logic: Staff Activation Sync** | Ensured consistency between status and active flags |
 | 2026-01-23 | **UX: 30-min Time Intervals** | Synced time selection steps across reporting pages |

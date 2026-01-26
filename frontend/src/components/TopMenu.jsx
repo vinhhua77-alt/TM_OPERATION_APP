@@ -16,25 +16,16 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
         setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const handleFeatureLabClick = () => {
-        closeMenu();
-        if (notify) {
-            notify('Tính năng đang được triển khai', 'info');
-        } else {
-            alert('Tính năng đang được triển khai');
-        }
-    };
-
     const closeMenu = () => { onClose(); };
 
-    // --- COMPONENTS ---
+    // --- SUB-COMPONENTS ---
 
     const SectionHeader = ({ label, isOpen, onClick }) => (
         <div
             onClick={onClick}
-            className="flex items-center justify-between px-3 py-1.5 mt-0.5 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-between px-3 py-1 mt-0.5 cursor-pointer group select-none hover:bg-slate-50 transition-colors"
         >
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-slate-600">
+            <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-slate-600">
                 {label}
             </span>
             <span className={`text-[8px] text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
@@ -47,14 +38,14 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
         <div
             onClick={onClick}
             className={`
-                flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all border-l-[3px]
+                flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-all border-l-[3px]
                 ${active ? 'bg-blue-50/50 border-blue-600' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'}
                 ${special ? 'bg-blue-50/20' : ''}
             `}
         >
-            <span className="text-base w-4 text-center">{icon}</span>
+            <span className="text-sm w-4 text-center">{icon}</span>
             <div className="flex-1 flex items-center justify-between">
-                <span className={`text-[10px] font-bold ${active ? 'text-blue-600' : 'text-slate-700'} tracking-tight`}>
+                <span className={`text-[10.5px] font-bold ${active ? 'text-blue-600' : 'text-slate-700'} tracking-tight`}>
                     {label}
                 </span>
                 {badge && (
@@ -73,7 +64,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
             ${showMenu ? 'translate-x-0' : '-translate-x-full'}
         `}>
             {/* 1. HEADER */}
-            <div className="relative bg-blue-600 flex flex-col justify-end p-3 pt-8 border-b border-blue-700 overflow-hidden shrink-0">
+            <div className="relative bg-blue-600 flex flex-col justify-end p-3 pt-6 border-b border-blue-700 overflow-hidden shrink-0">
                 <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white rounded-full opacity-10 blur-xl"></div>
                 <button
                     onClick={closeMenu}
@@ -82,16 +73,16 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                     <span className="text-[10px]">✕</span>
                 </button>
 
-                <div className="relative z-10 flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-base shadow-inner border border-white/30 backdrop-blur-md">
+                <div className="relative z-10 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-black text-sm shadow-inner border border-white/30 backdrop-blur-md">
                         {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                        <div className="text-white font-black text-[12px] leading-tight truncate max-w-[130px] uppercase tracking-tighter">
+                        <div className="text-white font-black text-[11px] leading-tight truncate max-w-[130px] uppercase tracking-tighter">
                             {user?.name || 'Guest'}
                         </div>
                         <div className="flex items-center gap-2 mt-0">
-                            <span className="px-1 py-0 rounded text-[7px] font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 uppercase tracking-widest">
+                            <span className="px-1 py-0 rounded text-[6.5px] font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 uppercase tracking-widest">
                                 {user?.role || 'Guest'}
                             </span>
                         </div>
@@ -101,7 +92,6 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
 
             {/* 2. SCROLLABLE LIST */}
             <div className="flex-1 overflow-y-auto py-1.5 custom-scrollbar">
-
                 <MenuItem
                     icon="🏠"
                     label="Trang chủ"
@@ -124,23 +114,26 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                 {expandedSections.vận_hành && (
                     <div className="animate-in slide-in-from-left-2 duration-200">
                         {sysConfig.featureFlags.includes('MODULE_QAQC_HUB') && (
-                            <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('QAQC_HUB'); }} />
+                            <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('COMPLIANCE_5S_HUB'); }} />
                         )}
                         <MenuItem icon="📝" label="Báo Cáo Hàng Ngày" onClick={() => { closeMenu(); onNavigate('DAILY_HUB'); }} />
                         {sysConfig.featureFlags.includes('MODULE_OPERATION_METRICS') && (
                             <MenuItem icon="📉" label="HỆ THỐNG QA/QC" onClick={() => { closeMenu(); onNavigate('OPERATION_METRICS'); }} />
                         )}
-                        {/* Hidden but kept in code if needed later: REVENUE_CONSOLE */}
                     </div>
                 )}
 
                 {/* --- 3. DASHBOARD --- */}
-                <SectionHeader label="Dashboard 📊" isOpen={expandedSections.dashboard} onClick={() => toggleSection('dashboard')} />
-                {expandedSections.dashboard && (
-                    <div className="animate-in slide-in-from-left-2 duration-200">
-                        <MenuItem icon="📊" label="Dashboard Trung Tâm" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
-                        <MenuItem icon="📈" label="Báo Cáo dữ liệu" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
-                    </div>
+                {['ADMIN', 'IT', 'OPS', 'SM'].includes(user?.role) && (
+                    <>
+                        <SectionHeader label="Dashboard 📊" isOpen={expandedSections.dashboard} onClick={() => toggleSection('dashboard')} />
+                        {expandedSections.dashboard && (
+                            <div className="animate-in slide-in-from-left-2 duration-200">
+                                <MenuItem icon="📊" label="Dashboard Trung Tâm" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
+                                <MenuItem icon="📈" label="Báo Cáo dữ liệu" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* --- 4. QUẢN TRỊ HỆ THỐNG --- */}
@@ -162,11 +155,7 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                         <SectionHeader label="Cấu hình hệ thống" isOpen={expandedSections.cấu_hình} onClick={() => toggleSection('cấu_hình')} />
                         {expandedSections.cấu_hình && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
-                                <MenuItem icon="🏗️" label="Thiết lập cấu hình" onClick={() => { closeMenu(); onNavigate('STORE_SETUP'); }} />
                                 <MenuItem icon="⚙️" label="Admin Console" onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }} />
-                                {['ADMIN', 'IT'].includes(user?.role) && (
-                                    <MenuItem icon="🧪" label="Tính năng Lab" onClick={() => { closeMenu(); onNavigate('LAB_FEATURES'); }} />
-                                )}
                             </div>
                         )}
                     </>
@@ -195,8 +184,6 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
             </div>
         </div>
     );
-
-
 
     return (
         <>

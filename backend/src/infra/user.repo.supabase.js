@@ -2,17 +2,8 @@
  * USER REPOSITORY - SUPABASE VERSION
  * Query user data từ Supabase thay vì Google Sheets
  */
-
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://gsauyvtmaoegggubzuni.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './supabase.client.js';
+import { userCache } from './user.cache.js';
 
 export class UserRepo {
     /**
@@ -46,7 +37,8 @@ export class UserRepo {
                 is_trainee: data.is_trainee || false,
                 trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
-                responsibility: data.responsibility || []
+                responsibility: data.responsibility || [],
+                sub_position: data.sub_position || null
             };
         } catch (error) {
             console.error('UserRepo.getByEmail error:', error);
@@ -88,7 +80,8 @@ export class UserRepo {
                 is_trainee: data.is_trainee || false,
                 trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
-                responsibility: data.responsibility || []
+                responsibility: data.responsibility || [],
+                sub_position: data.sub_position || null
             };
         } catch (error) {
             console.error('UserRepo.getByStaffId error:', error);
@@ -127,7 +120,8 @@ export class UserRepo {
                 is_trainee: data.is_trainee || false,
                 trainee_verified: data.trainee_verified || false,
                 tenant_id: data.tenant_id || null,
-                responsibility: data.responsibility || []
+                responsibility: data.responsibility || [],
+                sub_position: data.sub_position || null
             };
         } catch (error) {
             console.error('UserRepo.getById error:', error);
@@ -187,12 +181,16 @@ export class UserRepo {
     /**
      * Lấy danh sách nhân viên (có limit)
      */
-    static async getList(limit = 10, offset = 0) {
+    static async getList(tenantId = null, limit = 10, offset = 0) {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('staff_master')
                 .select('id, staff_id, staff_name, gmail, role, store_code, active, tenant_id')
                 .range(offset, offset + limit - 1);
+
+            if (tenantId) query = query.eq('tenant_id', tenantId);
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -217,12 +215,19 @@ export class UserRepo {
      */
     static async updateStatus(staffId, active) {
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('staff_master')
                 .update({ active: active, status: active ? 'ACTIVE' : 'INACTIVE' })
-                .eq('staff_id', staffId.toUpperCase());
+                .eq('staff_id', staffId.toUpperCase())
+                .select()
+                .single();
 
             if (error) throw error;
+
+            // Invalidate cache
+            if (data) {
+                userCache.invalidateUser(data.id, data.staff_id);
+            }
 
             return true;
         } catch (error) {
@@ -236,12 +241,19 @@ export class UserRepo {
      */
     static async updatePassword(staffId, passwordHash) {
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('staff_master')
                 .update({ password_hash: passwordHash })
-                .eq('staff_id', staffId.toUpperCase());
+                .eq('staff_id', staffId.toUpperCase())
+                .select()
+                .single();
 
             if (error) throw error;
+
+            // Invalidate cache
+            if (data) {
+                userCache.invalidateUser(data.id, data.staff_id);
+            }
 
             return true;
         } catch (error) {
@@ -253,12 +265,14 @@ export class UserRepo {
     /**
      * Lấy tất cả staff với filters
      */
-    static async getAllStaff(filters = {}) {
+    static async getAllStaff(filters = {}, tenantId = null) {
         try {
             let query = supabase
                 .from('staff_master')
                 .select('*')
                 .order('created_at', { ascending: false });
+
+            if (tenantId) query = query.eq('tenant_id', tenantId);
 
             // Apply filters
             if (filters.store_codes && Array.isArray(filters.store_codes)) {
@@ -307,6 +321,11 @@ export class UserRepo {
 
             if (error) throw error;
 
+            // Invalidate cache for all activated users
+            if (data && data.length > 0) {
+                data.forEach(user => userCache.invalidateUser(user.id, user.staff_id));
+            }
+
             return data || [];
         } catch (error) {
             console.error('UserRepo.bulkActivate error:', error);
@@ -351,6 +370,11 @@ export class UserRepo {
 
             if (error) throw error;
 
+            // Invalidate cache
+            if (data) {
+                userCache.invalidateUser(data.id, data.staff_id);
+            }
+
             return data;
         } catch (error) {
             console.error('UserRepo.updateStaffInfo error:', error);
@@ -361,13 +385,20 @@ export class UserRepo {
     /**
      * Get staff statistics
      */
-    static async getStatistics(storeCode = null) {
+    static async getStatistics(storeCode = null, tenantId = null) {
         try {
             // Base queries
             let totalQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true });
             let activeQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('active', true);
             let pendingQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('status', 'PENDING');
             let traineePendingQuery = supabase.from('staff_master').select('*', { count: 'exact', head: true }).eq('is_trainee', true).eq('trainee_verified', false);
+
+            if (tenantId) {
+                totalQuery = totalQuery.eq('tenant_id', tenantId);
+                activeQuery = activeQuery.eq('tenant_id', tenantId);
+                pendingQuery = pendingQuery.eq('tenant_id', tenantId);
+                traineePendingQuery = traineePendingQuery.eq('tenant_id', tenantId);
+            }
 
             if (storeCode) {
                 totalQuery = totalQuery.eq('store_code', storeCode);
@@ -434,6 +465,59 @@ export class UserRepo {
         } catch (error) {
             console.error('UserRepo.syncStaffStatus error:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Lấy Top nhân viên active dựa trên số ca làm tháng này (Realtime from raw logs)
+     */
+    static async getTopActiveStaff(limit = 10, tenantId = null) {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+
+            // 1. Query RAW SHIFTLOGS directly for accuracy
+            let query = supabase
+                .from('raw_shiftlog')
+                .select('staff_id')
+                .gte('created_at', startOfMonth);
+
+            const { data: logs, error } = await query;
+
+            if (error) throw error;
+
+            if (!logs || logs.length === 0) return [];
+
+            // 2. Count shifts by Staff UUID
+            const staffStats = {};
+            logs.forEach(log => {
+                const sid = log.staff_id;
+                staffStats[sid] = (staffStats[sid] || 0) + 1;
+            });
+
+            // 3. Sort and pick top IDs
+            const sortedIds = Object.entries(staffStats)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, limit)
+                .map(([id]) => id);
+
+            if (sortedIds.length === 0) return [];
+
+            // 4. Fetch staff details
+            const { data: staffData } = await supabase
+                .from('staff_master')
+                .select('id, staff_id, staff_name, gmail, role, store_code')
+                .in('id', sortedIds);
+
+            // 5. Merge and return sorted
+            return staffData.map(s => ({
+                ...s,
+                shift_count: staffStats[s.id] || 0
+            })).sort((a, b) => b.shift_count - a.shift_count);
+
+        } catch (error) {
+            console.error('UserRepo.getTopActiveStaff error:', error);
+            return [];
         }
     }
 }

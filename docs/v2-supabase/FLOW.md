@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## FLOW.md (v2 - Supabase)
 
-**Version**: 4.0  
-**Last Updated**: 2026-01-23  
+**Version**: 5.0 (v3.5 Decision Intelligence)  
+**Last Updated**: 2026-01-25  
 **Status**: Production
 
 ---
@@ -483,6 +483,7 @@ Employee views personal dashboard with monthly statistics, gamification, and rec
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-25 | **Added Compliance Core (v3.5)** | Implemented Time-based Signal Flow and Audit flows |
 | 2026-01-23 | Added FLOW 12: User Password Reset | Support for self-service password recovery |
 | 2026-01-23 | Added FLOW 13: Staff Activation Sync | Maintain consistency between status and active flags |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
@@ -637,7 +638,58 @@ OPS or Admin assigns a list of stores to an Area Manager (AM).
 
 ---
 
-## 16. RELATED DOCUMENTATION
+## 17. FLOW 15 – COMPLIANCE SIGNAL FLOW (TIME-BASED)
+**Version**: 1.0 (2026-01-25)
+
+### 17.1. Business Flow
+Staff members confirm operational readiness for specific areas assigned to their shift time-slot.
+
+### 17.2. Technical Flow
+```
+1. Staff opens Page5SCompliance.jsx (QAQC Hub)
+2. Staff selects Work Zone (FOH/BOH) - Saved to localStorage
+3. Frontend: GET /api/compliance/staff-assignments?storeCode=X&workZone=Y
+4. Backend: ComplianceService.getAssignments()
+   - Determines current Time Slot based on Server Time
+   - Joins compliance_assignments with compliance_areas
+   - Returns list of specific areas to confirm
+5. Staff clicks "READY" or "HAS_ISSUE"
+6. If "HAS_ISSUE": Staff selects reason + captures photo
+7. Frontend: POST /api/compliance/signals { staff_id, area, status, issue_type, note }
+8. Backend: SignalRepo.insert() -> INSERT into compliance_signals
+9. Effect: Real-time ops risk calculated for leader dashboard
+```
+
+### 17.3. Code Mapping
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Frontend | `Page5SCompliance.jsx` | Signal wizard UI |
+| API Client | `compliance.api.js` | Signals API |
+| Controller | `compliance.routes.js` | Route routing |
+| Domain | `compliance.service.js` | Logic & Time-slot calculation |
+| Repository | `compliance.repo.js` | DB INSERT signals |
+
+---
+
+## 18. FLOW 16 – COMPLIANCE AUDIT (5S & HACCP)
+**Version**: 1.0 (2026-01-25)
+
+### 18.1. Business Flow
+Leaders/SM perform official 5S checks and Food Safety (Temp) logs.
+
+### 18.2. Technical Flow
+```
+1. Leader opens Page5SCompliance.jsx -> Selects "Kiểm tra 5S" or "HACCP"
+2. Leader fills digital audit form
+3. Frontend: POST /api/compliance/checks OR /api/compliance/food-safety
+4. Backend: ComplianceService validates input (Temp ranges, Root causes)
+5. Backend: INSERT into compliance_checks or compliance_food_safety
+6. Effect: Operational Fact Tables updated for compliance scoring
+```
+
+---
+
+## 19. RELATED DOCUMENTATION
 
 - [ANTIGRAVITY_RULES.md](./ANTIGRAVITY_RULES.md) - Rules 02, 03, 09
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture

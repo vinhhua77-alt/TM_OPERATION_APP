@@ -2,14 +2,21 @@
  * ACCESS REPOSITORY
  * Handles database operations for Feature Flags and Permissions
  */
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+import { supabase } from './supabase.client.js';
 
 export class AccessRepo {
+    /**
+     * Get all available tenants
+     */
+    static async getAllTenants() {
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .order('tenant_name');
+        if (error) throw error;
+        return data;
+    }
+
     /**
      * Get all feature flags
      */
@@ -134,27 +141,63 @@ export class AccessRepo {
     /**
      * Get counts for system summary dashboard
      */
-    static async getSystemSummary() {
-        const fetchCount = async (table) => {
-            const { count, error } = await supabase
-                .from(table)
-                .select('*', { count: 'exact', head: true });
-            if (error) return 0;
-            return count;
-        };
+    static async getSystemSummary(tenantId = null) {
+        if (!tenantId || tenantId === 'ALL') {
+            const fetchCount = async (table) => {
+                const { count, error } = await supabase
+                    .from(table)
+                    .select('*', { count: 'exact', head: true });
+                if (error) return 0;
+                return count;
+            };
 
-        const [tenants, brands, stores, staff] = await Promise.all([
-            fetchCount('tenants'),
-            fetchCount('brands'),
-            fetchCount('store_list'),
-            fetchCount('staff_master')
-        ]);
+            const [tenantsCount, brandsCount, storesCount, staffCount] = await Promise.all([
+                fetchCount('tenants'),
+                fetchCount('brands'),
+                fetchCount('store_list'),
+                fetchCount('staff_master')
+            ]);
+
+            return {
+                tenants: tenantsCount,
+                brands: brandsCount,
+                stores: storesCount,
+                staff: staffCount
+            };
+        }
+
+        // Logic for specific tenant (Legal Entity short code like 'TMG', 'GTY')
+        // 1. Get Brand codes for this tenant
+        const { data: brands } = await supabase.from('brands').select('brand_code').eq('tenant_id', tenantId);
+        const brandCodes = brands?.map(b => b.brand_code) || [];
+
+        // 2. Count Stores linked to these brands OR matching store_code
+        let orParts = [];
+        if (brandCodes.length > 0) {
+            orParts.push(`brand_group_code.in.(${brandCodes.map(c => `"${c}"`).join(',')})`);
+        }
+        orParts.push(`store_code.eq."${tenantId}"`);
+
+        const { data: stores, count: storesCount } = await supabase.from('store_list')
+            .select('store_code', { count: 'exact' })
+            .or(orParts.join(','));
+
+        const storeCodes = stores?.map(s => s.store_code) || [];
+
+        // 3. Count Staff linked to these stores
+        let staffCount = 0;
+        if (storeCodes.length > 0) {
+            const { count } = await supabase.from('staff_master')
+                .select('*', { count: 'exact', head: true })
+                .in('store_code', storeCodes);
+            staffCount = count || 0;
+        }
 
         return {
-            tenants,
-            brands,
-            stores,
-            staff
+            tenants: 1,
+            brands: brandCodes.length,
+            stores: storesCount || 0,
+            staff: staffCount
         };
     }
 
@@ -167,6 +210,39 @@ export class AccessRepo {
             .select('*')
             .order('created_at', { ascending: false })
             .limit(limit);
+
+        if (error) throw error;
+        return data;
+    }
+
+    /**
+     * DASHBOARD CUSTOMIZATION
+     */
+    static async getDashboardConfig(userId) {
+        const { data, error } = await supabase
+            .from('user_dashboard_configs')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error && error.code === 'PGRST116') return null; // Not found
+        if (error) throw error;
+        return data;
+    }
+
+    static async saveDashboardConfig(userId, tenantId, config) {
+        const { grid_layout, custom_scripts } = config;
+        const { data, error } = await supabase
+            .from('user_dashboard_configs')
+            .upsert({
+                user_id: userId,
+                tenant_id: tenantId,
+                grid_layout,
+                custom_scripts,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' })
+            .select()
+            .single();
 
         if (error) throw error;
         return data;

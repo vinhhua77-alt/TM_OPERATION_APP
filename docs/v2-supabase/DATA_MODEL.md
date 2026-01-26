@@ -1,8 +1,8 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## DATA_MODEL.md (v2 - Supabase Postgres)
 
-**Version**: 4.0  
-**Last Updated**: 2026-01-23  
+**Version**: 5.0 (v3.5 Decision Intelligence)  
+**Last Updated**: 2026-01-25  
 **Status**: Production
 
 ---
@@ -37,6 +37,9 @@ The data model follows these **immutable principles**:
 - `md_observed_issue`
 - `md_coaching_topic`
 - `md_next_shift_risk`
+- `compliance_areas`
+- `compliance_slots`
+- `compliance_assignments`
 
 ### 2.2. RAW DATA (Append-Only)
 
@@ -45,6 +48,9 @@ The data model follows these **immutable principles**:
 - `raw_shiftlog`
 - `raw_lead_shift`
 - `raw_sm_action`
+- `compliance_signals`
+- `compliance_checks`
+- `compliance_food_safety`
 
 ### 2.3. SYSTEM DATA
 
@@ -194,6 +200,41 @@ The data model follows these **immutable principles**:
 
 ---
 
+### 3.8. compliance_areas (MASTER - 5S)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL (PK) | AutoID |
+| tenant_id | TEXT | FK → tenants |
+| store_code | TEXT | FK → store_list |
+| area_id | TEXT | Unique code (e.g. FOH-01) |
+| area_name | TEXT | Display name |
+| work_zone | TEXT | FOH or BOH |
+| active | BOOLEAN | Status |
+
+### 3.9. compliance_slots (MASTER - 5S)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL (PK) | AutoID |
+| slot_name | TEXT | Name (e.g. Ca Sáng) |
+| start_time | TIME | Logic start |
+| end_time | TIME | Logic end |
+| active | BOOLEAN | Status |
+
+### 3.10. compliance_assignments (MASTER - 5S Matrix)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL (PK) | AutoID |
+| tenant_id | TEXT | FK |
+| store_code | TEXT | FK |
+| work_zone | TEXT | FOH/BOH |
+| time_slot_id | INT | FK → compliance_slots |
+| area_id | INT | FK → compliance_areas |
+
+---
+
 ## 4. RAW DATA SCHEMAS (APPEND-ONLY)
 
 ### 4.1. raw_shiftlog (v3.0 - Updated 2026-01-22)
@@ -297,6 +338,55 @@ CREATE INDEX idx_raw_shiftlog_is_valid ON raw_shiftlog(is_valid);
 | action_type | TEXT | Action type (ACK, FIX, REOPEN, ESCALATE, IGNORE) |
 | action_data | TEXT | JSON payload with action details |
 | created_at | TIMESTAMPTZ | Action timestamp |
+
+---
+
+### 4.4. compliance_signals (RAW - 5S)
+
+**Purpose**: Staff-level 5S confirmations (append-only)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGSERIAL (PK) | AutoID |
+| tenant_id | TEXT | Org ID |
+| store_code | TEXT | Store ID |
+| staff_id | TEXT | Submitting staff |
+| signal_type | TEXT | HANDOVER, START_PEAK, etc. |
+| area | TEXT | Targeted area |
+| status | TEXT | READY or HAS_ISSUE |
+| issue_type | TEXT | Reason if HAS_ISSUE |
+| note | TEXT | Details |
+| photo_url | TEXT | Evidence |
+| created_at | TIMESTAMPTZ | Time of signal (Logic trigger) |
+
+### 4.5. compliance_checks (RAW - 5S Audit)
+
+**Purpose**: Leader-level 5S audits (append-only)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGSERIAL (PK) | AutoID |
+| leader_id | TEXT | Auditing leader |
+| area | TEXT | Targeted area |
+| result | TEXT | PASS or FAIL |
+| root_cause | TEXT | PEPOLE, PROCESS, EQUIPMENT |
+| action_taken | TEXT | FIXED, PLAN, IGNORE |
+| created_at | TIMESTAMPTZ | Audit time |
+
+### 4.6. compliance_food_safety (RAW - HACCP)
+
+**Purpose**: Food safety logs (append-only)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGSERIAL (PK) | AutoID |
+| leader_id | TEXT | Submitting leader |
+| log_moment | TEXT | PEAK_START, CLOSING |
+| device_type | TEXT | CHILLER, FREEZER, HOT_HOLD |
+| temperature | NUMERIC | Actual degree Celsius |
+| threshold_min | NUMERIC | Lower bound |
+| threshold_max | NUMERIC | Upper bound |
+| created_at | TIMESTAMPTZ | Log time |
 
 **action_data JSON structure** (example):
 ```json
@@ -446,6 +536,7 @@ role_master
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-25 | **Added Compliance Core (v3.5)** | Implemented high-stakes operational tables for 5S, HACCP, and Signal Flow |
 | 2026-01-23 | Moved audit_logs to Active tables | Implemented for security & traceability |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + performance optimizations |
 | 2026-01-22 | Updated raw_shiftlog schema | Proper data types (BOOLEAN, NUMERIC, JSONB) |

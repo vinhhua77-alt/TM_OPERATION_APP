@@ -30,7 +30,7 @@ export class StaffService {
         }
 
         try {
-            const staff = await UserRepo.getAllStaff(filters);
+            const staff = await UserRepo.getAllStaff(filters, currentUser.tenant_id);
             return staff;
         } catch (error) {
             console.error('StaffService.getAllStaff error:', error);
@@ -50,7 +50,7 @@ export class StaffService {
         try {
             // SM gets stats filtered by their store
             const storeCode = currentUser.role === 'SM' ? (currentUser.storeCode || currentUser.store_code) : null;
-            const stats = await UserRepo.getStatistics(storeCode);
+            const stats = await UserRepo.getStatistics(storeCode, currentUser.tenant_id);
             return stats;
         } catch (error) {
             console.error('StaffService.getStatistics error:', error);
@@ -210,5 +210,17 @@ export class StaffService {
             throw new Error('Unauthorized: Only Admin/OPS can sync data');
         }
         return await UserRepo.syncStaffStatus();
+    }
+    /**
+     * Get top active staff (by shifts)
+     */
+    static async getTopActiveStaff(currentUser) {
+        // Permission check
+        const authorizedRoles = ['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'AM'];
+        if (!authorizedRoles.includes(currentUser.role)) {
+            throw new Error('Unauthorized');
+        }
+
+        return await UserRepo.getTopActiveStaff(10, currentUser.tenant_id);
     }
 }

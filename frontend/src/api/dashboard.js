@@ -11,8 +11,13 @@ export const dashboardAPI = {
      * @param {string} staffId - Staff ID
      * @param {string} month - Optional month in YYYY-MM format
      */
-    async getDashboard(staffId, month = null) {
-        const params = month ? `?month=${month}` : '';
+    async getDashboard(staffId, periodConfig = null) {
+        let params = '';
+        if (typeof periodConfig === 'object' && periodConfig !== null) {
+            params = `?startDate=${periodConfig.startDate}&endDate=${periodConfig.endDate}`;
+        } else if (periodConfig) {
+            params = `?month=${periodConfig}`;
+        }
         return await apiClient.get(`/dashboard/${staffId}${params}`);
     },
 
@@ -37,5 +42,23 @@ export const dashboardAPI = {
         let qs = `?period=${period}`;
         if (date) qs += `&date=${date}`;
         return await apiClient.get(`/dashboard/workload/${storeId}${qs}`);
+    },
+
+    async getCustomConfig() {
+        return await apiClient.get('/dashboard/custom/config');
+    },
+
+    async saveCustomConfig(config) {
+        return await apiClient.post('/dashboard/custom/config', config);
+    },
+
+    async getLeaderAnalytics(staffId, periodConfig, storeCode) {
+        const query = new URLSearchParams({
+            userId: staffId,
+            startDate: periodConfig.startDate,
+            endDate: periodConfig.endDate,
+            storeCode: storeCode || 'ALL'
+        }).toString();
+        return await apiClient.get(`/dashboard/leader/analytics?${query}`);
     }
 };

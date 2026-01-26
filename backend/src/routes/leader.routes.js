@@ -20,13 +20,33 @@ router.post('/submit', async (req, res, next) => {
         const payload = req.body;
 
         // Sanitize logging
-        console.log(`📝 Received LEADER REPORT: Store=${payload.store_id}, Area=${payload.area_code}, Leader=${payload.leaderName}`);
+        console.log(`📝 Received LEADER REPORT: Payload keys=`, Object.keys(payload));
+
+        let storeCodeToSave = payload.store_id;
+        // --- STANDARDIZATION: STORE CODE ---
+        // If payload sends UUID, resolve to Code
+        if (storeCodeToSave && storeCodeToSave.length > 30) {
+            const { data: store } = await supabase
+                .from('master_store_list')
+                .select('store_code')
+                .eq('id', storeCodeToSave)
+                .single();
+            if (store) storeCodeToSave = store.store_code;
+        }
+
+        console.log(`Payload Data (Subset): Store=${storeCodeToSave} (Raw: ${payload.store_id}), Area=${payload.area_code}, Leader=${payload.leaderName}, ID=${payload.leaderId}`);
 
         // Validation (Basic)
-        if (!payload.store_id || !payload.area_code) {
+        if (!storeCodeToSave || !payload.area_code) {
+            const missing = [];
+            if (!storeCodeToSave) missing.push(`store_id (Got: ${payload.store_id})`);
+            if (!payload.area_code) missing.push('area_code');
+
+            console.warn(`❌ Leader Report Rejected: Missing fields: ${missing.join(', ')}`);
+
             return res.status(400).json({
                 success: false,
-                message: 'Thiếu thông tin bắt buộc (Chi nhánh, Khu vực)'
+                message: `Thiếu thông tin bắt buộc: ${missing.join(', ')}`
             });
         }
 
@@ -41,7 +61,7 @@ router.post('/submit', async (req, res, next) => {
                 {
                     leader_id: payload.leaderId,
                     leader_name: payload.leaderName,
-                    store_code: payload.store_id, // Note: frontend sends store_id which maps to store_code
+                    store_code: storeCodeToSave, // Use Resolved Code
                     area_code: payload.area_code,
                     shift_start: shiftStart,
                     shift_end: shiftEnd,

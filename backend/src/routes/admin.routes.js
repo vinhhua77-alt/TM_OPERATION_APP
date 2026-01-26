@@ -30,12 +30,26 @@ router.get('/console', authenticateToken, requireAdminOrIT, async (req, res, nex
 });
 
 /**
+ * GET /api/admin/tenants
+ * Get list of all tenants
+ */
+router.get('/tenants', authenticateToken, requireAdminOrIT, async (req, res, next) => {
+    try {
+        const data = await AccessService.getTenants();
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * GET /api/admin/summary
  * Get system-wide counts (Tenants, Brands, Stores, Staff)
  */
 router.get('/summary', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
-        const data = await AccessService.getSystemSummary();
+        const { tenantId } = req.query;
+        const data = await AccessService.getSystemSummary(tenantId);
         res.json({ success: true, data });
     } catch (error) {
         next(error);
@@ -57,14 +71,34 @@ router.post('/config', authenticateToken, requireAdminOrIT, async (req, res, nex
     }
 });
 
-/**
- * GET /api/admin/audit-logs
- * Get system audit logs
- */
 router.get('/audit-logs', authenticateToken, requireAdminOrIT, async (req, res, next) => {
     try {
         const data = await AccessService.getAuditLogs();
         res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * GET /api/admin/dashboard-config
+ */
+router.get('/dashboard-config', authenticateToken, async (req, res, next) => {
+    try {
+        const data = await AccessService.getDashboardConfig(req.userId);
+        res.json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/dashboard-config
+ */
+router.post('/dashboard-config', authenticateToken, async (req, res, next) => {
+    try {
+        const result = await AccessService.saveDashboardConfig(req.userId, req.tenantId, req.body);
+        res.json({ success: true, data: result });
     } catch (error) {
         next(error);
     }

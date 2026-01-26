@@ -149,19 +149,27 @@ class AnalyticsService {
             // 5. Lưu Staff Metrics
             for (const staffId in staffDataMap) {
                 const st = staffDataMap[staffId];
-                // Try to ensure staff_id is UUID
                 let staffUuid = staffId;
                 if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(staffId)) {
-                    // Skip or log if not UUID? For safety, we only proceed if UUID
                     continue;
                 }
+
+                // Calculate averages for this staff
+                const avgStaffChecklist = st.checklistSum / (st.totalShifts || 1);
+                const avgStaffMood = st.moodSum / (st.totalShifts || 1);
 
                 await supabase.from('agg_daily_staff_metrics').upsert({
                     report_date: dateStr,
                     staff_id: staffUuid,
                     store_id: st.storeUuid,
                     work_hours: parseFloat(st.totalHours.toFixed(1)),
-                    extended_metrics: { total_shifts: st.totalShifts }
+                    checklist_score: parseFloat(avgStaffChecklist.toFixed(2)),
+                    mood_score: parseFloat(avgStaffMood.toFixed(1)),
+                    extended_metrics: {
+                        total_shifts: st.totalShifts,
+                        avg_checklist: avgStaffChecklist,
+                        avg_mood: avgStaffMood
+                    }
                 }, { onConflict: 'report_date, staff_id' });
             }
 
@@ -178,14 +186,19 @@ class AnalyticsService {
      * Get aggregated metrics for a store within a date range
      * Supports storeId = 'ALL' for chain-wide analytics
      */
-    async getStoreMetrics(storeId, startDate, endDate) {
+    async getStoreMetrics(storeId, startDate, endDate, tenantId = null) {
         try {
             let query = supabase
                 .from('agg_daily_store_metrics')
-                .select('*')
+                .select('*, store_list(id, store_code, tenant_id)')
                 .gte('report_date', startDate)
                 .lte('report_date', endDate)
                 .order('report_date', { ascending: true });
+
+            // ENFORCE TENANT FILTER
+            if (tenantId && tenantId !== 'ALL') {
+                query = query.filter('store_list.tenant_id', 'eq', tenantId);
+            }
 
             // Filter by store if not ALL
             if (storeId && storeId !== 'ALL') {
@@ -253,13 +266,17 @@ class AnalyticsService {
     /**
      * Get top performing staff based on aggregated metrics
      */
-    async getTopStaff(storeId, startDate, endDate, limit = 5) {
+    async getTopStaff(storeId, startDate, endDate, tenantId = null, limit = 5) {
         try {
             let query = supabase
                 .from('agg_daily_staff_metrics')
-                .select('*, staff_master(fullname, staff_id_code)')
+                .select('*, staff_master(fullname, staff_id_code, store_code, tenant_id)')
                 .gte('report_date', startDate)
                 .lte('report_date', endDate);
+
+            if (tenantId && tenantId !== 'ALL') {
+                query = query.filter('staff_master.tenant_id', 'eq', tenantId);
+            }
 
             if (storeId && storeId !== 'ALL') {
                 query = query.eq('store_id', storeId);

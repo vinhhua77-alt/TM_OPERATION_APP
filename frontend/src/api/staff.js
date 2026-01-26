@@ -57,5 +57,10 @@ export const staffAPI = {
         async syncStatus() {
                 const response = await apiClient.post('/staff/maintenance/sync-status');
                 return response;
+        },
+
+        async getTopActiveStaff() {
+                const response = await apiClient.get('/staff/top-active');
+                return response;
         }
 };

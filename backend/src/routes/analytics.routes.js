@@ -21,7 +21,7 @@ router.get('/store-metrics', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), asyn
         const { storeId, startDate, endDate } = req.query;
         if (!storeId || !startDate || !endDate) return res.status(400).json({ success: false, message: 'Missing params' });
 
-        const result = await analyticsService.getStoreMetrics(storeId, startDate, endDate);
+        const result = await analyticsService.getStoreMetrics(storeId, startDate, endDate, req.tenantId);
         res.json(result);
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });
@@ -34,7 +34,7 @@ router.get('/top-staff', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), async (r
         const { storeId, startDate, endDate, limit } = req.query;
         if (!storeId || !startDate || !endDate) return res.status(400).json({ success: false, message: 'Missing params' });
 
-        const result = await analyticsService.getTopStaff(storeId, startDate, endDate, limit);
+        const result = await analyticsService.getTopStaff(storeId, startDate, endDate, req.tenantId, limit);
         res.json(result);
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });

@@ -3,6 +3,13 @@ import { masterAPI } from '../api/master';
 import { leaderAPI } from '../api/leader';
 
 const PageLeaderReport = ({ user, onBack, onNavigate }) => {
+    // 0. SAFE USER DATA (NORMALIZED)
+    const safeUser = useMemo(() => ({
+        id: user?.id || user?.sub,
+        name: user?.name || user?.staff_name || 'N/A',
+        storeCode: user?.storeCode || user?.store_code || ''
+    }), [user]);
+
     // 1. MASTER DATA STATE
     const [master, setMaster] = useState({
         checklist: [], incidents: [], staff: [], areas: [], shifts: [], stores: [],
@@ -10,9 +17,8 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
     });
 
     // 2. FORM STATE
-    // 2. FORM STATE
     const [formData, setFormData] = useState({
-        store_id: user?.storeCode || user?.store_code || '',
+        store_id: safeUser.storeCode,
         area_code: '',
         startH: '',
         startM: '00',
@@ -31,6 +37,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
         nhac_topic: '',
         next_shift_risk: '',
         next_shift_note: '',
+        feedback_content: '', // New field for user feedback
         confirm_all: false,
         shiftErrorReason: '',
         confirmWrongShift: false,
@@ -87,7 +94,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
         const startTotal = parseInt(formData.startH) * 60 + parseInt(formData.startM || 0);
         const endTotal = parseInt(formData.endH) * 60 + parseInt(formData.endM || 0);
 
-        if (endTotal === startTotal) return { type: 'error', text: '⚠️ GIỜ RA PHẢI KHÁC GIỜ VÀO' };
+        if (endTotal === startTotal) return { type: 'error', text: 'INVALID TIME' };
 
         let duration = (endTotal - startTotal) / 60;
         if (duration < 0) duration += 24;
@@ -97,9 +104,9 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
 
         const match = master.shifts.find(s => s.start === sApp && s.end === eApp);
 
-        if (match) return { type: 'ok', text: `✔️ KHỚP CA: ${match.name}` };
+        if (match) return { type: 'ok', text: `SHIFT: ${match.name}` };
 
-        return { type: 'warning', text: `⚠️ CA KHÔNG CÓ TRONG HỆ THỐNG (${duration.toFixed(1)}H).`, showConfirm: true };
+        return { type: 'warning', text: `CUSTOM SHIFT (${duration.toFixed(1)}H)`, showConfirm: true };
     }, [formData.startH, formData.startM, formData.endH, formData.endM, master.shifts]);
 
     const hasIncidentTrigger = useMemo(() => {
@@ -132,7 +139,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
 
     const handleSubmit = async () => {
         if (!isReadyToSubmit) {
-            setError("VUI LÒNG HOÀN TẤT CHECKLIST VÀ CÁC MỤC BẮT BUỘC!");
+            setError("MISSING REQUIRED FIELDS");
             return;
         }
 
@@ -140,271 +147,258 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
         try {
             const payload = {
                 ...formData,
-                leaderId: user?.id,
-                leaderName: user?.name
+                leaderId: safeUser.id,
+                leaderName: safeUser.name
             };
 
             const res = await leaderAPI.submitReport(payload);
 
             if (res.success) {
-                // GenZ motivational messages
-                const messages = [
-                    "🎉 XONG RỒI! Anh/chị là LEADER xuất sắc nhất hôm nay! 💪",
-                    "🔥 CHỐT ĐƠN! Báo cáo của anh/chị quá đỉnh! Keep it up! 🚀",
-                    "✨ PERFECT! Team đang tự hào về anh/chị đấy! 🌟",
-                    "💯 DONE! Anh/chị vừa level up kỹ năng quản lý! 📈",
-                    "🎯 HOÀN THÀNH! Anh/chị là role model của team! 👑",
-                    "⚡ NHANH NHƯ CHỚP! Báo cáo đã được ghi nhận! 💪",
-                    "🌈 TUYỆT VỜI! Anh/chị làm việc quá chuyên nghiệp! 🎊",
-                    "🚀 BOOM! Một ngày làm việc thành công nữa! Let's go! 🔥"
-                ];
-                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-                alert(randomMessage);
+                alert("REPORT SUBMITTED SUCCESSFULLY");
                 onBack();
             } else {
-                setError("❌ LỖI: " + (res.message || "Unknown error"));
+                setError("SUBMIT ERROR: " + (res.message || "Unknown error"));
             }
         } catch (e) {
-            console.error(e);
-            setError("Lỗi kết nối server");
+            console.error("Submit Error:", e);
+            const msg = e.message || "Server Error";
+            setError(`ERROR: ${msg}`);
         } finally {
             setSubmitting(false);
         }
     };
 
-    // REMOVED BLOCKING LOADING SCREEN
-    // if (loading) return <div className="p-4 text-center">Đang tải dữ liệu...</div>;
+    // --- MINIMALIST COMPONENTS ---
+    const SectionHeader = ({ title }) => (
+        <div className="flex items-center gap-2 mb-2 px-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</span>
+            <div className="h-px bg-slate-100 flex-1"></div>
+        </div>
+    );
+
+    const MinimalSelect = ({ value, onChange, options, placeholder, className = "" }) => (
+        <select
+            className={`w-full bg-white border border-slate-200 text-[10px] font-bold text-slate-700 p-2 rounded outline-none focus:border-black transition-colors ${className}`}
+            value={value}
+            onChange={onChange}
+        >
+            <option value="">{placeholder}</option>
+            {options}
+        </select>
+    );
+
+    const MinimalInput = ({ value, onChange, placeholder }) => (
+        <input
+            className="w-full bg-white border border-slate-200 text-[10px] font-bold text-slate-700 p-2 rounded outline-none focus:border-black transition-colors placeholder-slate-300"
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+        />
+    );
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10">
-            {/* LEADER HEADER */}
-            <div className={`shrink-0 bg-gradient-to-br from-emerald-600 to-teal-700 p-5 pb-10 text-white relative overflow-hidden shadow-lg transition-all duration-1000`}>
-                <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/20 hover:bg-white/30 text-white text-[7.5px] font-bold px-2 py-0.5 rounded-full transition-all backdrop-blur-md border border-white/5 uppercase tracking-tighter mb-2 active:scale-95">
-                        ← Trở về
-                    </button>
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-2xl shadow-xl leading-none">
-                            📋
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-black uppercase tracking-tight leading-none mb-0">LEADER LOG</h1>
-                            <p className="text-[8px] font-bold opacity-80 uppercase tracking-widest">
-                                {user?.name}
-                            </p>
-                        </div>
+        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10 animate-fade-in">
+            {/* MINIMAL HEADER */}
+            <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+                <div className="flex items-center gap-2">
+                    <button onClick={onBack} className="text-xl text-slate-400 hover:text-black transition-colors">←</button>
+                    <div>
+                        <h1 className="text-[11px] font-black uppercase tracking-tighter text-slate-800 leading-none">Leader Report</h1>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{safeUser.name}</p>
                     </div>
                 </div>
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
-                <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-black/5 rounded-full blur-[60px]"></div>
+                <div className="text-[9px] font-mono font-bold text-slate-300">{new Date().toLocaleDateString('vi-VN')}</div>
             </div>
 
             {/* FORM AREA */}
-            <div className="flex-1 px-4 -mt-6 relative z-20 space-y-4">
+            <div className="flex-1 px-4 py-4 max-w-lg mx-auto w-full space-y-5">
 
-                {/* 1. STORE & AREA CARD */}
-                <div className="bg-white p-3 rounded-[24px] shadow-sm border border-slate-100 space-y-2">
-                    <div className="flex items-center gap-2 mb-0">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Chi nhánh & Khu vực</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <select
-                            className="bg-slate-50 border-none text-[10px] font-black text-slate-700 p-2 rounded-xl focus:ring-2 ring-emerald-500/20"
+                {/* 1. LOCATION & TIME */}
+                <div className="space-y-4">
+                    <SectionHeader title="Location & Time" />
+                    <div className="grid grid-cols-2 gap-3">
+                        <MinimalSelect
                             value={formData.store_id}
                             onChange={(e) => handleInputChange('store_id', e.target.value)}
-                        >
-                            <option value="">-- CHI NHÁNH --</option>
-                            {master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.name || s.store_name}</option>)}
-                        </select>
-
-                        <select
-                            className="bg-slate-50 border-none text-[10px] font-black text-slate-700 p-2 rounded-xl focus:ring-2 ring-emerald-500/20"
+                            placeholder="SELECT STORE"
+                            options={master.stores?.map(s => <option key={s.store_code || s.id} value={s.store_code || s.id}>{s.name || s.store_name}</option>)}
+                        />
+                        <MinimalSelect
                             value={formData.area_code}
                             onChange={(e) => handleInputChange('area_code', e.target.value)}
-                        >
-                            <option value="">-- KHU VỰC --</option>
-                            {master.areas?.map(a => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                    </div>
-                </div>
-
-                {/* 2. TIME CARD */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thời gian ca làm</span>
+                            placeholder="SELECT AREA"
+                            options={master.areas?.map(a => <option key={a} value={a}>{a}</option>)}
+                        />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[8px] font-black text-slate-400 ml-1">GIỜ VÀO</label>
-                            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
-                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)}>
-                                    <option value="">HH</option>
-                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                                </select>
-                                <span className="font-black text-slate-300">:</span>
-                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.startM || '00'} onChange={(e) => handleInputChange('startM', e.target.value)}>
-                                    <option value="00">00</option>
-                                    <option value="30">30</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[8px] font-black text-slate-400 ml-1">GIỜ RA</label>
-                            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
-                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)}>
-                                    <option value="">HH</option>
-                                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)}
-                                </select>
-                                <span className="font-black text-slate-300">:</span>
-                                <select className="flex-1 bg-transparent border-none text-[12px] font-black text-slate-700 p-0 focus:ring-0 text-center" value={formData.endM || '00'} onChange={(e) => handleInputChange('endM', e.target.value)}>
-                                    <option value="00">00</option>
-                                    <option value="30">30</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {shiftStatus && (
-                        <div className={`mt-3 p-2 rounded-xl text-[9px] font-black text-center ${shiftStatus.type === 'ok' ? 'bg-emerald-50 text-emerald-600' : (shiftStatus.type === 'error' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600')}`}>
-                            {shiftStatus.text}
-                            {shiftStatus.type === 'warning' && (
-                                <div className="mt-2 space-y-2">
-                                    <label className="flex items-center justify-center gap-2 cursor-pointer">
-                                        <input type="checkbox" className="rounded-md border-amber-300" checked={formData.confirmWrongShift} onChange={(e) => handleInputChange('confirmWrongShift', e.target.checked)} />
-                                        <span>XÁC NHẬN GIỜ THỰC TẾ</span>
-                                    </label>
-                                    {formData.confirmWrongShift && (
-                                        <select className="w-full bg-white border-none text-[9px] p-1.5 rounded-lg shadow-inner mt-1" value={formData.shiftErrorReason} onChange={(e) => handleInputChange('shiftErrorReason', e.target.value)}>
-                                            <option value="">-- CHỌN LÝ DO --</option>
-                                            <option value="ĐỔI CA">ĐỔI CA</option><option value="ĐI TRỄ">ĐI TRỄ</option><option value="VỀ SỚM">VỀ SỚM</option><option value="TĂNG CA">TĂNG CA</option>
-                                        </select>
-                                    )}
+                    <div className="bg-white border border-slate-200 rounded p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex-1">
+                                <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">Start Time</label>
+                                <div className="flex gap-1">
+                                    <MinimalSelect value={formData.startH} onChange={(e) => handleInputChange('startH', e.target.value)} placeholder="HH" options={Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)} />
+                                    <MinimalSelect value={formData.startM || '00'} onChange={(e) => handleInputChange('startM', e.target.value)} placeholder="MM" options={<><option value="00">00</option><option value="30">30</option></>} />
                                 </div>
-                            )}
+                            </div>
+                            <div className="text-slate-300 font-black">→</div>
+                            <div className="flex-1">
+                                <label className="text-[8px] font-black text-slate-400 uppercase mb-1 block">End Time</label>
+                                <div className="flex gap-1">
+                                    <MinimalSelect value={formData.endH} onChange={(e) => handleInputChange('endH', e.target.value)} placeholder="HH" options={Array.from({ length: 24 }).map((_, i) => <option key={i} value={i.toString().padStart(2, '0')}>{i.toString().padStart(2, '0')}</option>)} />
+                                    <MinimalSelect value={formData.endM || '00'} onChange={(e) => handleInputChange('endM', e.target.value)} placeholder="MM" options={<><option value="00">00</option><option value="30">30</option></>} />
+                                </div>
+                            </div>
                         </div>
-                    )}
+
+                        {(shiftStatus.type === 'ok' || shiftStatus.type === 'warning') && (
+                            <div className={`text-[10px] font-mono font-bold uppercase p-2 bg-slate-50 border border-slate-100 rounded text-center ${shiftStatus.type === 'warning' ? 'text-amber-500' : 'text-emerald-600'}`}>
+                                {shiftStatus.text}
+                            </div>
+                        )}
+
+                        {shiftStatus.type === 'warning' && (
+                            <div className="mt-2 pt-2 border-t border-slate-100">
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                    <input type="checkbox" className="accent-black w-3 h-3" checked={formData.confirmWrongShift} onChange={(e) => handleInputChange('confirmWrongShift', e.target.checked)} />
+                                    <span className="text-[9px] font-bold text-amber-600 uppercase">Confirm Custom Shift</span>
+                                </label>
+                                {formData.confirmWrongShift && (
+                                    <MinimalSelect
+                                        value={formData.shiftErrorReason}
+                                        onChange={(e) => handleInputChange('shiftErrorReason', e.target.value)}
+                                        placeholder="REASON FOR MISMATCH"
+                                        options={<><option value="DOI_CA">Swapped Shift</option><option value="TANG_CA">Overtime</option><option value="COVER">Cover Shift</option></>}
+                                    />
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* 3. OPERATIONAL STATUS */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái vận hành</span>
-                    </div>
-                    <div className="flex gap-2">
-                        {[{ id: 'has_peak', l: 'CA ĐÔNG', icon: '🔥' }, { id: 'has_out_of_stock', l: 'HẾT MÓN', icon: '📦' }, { id: 'has_customer_issue', l: 'PHÀN NÀN', icon: '👤' }].map(b => (
+                {/* 2. OPS HEALTH */}
+                <div>
+                    <SectionHeader title="Operational Health" />
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                        {[{ id: 'has_peak', l: 'PEAK HOUR' }, { id: 'has_out_of_stock', l: 'OUT OF STOCK' }, { id: 'has_customer_issue', l: 'USER ISSUE' }].map(b => (
                             <button
                                 key={b.id}
                                 onClick={() => handleInputChange(b.id, !formData[b.id])}
-                                className={`flex-1 py-2.5 rounded-xl text-[9px] font-black transition-all active:scale-90 border shadow-sm ${formData[b.id] ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                                className={`py-2 px-1 rounded border text-[9px] font-black uppercase transition-all ${formData[b.id] ? 'bg-black text-white border-black' : 'bg-white text-slate-300 border-slate-200 hover:border-slate-300'}`}
                             >
-                                <div className="text-xs mb-0.5">{b.icon}</div>
                                 {b.l}
                             </button>
                         ))}
                     </div>
 
-                    <div className="mt-4 space-y-0">
+                    <div className="bg-white border border-slate-200 rounded divide-y divide-slate-100">
                         {master.leaderChecklist?.map(item => (
-                            <div key={item} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                                <span className="text-[10.5px] font-bold text-slate-600 pr-4 leading-tight">{item}</span>
-                                <div className="flex bg-slate-50 p-1 rounded-xl gap-1 border border-slate-100 shadow-inner shrink-0">
-                                    <button onClick={() => toggleChecklist(item, true)} className={`px-4 py-1.5 rounded-lg transition-all ${formData.checklist[item] === true ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-300'}`}>
-                                        <span className="text-[10px]">✔️</span>
-                                    </button>
-                                    <button onClick={() => toggleChecklist(item, false)} className={`px-4 py-1.5 rounded-lg transition-all ${formData.checklist[item] === false ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-300'}`}>
-                                        <span className="text-[10px]">❌</span>
-                                    </button>
+                            <div key={item} className="p-3 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-700 uppercase">{item}</span>
+                                <div className="flex gap-1">
+                                    <button onClick={() => toggleChecklist(item, true)} className={`w-8 h-6 rounded flex items-center justify-center text-[10px] border transition-colors ${formData.checklist[item] === true ? 'bg-emerald-50 border-emerald-500 text-emerald-600 font-bold' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>OK</button>
+                                    <button onClick={() => toggleChecklist(item, false)} className={`w-8 h-6 rounded flex items-center justify-center text-[10px] border transition-colors ${formData.checklist[item] === false ? 'bg-rose-50 border-rose-500 text-rose-600 font-bold' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>NO</button>
                                 </div>
                             </div>
                         ))}
                     </div>
 
                     {hasIncidentTrigger && (
-                        <div className="p-3 bg-rose-50 rounded-2xl border border-rose-100 space-y-2 animate-in zoom-in-95">
-                            <div className="text-[9px] font-black text-rose-500 uppercase tracking-tighter">🔒 BẮT BUỘC: CHI TIẾT SỰ CỐ</div>
-                            <select className="w-full bg-white border-none text-[10px] font-bold p-2 rounded-xl shadow-sm" value={formData.observed_issue_code} onChange={(e) => handleInputChange('observed_issue_code', e.target.value)}>
-                                <option value="">-- LOẠI SỰ CỐ --</option>
-                                {master.leaderIncidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
-                            </select>
-                            <textarea className="w-full bg-white border-none text-[11px] p-3 rounded-xl shadow-sm min-h-[50px] focus:ring-0" placeholder="Mô tả & hướng giải quyết..." value={formData.observed_note} onChange={(e) => handleInputChange('observed_note', e.target.value)} />
+                        <div className="mt-3 p-3 bg-rose-50 border border-dash border-rose-200 rounded animate-in fade-in">
+                            <div className="text-[9px] font-black text-rose-500 uppercase tracking-wide mb-2">Issue Required *</div>
+                            <div className="space-y-2">
+                                <MinimalSelect
+                                    className="border-rose-200 focus:border-rose-500"
+                                    value={formData.observed_issue_code}
+                                    onChange={(e) => handleInputChange('observed_issue_code', e.target.value)}
+                                    placeholder="ISSUE TYPE"
+                                    options={master.leaderIncidents?.map(inc => <option key={inc} value={inc}>{inc}</option>)}
+                                />
+                                <textarea
+                                    className="w-full bg-white border border-rose-200 text-[10px] font-mono text-slate-700 p-2 rounded outline-none focus:border-rose-500 min-h-[60px]"
+                                    placeholder="Describe the issue and resolution..."
+                                    value={formData.observed_note}
+                                    onChange={(e) => handleInputChange('observed_note', e.target.value)}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* 4. MOOD & STAFF FEEDBACK */}
-                <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ca làm hôm nay thế nào?</span>
-                    </div>
-                    <div className="flex justify-between px-2 bg-slate-50 py-3 rounded-2xl border border-slate-100">
-                        {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
-                            <span
-                                key={i}
-                                onClick={() => handleInputChange('mood', i + 1)}
-                                className={`text-2xl cursor-pointer transition-all active:scale-125 ${formData.mood === (i + 1) ? 'opacity-100 scale-125 drop-shadow-lg' : 'opacity-20 grayscale'}`}
-                            >
-                                {m}
-                            </span>
-                        ))}
+                {/* 3. PEOPLE & MOOD */}
+                <div>
+                    <SectionHeader title="Team & Mood" />
+                    <div className="bg-white border border-slate-200 rounded p-4 mb-3">
+                        <div className="flex justify-between items-center px-2">
+                            {['😫', '😐', '😊', '🔥', '🚀'].map((m, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleInputChange('mood', i + 1)}
+                                    className={`text-2xl transition-all hover:scale-110 ${formData.mood === (i + 1) ? 'opacity-100 scale-125' : 'opacity-20 grayscale'}`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ghi nhận nhân sự</span>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                            <div className="text-[9px] font-black text-emerald-600 uppercase">Recognize (Kudos)</div>
+                            <MinimalSelect value={formData.khen_emp} onChange={(e) => handleInputChange('khen_emp', e.target.value)} placeholder="Staff" options={filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)} />
+                            <MinimalSelect value={formData.khen_topic} onChange={(e) => handleInputChange('khen_topic', e.target.value)} placeholder="Generic Topic" options={<><option>Attitude</option><option>Speed</option><option>Quality</option></>} />
                         </div>
-                        {/* KHEN */}
-                        <div className="grid grid-cols-3 gap-2 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
-                            <div className="text-[8px] font-black text-emerald-600 flex items-center justify-center bg-white rounded-lg shadow-sm">👍 KHEN</div>
-                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.khen_emp} onChange={(e) => handleInputChange('khen_emp', e.target.value)}>
-                                <option value="">Nhân viên</option>
-                                {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.khen_topic} onChange={(e) => handleInputChange('khen_topic', e.target.value)}>
-                                <option value="">Chủ đề</option><option>Thái độ</option><option>Tốc độ</option>
-                            </select>
-                        </div>
-                        {/* NHẮC */}
-                        <div className="grid grid-cols-3 gap-2 bg-rose-50/50 p-2 rounded-2xl border border-rose-100">
-                            <div className="text-[8px] font-black text-rose-500 flex items-center justify-center bg-white rounded-lg shadow-sm">⚠️ NHẮC</div>
-                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.nhac_emp} onChange={(e) => handleInputChange('nhac_emp', e.target.value)}>
-                                <option value="">Nhân viên</option>
-                                {filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                            <select className="bg-white border-none text-[9px] font-bold p-1.5 rounded-lg shadow-sm" value={formData.nhac_topic} onChange={(e) => handleInputChange('nhac_topic', e.target.value)}>
-                                <option value="">Chủ đề</option><option>Sai SOP</option><option>Vệ sinh</option>
-                            </select>
+                        <div className="space-y-2">
+                            <div className="text-[9px] font-black text-rose-500 uppercase">Remind (Coaching)</div>
+                            <MinimalSelect value={formData.nhac_emp} onChange={(e) => handleInputChange('nhac_emp', e.target.value)} placeholder="Staff" options={filteredStaff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)} />
+                            <MinimalSelect value={formData.nhac_topic} onChange={(e) => handleInputChange('nhac_topic', e.target.value)} placeholder="Issue Topic" options={<><option>SOP Violation</option><option>Hygiene</option><option>Lateness</option></>} />
                         </div>
                     </div>
                 </div>
 
-                {/* 5. HANDOVER & SUBMIT */}
-                <div className="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                        <select className="bg-slate-50 border-none text-[10px] font-black p-2.5 rounded-xl text-slate-700" value={formData.next_shift_risk} onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}>
-                            <option value="">-- MỨC ĐỘ RỦI RO --</option><option value="NONE">RỦI RO: KHÔNG</option><option value="LOW">RỦI RO: THẤP</option><option value="ATTENTION">RỦI RO: CHÚ Ý</option>
-                        </select>
-                        <textarea className="bg-slate-50 border-none text-[10px] p-2.5 rounded-xl min-h-[40px] focus:ring-0" placeholder="Dặn dò ca sau..." value={formData.next_shift_note} onChange={(e) => handleInputChange('next_shift_note', e.target.value)} />
+                {/* 4. HANDOVER & FEEDBACK */}
+                <div>
+                    <SectionHeader title="Handover & Feedback" />
+                    <div className="space-y-3">
+                        <MinimalSelect
+                            value={formData.next_shift_risk}
+                            onChange={(e) => handleInputChange('next_shift_risk', e.target.value)}
+                            placeholder="RISK ASSESSMENT LEVEL"
+                            options={<><option value="NONE">Risk: None</option><option value="LOW">Risk: Low</option><option value="ATTENTION">Risk: High Attention</option></>}
+                        />
+                        <textarea
+                            className="w-full bg-white border border-slate-200 text-[10px] font-mono text-slate-700 p-3 rounded outline-none focus:border-black min-h-[60px]"
+                            placeholder="Handover notes for next shift leader..."
+                            value={formData.next_shift_note}
+                            onChange={(e) => handleInputChange('next_shift_note', e.target.value)}
+                        />
+                        {/* NEW FEEDBACK FIELD */}
+                        <div className="pt-2 border-t border-slate-100">
+                            <label className="text-[9px] font-black text-blue-600 uppercase mb-1 block">💡 Your Feedback (Optional)</label>
+                            <textarea
+                                className="w-full bg-blue-50/30 border border-blue-100 text-[10px] font-mono text-slate-700 p-3 rounded outline-none focus:border-blue-300 min-h-[60px] placeholder-blue-200"
+                                placeholder="Ideas to improve store operations..."
+                                value={formData.feedback_content}
+                                onChange={(e) => handleInputChange('feedback_content', e.target.value)}
+                            />
+                        </div>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-3 p-3 bg-slate-100/50 rounded-2xl border border-slate-100">
-                        <input type="checkbox" className="rounded-md border-slate-300 w-5 h-5 text-emerald-600 focus:ring-emerald-500" checked={formData.confirm_all} onChange={(e) => handleInputChange('confirm_all', e.target.checked)} />
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter leading-tight">Cam kết các dữ liệu trên là đúng.</span>
-                    </div>
+                {/* 5. SUBMIT */}
+                <div className="pt-4 pb-8 space-y-3">
+                    <label className="flex items-center justify-center gap-2 cursor-pointer bg-slate-50 p-3 rounded border border-slate-100 hover:bg-slate-100 transition-colors">
+                        <input type="checkbox" className="accent-black w-4 h-4" checked={formData.confirm_all} onChange={(e) => handleInputChange('confirm_all', e.target.checked)} />
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">I confirm all data is accurate</span>
+                    </label>
 
-                    {error && <p className="text-rose-500 text-[9px] font-black text-center animate-bounce">{error}</p>}
+                    {error && <div className="text-center text-[9px] font-black text-rose-500 uppercase">{error}</div>}
 
                     <button
-                        className={`w-full py-4 rounded-[24px] font-black text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 ${!isReadyToSubmit ? 'bg-slate-200 text-slate-400' : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:shadow-emerald-200'}`}
                         onClick={handleSubmit}
                         disabled={submitting || !isReadyToSubmit}
+                        className={`w-full py-3 rounded text-[10px] font-black uppercase tracking-widest transition-all ${!isReadyToSubmit ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-black text-white hover:bg-slate-800 shadow-lg hover:shadow-xl translate-y-0 active:translate-y-0.5'}`}
                     >
-                        {submitting ? 'ĐANG GỬI...' : 'GỬI BÁO CÁO VẬN HÀNH 🏆'}
-                    </button>
-
-                    <button onClick={onBack} className="w-full text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-emerald-600 transition-colors">
-                        QUAY LẠI TRUNG TÂM BÁO CÁO
+                        {submitting ? 'Submitting...' : 'Submit Report'}
                     </button>
                 </div>
             </div>

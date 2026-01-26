@@ -29,6 +29,7 @@ import PageStoreSetup from './pages/PageStoreSetup';
 import PageDecisionConsole from './pages/PageDecisionConsole'; // [NEW]
 import Notification from './components/Notification';
 import RoleImpersonator from './components/RoleImpersonator'; // [NEW]
+import Page5SCompliance from './pages/Page5SCompliance'; // [RENAMED]
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
@@ -195,7 +196,7 @@ function App() {
       case 'DAILY_HUB':
         return <PageDailyReporting user={user} onBack={() => handleNavigate('HOME')} onNavigate={handleNavigate} sysConfig={sysConfig} />;
       case 'QAQC_HUB':
-        return <PageQAQC user={user} onBack={() => handleNavigate('HOME')} />;
+        return <Page5SCompliance user={user} onBack={() => handleNavigate('DAILY_HUB')} onNavigate={handleNavigate} />;
       case 'REVENUE_CONSOLE':
         return <PageRevenueConsole user={user} onBack={() => handleNavigate('HOME')} />;
       case 'OPERATION_METRICS':

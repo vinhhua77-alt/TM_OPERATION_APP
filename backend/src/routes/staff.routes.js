@@ -116,5 +116,20 @@ router.post('/maintenance/sync-status', authenticateToken, async (req, res, next
     next(error);
   }
 });
+/**
+ * GET /api/staff/top-active
+ * Get top 10 active staff by shift count
+ */
+router.get('/top-active', authenticateToken, async (req, res, next) => {
+  try {
+    const result = await StaffService.getTopActiveStaff(req.user);
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

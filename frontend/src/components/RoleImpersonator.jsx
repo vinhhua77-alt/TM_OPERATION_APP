@@ -14,7 +14,8 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
     const [isOpen, setIsOpen] = useState(false);
     const [view, setView] = useState('ROLES'); // 'ROLES' or 'STAFF'
     const [search, setSearch] = useState('');
-    const [staffList, setStaffList] = useState([]);
+    const [staffList, setStaffList] = useState([]); // Full list for searching
+    const [topStaff, setTopStaff] = useState([]);   // Top 10 active
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -26,9 +27,15 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
     const loadStaff = async () => {
         setLoading(true);
         try {
-            const res = await staffAPI.getAllStaff({ status: 'ACTIVE' });
-            if (res.success) {
-                setStaffList(res.data);
+            // 1. Load Top Active (Fast) - Display immediately
+            const topRes = await staffAPI.getTopActiveStaff();
+            if (topRes.success) {
+                setTopStaff(topRes.data);
+            }
+            // 2. Load All for search (Background)
+            const allRes = await staffAPI.getAllStaff({ status: 'ACTIVE' });
+            if (allRes.success) {
+                setStaffList(allRes.data);
             }
         } catch (e) {
             console.error(e);
@@ -37,10 +44,15 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
         }
     };
 
-    const filteredStaff = staffList.filter(s =>
-        s.staff_name.toLowerCase().includes(search.toLowerCase()) ||
-        s.staff_id.toLowerCase().includes(search.toLowerCase())
-    ).slice(0, 10);
+    const getDisplayList = () => {
+        if (!search) return topStaff.length > 0 ? topStaff : staffList.slice(0, 10);
+        return staffList.filter(s =>
+            s.staff_name.toLowerCase().includes(search.toLowerCase()) ||
+            s.staff_id.toLowerCase().includes(search.toLowerCase())
+        ).slice(0, 10);
+    };
+
+    const displayStaff = getDisplayList();
 
     return (
         <div className="fixed bottom-20 right-4 z-[9999] flex flex-col items-end gap-2">
@@ -57,7 +69,7 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
                             onClick={() => setView('STAFF')}
                             className={`flex-1 py-1.5 text-[9px] font-black rounded-xl transition-all ${view === 'STAFF' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
                         >
-                            STAFF
+                            {search ? 'SEARCH' : 'TOP ACTIVE'}
                         </button>
                     </div>
 
@@ -90,23 +102,33 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
                                 className="mx-1 px-3 py-2 bg-slate-50 border-none rounded-xl text-[10px] font-bold focus:ring-0 mb-1"
                                 autoFocus
                             />
-                            {loading ? (
+                            {loading && topStaff.length === 0 ? (
                                 <div className="py-10 text-center text-[10px] font-bold text-slate-300">Searching...</div>
-                            ) : filteredStaff.length > 0 ? (
-                                filteredStaff.map(s => (
+                            ) : displayStaff.length > 0 ? (
+                                displayStaff.map((s, idx) => (
                                     <button
                                         key={s.staff_id}
                                         onClick={() => {
                                             onUserChange(s);
                                             setIsOpen(false);
                                         }}
-                                        className="flex flex-col items-start px-3 py-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all text-left"
+                                        className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all text-left group"
                                     >
-                                        <div className="text-[10px] font-black text-slate-800 leading-tight">{s.staff_name}</div>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-[8px] font-black text-blue-500 uppercase tracking-tighter">{s.role}</span>
-                                            <span className="text-[8px] font-bold text-slate-400">ID: {s.staff_id}</span>
+                                        <div className="flex flex-col items-start">
+                                            <div className="text-[10px] font-black text-slate-800 leading-tight">
+                                                {!search && idx < 3 && <span className="mr-1">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</span>}
+                                                {s.staff_name}
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[8px] font-black text-blue-500 uppercase tracking-tighter">{s.role}</span>
+                                                <span className="text-[8px] font-bold text-slate-400">ID: {s.staff_id}</span>
+                                            </div>
                                         </div>
+                                        {s.shift_count > 0 && (
+                                            <div className="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-md text-[8px] font-black whitespace-nowrap">
+                                                🔥 {s.shift_count}
+                                            </div>
+                                        )}
                                     </button>
                                 ))
                             ) : (

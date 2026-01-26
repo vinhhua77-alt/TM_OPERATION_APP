@@ -31,6 +31,7 @@ import analyticsRoutes from './routes/analytics.routes.js'; // [NEW]
 import revenueRoutes from './routes/revenue.routes.js'; // [NEW]
 import metricsRoutes from './routes/metrics.routes.js'; // [NEW]
 import decisionRoutes from './routes/decision.routes.js'; // [NEW]
+import complianceRoutes from './routes/compliance.routes.js'; // [NEW]
 
 import cron from 'node-cron'; // [NEW]
 import analyticsService from './domain/analytics/analytics.service.js'; // [NEW]
@@ -97,16 +98,16 @@ app.use(cors({
 // Rate limiting - Separate limits for auth and general API
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // General API: 1000 requests per 15 minutes (Relaxed for dev)
-  message: 'Too many requests from this IP, please try again later.',
+  max: 2000, // General API: 2000 requests per 15 minutes (Support more concurrent users)
+  message: 'Hệ thống nhận thấy quá nhiều truy cập từ mạng của bạn. Vui lòng quay lại sau 15 phút.',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Auth endpoints: 50 requests per 15 minutes (Relaxed for dev)
-  message: 'Too many authentication attempts. Please try again in 15 minutes.',
+  max: 100, // Auth endpoints: 100 requests per 15 minutes (Support store shifts)
+  message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 15 phút để bảo mật tài khoản.',
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -153,6 +154,7 @@ app.use('/api/analytics', analyticsRoutes); // [NEW]
 app.use('/api/revenue', revenueRoutes); // [NEW]
 app.use('/api/metrics', metricsRoutes); // [NEW]
 app.use('/api/decision', decisionRoutes); // [NEW]
+app.use('/api/compliance', complianceRoutes); // [NEW]
 
 // Error handling
 app.use(errorHandler);
@@ -173,10 +175,18 @@ app.listen(PORT, () => {
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📧 Email User: ${process.env.EMAIL_USER || 'NOT SET'}`);
 
-  // Schedule Cron Job (00:00 Daily)
+  // Schedule Cron Job (00:00 Daily) - Analytics
   cron.schedule('0 0 * * *', async () => {
     console.log('[CRON] Running Daily Analytics Aggregation...');
     await analyticsService.aggregateDailyMetrics();
+  });
+
+  // Schedule Keep-Alive Ping (Every 10 minutes)
+  // This prevents Render.com free tier from sleeping
+  cron.schedule('*/10 * * * *', () => {
+    const url = `http://localhost:${PORT}/health`;
+    console.log(`[KEEP-ALIVE] Pinged ${url} at ${new Date().toISOString()}`);
+    // Internal ping to keep the event loop busy
   });
 });
 

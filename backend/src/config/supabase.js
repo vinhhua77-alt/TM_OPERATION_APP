@@ -1,16 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+/**
+ * DEPRECATED: This file is kept for backwards compatibility.
+ * Please import from '../infra/supabase.client.js' instead.
+ * 
+ * @deprecated Use '../infra/supabase.client.js' for new code.
+ */
 
-dotenv.config();
+// Re-export from central singleton
+export { supabase, checkConnection } from '../infra/supabase.client.js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-    console.error('⚠️ Supabase credentials missing in environment variables');
-}
-
-export const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseKey || 'placeholder'
-);

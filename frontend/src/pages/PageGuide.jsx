@@ -1,91 +1,113 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const PageGuide = ({ onBack }) => {
-    const [openSection, setOpenSection] = useState(0);
-
-    const sections = [
+    // Guide Content
+    const guides = [
         {
-            title: "1. ĐĂNG NHẬP & QUYỀN TRUY CẬP",
+            title: "ĐĂNG NHẬP",
             icon: "🔑",
-            content: "• Sử dụng Mã Nhân Viên (TMxxx) để đăng nhập.\n• Nếu là LEADER: Bạn sẽ có thêm quyền 'Leader Log' để quản lý vận hành.\n• Nếu là STAFF: Bạn tập trung vào 'Nhật ký ca' và tích lũy 'Giờ bay'."
+            color: "blue",
+            steps: [
+                "Dùng mã TMxxx",
+                "Password mặc định",
+                "Đổi Pass ngay lần đầu"
+            ]
         },
         {
-            title: "2. NHẬT KÝ CA & CHECKLIST V8",
+            title: "CHECKLIST CA",
             icon: "📝",
-            content: "• Chọn Khu vực (Layout): Mỗi khu vực (FOH, BOH, CASH...) có màu sắc riêng.\n• Hoàn thành Checklist: Đảm bảo các tiêu chuẩn Sapphire được thực thi 100%.\n• Báo cáo Sự cố: Nếu có mục nào chọn 'KHÔNG', hệ thống sẽ bắt buộc mô tả sự cố để Team hỗ trợ kịp thời."
+            color: "purple",
+            steps: [
+                "Chọn khu vực (Layout)",
+                "Đánh giá YES/NO",
+                "Note sự cố nếu có"
+            ]
         },
         {
-            title: "3. CẢM NHẬN & LÝ DO CỐT LÕI",
-            icon: "😊",
-            content: "• Đánh giá Mood: Chọn Icon cảm xúc sau khi tan ca.\n• Lý do (2/6): Bạn CHỈ ĐƯỢC CHỌN TỐI ĐA 2 lý do cốt lõi nhất giải thích cho cảm xúc của mình. Việc này giúp hệ thống Decision Engine lọc ra đúng vấn đề cần cải thiện."
-        },
-        {
-            title: "4. LỘ TRÌNH 'GIỜ BAY' (CAREER)",
+            title: "TÍCH LŨY GIỜ",
             icon: "✈️",
-            content: "• Bay đủ 300H: Nút 'TẬP SỰ QUẢN LÝ' sẽ được mở khóa.\n• Tích lũy thực chiến: Hệ thống Decision Engine tự động cộng dồn giờ từ mọi báo cáo hợp lệ.\n• Thăng tiến: Đây là cơ sở minh bạch nhất để bạn lên Leader hoặc SM."
+            color: "green",
+            steps: [
+                "1 ca hoàn thành = Giờ bay",
+                "Đủ 300H mở khóa Leader",
+                "Xem tiến độ ở Profile"
+            ]
         },
         {
-            title: "5. GAMIFICATION & SÁNG KIẾN",
+            title: "CẢM XÚC & GAMING",
             icon: "💎",
-            content: "• XP & Level: Mỗi báo cáo giúp bạn thăng cấp (Level up).\n• Streak (🔥): Duy trì gửi báo cáo mỗi ngày để thắp lửa chuỗi ca làm liên tiếp.\n• Sáng kiến: Đừng quên đóng góp ý tưởng trong mục 'Sáng kiến hôm nay' để nhận phần thưởng XP đặc biệt!"
+            color: "orange",
+            steps: [
+                "Rate Mood cuối ca",
+                "Nhận XP khi completed",
+                "Đua Top Leaderboard"
+            ]
+        },
+        {
+            title: "SỰ CỐ VẬN HÀNH",
+            icon: "⚠️",
+            color: "red",
+            steps: [
+                "Báo cáo ngay lập tức",
+                "Chụp ảnh (nếu cần)",
+                "Leader sẽ xử lý"
+            ]
+        },
+        {
+            title: "SÁNG KIẾN",
+            icon: "💡",
+            color: "cyan",
+            steps: [
+                "Góp ý cải tiến quy trình",
+                "Nhận XP thưởng nóng",
+                "Được BOD ghi nhận"
+            ]
         }
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-8 animate-in fade-in duration-500">
-            {/* Header Sapphire Style */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-4 pb-10 text-white relative overflow-hidden shadow-xl mb-[-25px]">
-                <div className="relative z-10">
-                    <button onClick={onBack} className="bg-white/10 hover:bg-white/20 text-white text-[8px] font-black px-3 py-1 rounded-full border border-white/5 uppercase tracking-widest mb-4 transition-all active:scale-95">
-                        ← Dashboard
-                    </button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center text-2xl shadow-2xl rotate-3">📖</div>
-                        <div>
-                            <h1 className="text-xl font-black uppercase tracking-tighter leading-none">HDSD SAPPHIRE</h1>
-                            <p className="text-[9px] font-bold opacity-40 uppercase tracking-[0.15em] mt-1 italic">V3.0 Decision Engine</p>
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-slate-50 pb-20 fade-in">
+            {/* HEADER & CONTROLS */}
+            <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100 px-3 py-3 space-y-3">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                        HƯỚNG DẪN VẬN HÀNH
+                    </h1>
+                    <button onClick={onBack} className="text-sm text-slate-500 font-bold">Thoát</button>
                 </div>
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl"></div>
-                <div className="absolute -left-12 -bottom-12 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl"></div>
             </div>
 
-            {/* Accordion List */}
-            <div className="px-3.5 space-y-2.5 relative z-20">
-                {sections.map((section, index) => (
-                    <div key={index} className="bg-white rounded-[16px] shadow-sm border border-slate-100 overflow-hidden transition-all duration-300">
-                        <button
-                            onClick={() => setOpenSection(openSection === index ? null : index)}
-                            className={`w-full p-4 flex items-center justify-between text-left transition-colors ${openSection === index ? 'bg-slate-50' : 'bg-white'}`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg">{section.icon}</span>
-                                <span className={`text-[10px] font-black uppercase tracking-tight ${openSection === index ? 'text-blue-600' : 'text-slate-600'}`}>
-                                    {section.title}
-                                </span>
+            {/* MAIN GRID */}
+            <div className="p-3">
+                <div className="grid grid-cols-2 gap-3">
+                    {guides.map((guide, idx) => (
+                        <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3 bg-${guide.color}-50 text-${guide.color}-600`}>
+                                {guide.icon}
                             </div>
-                            <span className={`text-[10px] transition-transform duration-300 ${openSection === index ? 'rotate-180 text-blue-500' : 'text-slate-300'}`}>
-                                ▿
-                            </span>
-                        </button>
-                        {openSection === index && (
-                            <div className="px-5 pb-5 pt-0.5 animate-in slide-in-from-top-4 duration-300">
-                                <div className="h-[1px] bg-slate-100 mb-3 w-full opacity-50"></div>
-                                <div className="text-[10px] font-medium text-slate-500 leading-relaxed whitespace-pre-line">
-                                    {section.content}
-                                </div>
-                            </div>
-                        )}
+
+                            <h3 className="text-xs font-black text-slate-700 uppercase mb-2 tracking-tight">
+                                {guide.title}
+                            </h3>
+
+                            <ul className="space-y-1.5 flex-1">
+                                {guide.steps.map((step, sIdx) => (
+                                    <li key={sIdx} className="text-[10px] font-medium text-slate-500 flex items-start gap-1.5">
+                                        <span className={`w-1 h-1 rounded-full mt-1.5 bg-${guide.color}-400 shrink-0`}></span>
+                                        {step}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+
+                {/* BOTTOM NOTE */}
+                <div className="mt-6 text-center px-4">
+                    <div className="p-4 bg-slate-100 rounded-xl border border-slate-200 border-dashed">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">💎 SYSTEM V3.0</p>
+                        <p className="text-[9px] text-slate-500">"Hệ thống tự động ghi nhận mọi nỗ lực của bạn"</p>
                     </div>
-                ))}
-            </div>
-
-            {/* Footer Insight */}
-            <div className="mt-6 px-6 text-center">
-                <div className="inline-block p-3.5 bg-blue-50 border border-blue-100 rounded-xl">
-                    <p className="text-[9px] font-black text-blue-800 uppercase tracking-widest mb-1 italic">💎 TM PRIDE</p>
-                    <p className="text-[8px] text-blue-600/70 font-medium">"Kỷ luật là sức mạnh - Cải tiến là tương lai"</p>
                 </div>
             </div>
         </div>

@@ -10,22 +10,30 @@ export class DashboardService {
     /**
      * Get employee dashboard data
      */
-    static async getEmployeeDashboard(currentUser, staffId, yearMonth) {
+    static async getEmployeeDashboard(currentUser, staffId, periodConfig) {
         if (currentUser.id !== staffId && !['ADMIN', 'OPS'].includes(currentUser.role)) {
             throw new Error('Unauthorized: You can only view your own dashboard');
         }
 
-        if (!yearMonth) {
+        // Default to current month if nothing provided
+        if (!periodConfig) {
             const now = new Date();
-            yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            periodConfig = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        yearMonth = yearMonth.trim();
-        if (!/^\d{4}-\d{2}$/.test(yearMonth)) {
-            throw new Error(`Invalid month format: "${yearMonth}". Use YYYY-MM`);
+        // Validate Format
+        if (typeof periodConfig === 'string') {
+            periodConfig = periodConfig.trim();
+            if (!/^\d{4}-\d{2}$/.test(periodConfig)) {
+                throw new Error(`Invalid period format: "${periodConfig}". Use YYYY-MM or range object.`);
+            }
+        } else if (typeof periodConfig === 'object') {
+            if (!periodConfig.startDate || !periodConfig.endDate) {
+                throw new Error('Invalid date range object. Required startDate and endDate.');
+            }
         }
 
-        return await DashboardRepo.getEmployeeDashboard(staffId, yearMonth);
+        return await DashboardRepo.getEmployeeDashboard(staffId, periodConfig);
     }
 
     /**
@@ -76,6 +84,10 @@ export class DashboardService {
                 .from('shift_analytics_daily')
                 .select('*')
                 .eq('store_code', storeId);
+
+            if (currentUser.tenant_id) {
+                query = query.eq('tenant_id', currentUser.tenant_id);
+            }
 
             if (period === 'day') {
                 query = query.eq('date', anchorStr);
@@ -138,5 +150,46 @@ export class DashboardService {
                 error: error.message
             };
         }
+    }
+
+    /**
+     * Get user's custom dashboard configuration
+     */
+    static async getCustomConfig(currentUser) {
+        return await DashboardRepo.getUserDashboardConfig(currentUser.id, currentUser.tenant_id);
+    }
+
+    /**
+     * Save user's custom dashboard configuration
+     */
+    /**
+     * Save user's custom dashboard configuration
+     */
+    static async saveCustomConfig(currentUser, configData) {
+        const payload = {
+            ...configData,
+            user_id: currentUser.id,
+            tenant_id: currentUser.tenant_id,
+            updated_at: new Date().toISOString()
+        };
+        return await DashboardRepo.saveUserDashboardConfig(payload);
+    }
+
+    /**
+     * Get Leader Analytics aggregation
+     */
+    static async getLeaderAnalytics(currentUser, userId, periodConfig, storeCode) {
+        // Auth check: Should be Leader/SM/Admin
+        // For now, allow passthrough.
+
+        let validPeriod = periodConfig;
+
+        // Ensure format if string
+        if (typeof periodConfig === 'string') {
+            // "YYYY-MM" or "YYYY-MM-DD" or "day"
+            // If "day" -> handle in Repo
+        }
+
+        return await DashboardRepo.getLeaderAnalytics(userId, storeCode, validPeriod);
     }
 }

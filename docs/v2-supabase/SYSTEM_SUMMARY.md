@@ -1,9 +1,9 @@
 # THÁI MẬU GROUP – OPERATION APP
 ## SYSTEM SUMMARY (v2 - Supabase)
 
-**Version**: 4.0  
-**Last Updated**: 2026-01-23  
-**Status**: Production (v4.0 Enhancements)
+**Version**: 5.0 (v3.5 Decision Intelligence)  
+**Last Updated**: 2026-01-25  
+**Status**: Production (v5.0 Hub & Compliance Expansion)
 
 ---
 
@@ -42,10 +42,12 @@ Operation App is an internal operations management system for Thái Mậu Group,
 - **Self-Service Password Reset**: Users can reset forgotten passwords via email verification.
 - **Attendance Consistency**: Synced time selection (30-min intervals) across all reporting tools.
 
-### 2.5. Dashboard & Reports
-- Real-time operational metrics
-- Store performance analytics
 - Staff activity tracking
+
+### 2.6. Compliance & 5S (Tuân thủ)
+- **Signal Flow**: Time-based operational readiness confirmations for staff.
+- **Audit Center**: Leader-level 5S checks and Food Safety (Temp) logging.
+- **Risk Intelligence**: Real-time operational risk level calculation based on signal status.
 
 ---
 
@@ -80,7 +82,7 @@ Data Storage
 - **State Management**: React hooks (useState, useEffect)
 - **API Client**: Fetch API
 - **Deployment**: Vercel
-- **UX Strategy**: Mobile-First (BottomNav, FAB) & Flat Navigation
+- **UX Strategy**: Mobile-First Hub & Pillar architecture (Operations, People, Platform, Entity).
 
 ### 4.2. Backend
 - **Runtime**: Node.js
@@ -213,6 +215,7 @@ Git Repository (GitHub)
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-25 | Updated to v5.0 | SaaS Hub Redesign + Compliance Module (v3.5) |
 | 2026-01-23 | Updated to v4.0 | Self-Service Password Reset + Time Sync |
 | 2026-01-22 | Updated to v3.0 | Employee Dashboard + Performance |
 | 2026-01-21 | Created SYSTEM_SUMMARY.md v2.0 | Supabase migration complete |

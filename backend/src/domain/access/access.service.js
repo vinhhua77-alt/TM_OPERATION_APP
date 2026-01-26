@@ -53,6 +53,13 @@ export class AccessService {
     }
 
     /**
+     * Get all tenants
+     */
+    static async getTenants() {
+        return await AccessRepo.getAllTenants();
+    }
+
+    /**
      * Get data for Admin Console UI
      */
     static async getAdminConsoleData() {
@@ -109,8 +116,19 @@ export class AccessService {
     /**
      * Get system summary counts
      */
-    static async getSystemSummary() {
-        return await AccessRepo.getSystemSummary();
+    static async getSystemSummary(tenantId = null) {
+        return await AccessRepo.getSystemSummary(tenantId);
+    }
+
+    /**
+     * DASHBOARD CUSTOMIZATION
+     */
+    static async getDashboardConfig(userId) {
+        return await AccessRepo.getDashboardConfig(userId);
+    }
+
+    static async saveDashboardConfig(userId, tenantId, config) {
+        return await AccessRepo.saveDashboardConfig(userId, tenantId, config);
     }
 
     /**
