@@ -14,23 +14,23 @@ const PageGuide = ({ onBack }) => {
             ]
         },
         {
-            title: "CHECKLIST CA",
+            title: "CHECKLIST & SHIFT",
             icon: "📝",
             color: "purple",
             steps: [
-                "Chọn khu vực (Layout)",
-                "Đánh giá YES/NO",
-                "Note sự cố nếu có"
+                "Vào ca / Ra ca đúng giờ",
+                "Ghi lý do nếu lệch ca",
+                "Checklist vận hành đầy đủ"
             ]
         },
         {
-            title: "TÍCH LŨY GIỜ",
-            icon: "✈️",
-            color: "green",
+            title: "LỘ TRÌNH THĂNG TIẾN",
+            icon: "🐣",
+            color: "pink",
             steps: [
-                "1 ca hoàn thành = Giờ bay",
-                "Đủ 300H mở khóa Leader",
-                "Xem tiến độ ở Profile"
+                "Tích lũy 'Giờ Ấp' mỗi ca",
+                "Đủ giờ -> Bật 'Chế độ Tập sự'",
+                "Chờ Leader/SM duyệt"
             ]
         },
         {
@@ -81,7 +81,7 @@ const PageGuide = ({ onBack }) => {
             <div className="p-3">
                 <div className="grid grid-cols-2 gap-3">
                     {guides.map((guide, idx) => (
-                        <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full">
+                        <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full hover:border-black transition-colors">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3 bg-${guide.color}-50 text-${guide.color}-600`}>
                                 {guide.icon}
                             </div>
@@ -105,8 +105,9 @@ const PageGuide = ({ onBack }) => {
                 {/* BOTTOM NOTE */}
                 <div className="mt-6 text-center px-4">
                     <div className="p-4 bg-slate-100 rounded-xl border border-slate-200 border-dashed">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">💎 SYSTEM V3.0</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">💎 SYSTEM V3.2</p>
                         <p className="text-[9px] text-slate-500">"Hệ thống tự động ghi nhận mọi nỗ lực của bạn"</p>
+                        <div className="mt-2 text-[8px] text-slate-400">Release: 27/01/2026 • SaaS Enabled</div>
                     </div>
                 </div>
             </div>

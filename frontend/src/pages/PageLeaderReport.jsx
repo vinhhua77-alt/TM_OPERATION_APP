@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { masterAPI } from '../api/master';
 import { leaderAPI } from '../api/leader';
+import { careerAPI } from '../api/career';
 
 const PageLeaderReport = ({ user, onBack, onNavigate }) => {
     // 0. SAFE USER DATA (NORMALIZED)
     const safeUser = useMemo(() => ({
         id: user?.id || user?.sub,
         name: user?.name || user?.staff_name || 'N/A',
-        storeCode: user?.storeCode || user?.store_code || ''
+        storeCode: user?.storeCode || user?.store_code || '',
+        role: user?.role || 'LEADER'
     }), [user]);
 
     // 1. MASTER DATA STATE
@@ -48,6 +50,10 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
+    // --- APPROVAL NOTIFICATION STATE ---
+    const [pendingTrainees, setPendingTrainees] = useState([]);
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+
     // 3. INITIALIZE
     useEffect(() => {
         const now = new Date();
@@ -58,6 +64,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
         }));
 
         loadMasterData();
+        loadPendingTrainees();
     }, []);
 
     const loadMasterData = async () => {
@@ -75,7 +82,26 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
             }
         } catch (error) {
             console.error('Error loading master data:', error);
-            setError('Không thể tải dữ liệu hệ thống');
+            console.error(error);
+        }
+    };
+
+    const loadPendingTrainees = async () => {
+        // Only load if SM or Admin or Leader (in some cases)
+        // Hardcode storeId filter for now
+        if (safeUser.storeCode) {
+            const res = await careerAPI.getPendingRequests(safeUser.storeCode);
+            if (res.success) setPendingTrainees(res.data || []);
+        }
+    };
+
+    const handleApproval = async (reqId, decision) => {
+        const res = await careerAPI.approveRequest(reqId, safeUser.id, decision);
+        if (res.success) {
+            setPendingTrainees(prev => prev.filter(r => r.id !== reqId));
+            // Show toast or slight visual feedback?
+        } else {
+            alert('Error: ' + res.message);
         }
     };
 
@@ -197,7 +223,7 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
     );
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10 animate-fade-in">
+        <div className="flex flex-col h-full bg-slate-50 min-h-screen font-sans pb-10 animate-fade-in relative">
             {/* MINIMAL HEADER */}
             <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
                 <div className="flex items-center gap-2">
@@ -207,7 +233,21 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{safeUser.name}</p>
                     </div>
                 </div>
-                <div className="text-[9px] font-mono font-bold text-slate-300">{new Date().toLocaleDateString('vi-VN')}</div>
+                <div className="flex items-center gap-3">
+                    {/* NOTIFICATION BELL */}
+                    <button
+                        onClick={() => setShowApprovalModal(true)}
+                        className="relative p-1.5 rounded-full hover:bg-slate-50 transition-colors"
+                    >
+                        <span className="text-xl">🔔</span>
+                        {pendingTrainees.length > 0 && (
+                            <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full animate-bounce">
+                                {pendingTrainees.length}
+                            </span>
+                        )}
+                    </button>
+                    <div className="text-[9px] font-mono font-bold text-slate-300 hidden sm:block">{new Date().toLocaleDateString('vi-VN')}</div>
+                </div>
             </div>
 
             {/* FORM AREA */}
@@ -402,6 +442,58 @@ const PageLeaderReport = ({ user, onBack, onNavigate }) => {
                     </button>
                 </div>
             </div>
+
+            {/* APPROVAL MODAL */}
+            {showApprovalModal && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+                        <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="text-sm font-black uppercase text-slate-700 flex items-center gap-2">
+                                🔔 Trainee Approvals ({pendingTrainees.length})
+                            </h3>
+                            <button onClick={() => setShowApprovalModal(false)} className="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-400 font-bold hover:bg-slate-100">✕</button>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto divide-y divide-slate-100">
+                            {pendingTrainees.length === 0 ? (
+                                <div className="p-8 text-center text-slate-400 italic text-xs">
+                                    No pending approvals for today.
+                                </div>
+                            ) : (
+                                pendingTrainees.map(req => (
+                                    <div key={req.id} className="p-4 bg-white">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-800">{req.staffName}</div>
+                                                <div className="text-[10px] text-slate-500 mb-1">Applying for: <strong className="text-indigo-600 uppercase">{req.position}</strong></div>
+                                                <div className="text-[9px] font-mono text-slate-400">Hours: {req.currentHours}h • {new Date(req.timestamp).toLocaleTimeString()}</div>
+                                            </div>
+                                            {req.currentHours > 1000 ? ( // Mock Check
+                                                <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">ELIGIBLE</span>
+                                            ) : (
+                                                <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">LOW HOURS</span>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 mt-3">
+                                            <button
+                                                onClick={() => handleApproval(req.id, 'REJECTED')}
+                                                className="py-2 rounded border border-rose-200 text-rose-600 text-[10px] font-black uppercase hover:bg-rose-50"
+                                            >
+                                                Reject
+                                            </button>
+                                            <button
+                                                onClick={() => handleApproval(req.id, 'APPROVED')}
+                                                className="py-2 rounded bg-black text-white text-[10px] font-black uppercase hover:bg-slate-800"
+                                            >
+                                                Approve
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

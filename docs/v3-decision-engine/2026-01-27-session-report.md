@@ -1,93 +1,109 @@
-# SESSION REPORT & MANUAL: TM OPERATION APP (V3.1)
-**Date:** 2026-01-27
-**Module:** Decision Engine & Operation Console
+# 📦 RELEASE NOTE & USER MANUAL: TM OPERATION APP V3.2
+**Ngày phát hành:** 27/01/2026
+**Phiên bản:** 3.2.0 (SaaS Edition)
+**Modules:** Decision Engine, Operation Console, Career Path System.
 
 ---
 
-# 1. TỔNG QUAN THAY ĐỔI (CHANGELOG)
+# 1. LỊCH SỬ PHIÊN BẢN (VERSION HISTORY)
 
-### 🎨 UI/UX Refamp
-- **Admin Console (Hub View):**
-  - Chuyển đổi từ dạng List Table sang **Modular Grid**.
-  - Metric Cards: 4 thẻ chỉ số chính (Tenants, Brands, Stores, Staff).
-  - Module Blocks: 4 khối chức năng lớn (Operations, People, Platform, Entity) với Icon trực quan.
-  - **Auto Navigation:** Bấm vào Module tự động mở tab chức năng đầu tiên (VD: Operations -> 5S Config).
-- **Leader Report:**
-  - Chuyển sang phong cách **Minimalist Data Grid** (Phẳng, Tối giản, Border mỏng).
-  - Bổ sung trường **Feedback (Góp ý)** cho mọi user.
-- **Shift Log:**
-  - **Revert UI:** Khôi phục giao diện Gradient & Rounded Cards thân thiện.
-  - **Logic Mới:** Tích hợp 8 lý do sai ca & Trainee Mode Logic.
-
-### ⚙️ Tính Năng Mới (New Features)
-1.  **Trainee Mode (Chế độ Tập sự):**
-    - Logic kích hoạt dựa trên Role Matrix (Staff -> Leader, Leader -> SM).
-    - Yêu cầu xác nhận (Alert Confirm) khi kích hoạt.
-2.  **Shift Error Handling:**
-    - Mở rộng 8 lý do sai ca: *Đổi Ca, Tăng Ca, Về Sớm, Đi Trễ, Hỗ Trợ, Đào Tạo, Họp Team, Lỗi Lịch*.
-3.  **Global Feedback:**
-    - Cho phép Staff gửi ý kiến đóng góp trực tiếp trong ShiftLog.
+| Phiên Bản | Ngày | Tính Năng Nổi Bật | Trạng Thái |
+| :--- | :--- | :--- | :--- |
+| **V3.2** | 27/01/2026 | **SaaS Career Config**, Real DB Integration, **Micro-UI**, "Giờ Ấp" Incubation Mode. | 🚀 Active |
+| **V3.1** | 26/01/2026 | Trainee Mode Logic, Shift Log Revert, Leader Report Grid. | 🛑 Deprecated |
+| **V3.0** | 20/01/2026 | Decision Engine Core, Shift Error Reason (8 logic). | 🛑 Deprecated |
 
 ---
 
-# 2. HƯỚNG DẪN SỬ DỤNG (USER MANUAL)
+# 2. CHI TIẾT CẬP NHẬT (CHANGELOG V3.2)
 
-## 2.1. Admin Console (Quản trị viên)
-- **Truy cập:** Menu -> Admin Console.
-- **Thao tác:**
-  - Nhấp vào các thẻ **Metric** để xem chi tiết nhanh.
-  - Nhấp vào **Module Block** (VD: PEOPLE) để vào sâu cấu hình.
-  - **Lưu ý:** Hệ thống tự động chọn Tenant mặc định, có thể đổi ở góc trên bên trái.
+### 🚀 SaaS & Career Path Upgrade
+Hệ thống lộ trình thăng tiến được nâng cấp toàn diện lên mô hình **SaaS (Software as a Service)**, cho phép quản trị viên tự cấu hình động mà không cần can thiệp code.
 
-## 2.2. Shift Log (Nhật ký ca - Staff/Leader)
-- **Check-in/Out:**
-  - Chọn giờ vào/ra. Nếu lệch so với ca quy định -> Chọn checkbox "Xác nhận lệch ca" -> Chọn 1 trong 8 lý do.
-- **Trainee Mode (Tập sự):**
-  - Chỉ hiện với nhân sự đủ điều kiện (Staff/Leader).
-  - Bấm Toggle -> Xác nhận thông báo -> Chọn vị trí tập sự.
-  - *Lưu ý:* Cần báo với SM/Quản lý trực tiếp trước khi bật.
-- **Feedback:**
-  - Ghi mọi ý tưởng, sáng kiến vào ô "Góp ý & Sáng kiến" cuối form.
+*   **[NEW] Real Database Integration:**
+    *   Chuyển đổi hoàn toàn từ Mock Data sang **Supabase PostgreSQL**.
+    *   Dữ liệu được lưu trữ bền vững, bảo mật với RLS Policies.
+*   **[NEW] Dynamic Config Engine (SaaS):**
+    *   Cho phép Admin **Thêm/Sửa/Xóa** vị trí Trainee ngay trên Admin Console.
+    *   Hỗ trợ tạo vô hạn lộ trình mới (VD: Bếp Trưởng Trainee, Inventory Trainee...).
+*   **[UI] Micro-Compact Grid:**
+    *   Giao diện Config Card được thiết kế lại siêu nhỏ (Micro-size).
+    *   Grid 4 cột, Font chữ tinh chỉnh (`10px`), tối ưu mật độ thông tin.
 
-## 2.3. Leader Report (Báo cáo Leader)
-- **Giao diện:** Dạng Grid tối giản, tập trung vào số liệu.
-- **Checklist:** Đánh dấu nhanh OK/NOK cho các hạng mục vận hành.
-- **Nhân sự:** Ghi nhận Khen thưởng/Nhắc nhở kèm chủ đề cụ thể.
+### 🐣 Gen Z Theme & Localization
+*   **[UPDATE] "Giờ Ấp" (Incubation Hours):**
+    *   Thay thế thuật ngữ "Giờ Bay" bằng **"Giờ Ấp"** để phù hợp văn hóa Công Ty Gà.
+    *   Thể hiện quá trình "ấp ủ", nuôi dưỡng nhân tài từ giai đoạn trứng nước.
 
 ---
 
-# 3. TECHNICAL SPECIFICATION (TECH MANUAL)
+# 3. HƯỚNG DẪN SỬ DỤNG (USER MANUAL)
 
-## 3.1. Trainee State Matrix
-Logic mapping vị trí tập sự dựa trên Role hiện tại:
+## 3.1. Dành Cho Quản Trị Viên (Admin)
+Admin có toàn quyền thiết lập lộ trình thăng tiến.
 
-| Current Role | Trainee Options (Target) | Code Value |
-| :--- | :--- | :--- |
-| **STAFF** | Thu ngân, Leader | `CASHIER_TRAINEE`, `LEADER_TRAINEE` |
-| **LEADER/SM** | Store Manager, Area Manager | `SM_TRAINEE`, `AM_TRAINEE` |
-| **Others** | Ops Trainee | `OPS_TRAINEE` |
+**1. Truy cập Cấu Hình:**
+*   Menu -> **Admin Console**.
+*   Chọn Block **PEOPLE** (Cột 2) -> Tab **CAREER**.
 
-## 3.2. Data Models
-- **Shift Report Payload:**
-  ```json
-  {
-    "shiftErrorReason": "DOI_CA" | "TANG_CA" | "VE_SOM" | ...,
-    "isTraineeMode": boolean,
-    "traineePos": string,
-    "improvementNote": string // Feedback content
-  }
-  ```
+**2. Quản Lý Lộ Trình (Career Config):**
+*   **Thêm Mới:**
+    *   Nhấn nút **`+ ADD NEW POSITION`** (Màu xanh).
+    *   Nhập Mã (VD: `KITCHEN`), Tên hiển thị, Số "Giờ Ấp" yêu cầu (VD: 500h).
+    *   Chọn Role nguồn (VD: STAFF).
+    *   Nhấn **SAVE**.
+*   **Chỉnh Sửa:** Nhấn biểu tượng ✎ trên thẻ. Sửa thông số -> Save.
+*   **Xóa:** Nhấn biểu tượng ✕ trên thẻ để xóa vị trí không dùng nữa.
 
-## 3.3. UI Components Rules
-- **Minimalist Grid (Leader Report):**
-  - Sử dụng Tailwind Border (`border-slate-200`) thay vì `shadow-lg`.
-  - Font: `text-[10px] font-black uppercase`.
-- **Classic Soft (Shift Log):**
-  - Sử dụng Gradient (`bg-gradient-to-r`).
-  - Font: `rounded-[20px]`.
+## 3.2. Dành Cho Cửa Hàng Trưởng (SM)
+SM chịu trách nhiệm duyệt yêu cầu Trainee của nhân viên.
+
+**1. Duyệt Yêu Cầu (Approval):**
+*   Truy cập **Admin Console** -> **PEOPLE** -> **CAREER**.
+*   Tại Widget **"Pending Trainee Approvals"** (Đầu trang):
+    *   Xem danh sách nhân viên đang chờ duyệt.
+    *   Nhấn **APPROVE (Xanh)** để chấp thuận -> Nhân viên lên Trainee ngay lập tức.
+    *   Nhấn **REJECT (Đỏ)** để từ chối.
+
+## 3.3. Dành Cho Nhân Viên (Staff)
+Cách đăng ký tham gia Trainee Mode.
+
+**1. Gửi Yêu Cầu:**
+*   Vào **Shift Log (Nhật ký ca)**.
+*   Bật Toggle **"Chế độ Tập sự"**.
+*   Chọn vị trí mong muốn từ danh sách (Chỉ hiện các vị trí đủ điều kiện Role + Giờ Ấp).
+*   Nhấn **Xác nhận**.
+
+**2. Trạng Thái:**
+*   Sau khi gửi, yêu cầu sẽ ở trạng thái **PENDING**.
+*   Vui lòng báo SM duyệt. Sau khi duyệt, bạn sẽ thấy huy hiệu Trainee trong hồ sơ.
 
 ---
 
-# 4. NEXT STEPS
-- [ ] Implement Server-side validation cho Trainee Mode (Check total hours thực tế).
-- [ ] Build Dashboard Analytics cho dữ liệu Feedback & Trainee.
+# 4. THÔNG SỐ KỸ THUẬT (TECHNICAL SPECS)
+
+### 4.1. Database Schema
+```sql
+-- Configs
+CREATE TABLE career_configs (
+    position_key TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    min_hours_required INTEGER DEFAULT 0,
+    required_role TEXT NOT NULL
+);
+
+-- Requests
+CREATE TABLE career_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    staff_id UUID REFERENCES staff_master(id),
+    status TEXT DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 4.2. Validation Rules
+*   **Server-side:** API `submitTraineeRequest` tự động check `CurrentHours >= MinHours`.
+*   **Anti-Spam:** Mỗi Staff chỉ được có 1 PENDING request cho một vị trí tại một thời điểm.
+
+---
+*Document generated by Antigravity Agent - 27/01/2026*

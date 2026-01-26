@@ -36,6 +36,8 @@ import complianceRoutes from './routes/compliance.routes.js'; // [NEW]
 import cron from 'node-cron'; // [NEW]
 import analyticsService from './domain/analytics/analytics.service.js'; // [NEW]
 
+import careerRoutes from './routes/career.routes.js'; // [NEW]
+
 dotenv.config();
 
 const app = express();
@@ -150,11 +152,12 @@ app.use('/api/master-data', masterDataRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/analytics', analyticsRoutes); // [NEW]
-app.use('/api/revenue', revenueRoutes); // [NEW]
-app.use('/api/metrics', metricsRoutes); // [NEW]
-app.use('/api/decision', decisionRoutes); // [NEW]
-app.use('/api/compliance', complianceRoutes); // [NEW]
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/revenue', revenueRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/decision', decisionRoutes);
+app.use('/api/compliance', complianceRoutes);
+app.use('/api/career', careerRoutes); // [NEW]
 
 // Error handling
 app.use(errorHandler);

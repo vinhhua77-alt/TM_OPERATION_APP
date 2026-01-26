@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../api/admin.api';
 import { masterDataAPI } from '../api/master-data';
 import { staffAPI } from '../api/staff';
+import { careerAPI } from '../api/career';
 import PageComplianceConfig from './PageComplianceConfig';
 import PageStoreSetup from './PageStoreSetup';
 
@@ -223,100 +224,396 @@ const PageAdminConsole = ({ user, initialTab = 'HUB', onBack }) => {
         </div>
     );
 
-    // --- 2. PEOPLE PILLAR (Permissions Matrix - Minimalist) ---
-    const PeopleView = () => (
-        <div className="space-y-2 animate-fade-in">
-            {/* Simple Tab Switcher */}
-            <div className="flex border-b border-slate-200 mb-2">
-                {[
-                    { id: 'PERMS', label: 'Phân quyền' },
-                    { id: 'CAREER', label: 'Lộ trình' }
-                ].map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setSubTab(tab.id)}
-                        className={`px-4 py-2 text-[10px] font-bold uppercase tracking-tight border-b-2 transition-colors ${subTab === tab.id ? 'border-black text-black' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+    // --- 2. PEOPLE PILLAR (Permissions Matrix & Career Logic) ---
+    const PeopleView = () => {
+        const [careerConfig, setCareerConfig] = useState(null);
+        const [pendingRequests, setPendingRequests] = useState([]);
+        const [processingReq, setProcessingReq] = useState(null);
 
-            {subTab === 'PERMS' && (
-                <div className="bg-white border border-slate-200 shadow-none overflow-hidden rounded-md">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            {/* Sticky Header */}
-                            <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0 z-10">
-                                <tr>
-                                    <th className="px-2 py-2 text-[9px] font-bold text-slate-500 uppercase min-w-[180px]">Feature / Permission</th>
-                                    {['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'STAFF'].map(role => (
-                                        <th key={role} className="w-[50px] px-1 py-2 text-center text-[9px] font-bold text-slate-500 uppercase border-l border-slate-100">{role}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {(() => {
-                                    if (!data?.permissionMatrix) return null;
-                                    const groups = {};
-                                    // Group permissions by domain default 'CORE'
-                                    data.permissionMatrix.forEach(p => {
-                                        const d = p.domain || 'CORE';
-                                        if (!groups[d]) groups[d] = [];
-                                        groups[d].push(p);
-                                    });
+        // Config Edit Modal State
+        const [showConfigModal, setShowConfigModal] = useState(false);
+        const [editConfigForm, setEditConfigForm] = useState({
+            position_key: '', label: '', min_hours: 0, required_role: ''
+        });
+        const [isSavingConfig, setIsSavingConfig] = useState(false);
 
-                                    const order = ['ADMIN', 'INTELLIGENCE', 'TALENT', 'FINANCIAL', 'CORE'];
+        useEffect(() => {
+            if (subTab === 'CAREER') {
+                if (!careerConfig) loadCareerConfig();
+                loadPendingRequests();
+            }
+        }, [subTab]);
 
-                                    return Object.entries(groups)
-                                        .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
-                                        .map(([domain, items]) => (
-                                            <React.Fragment key={domain}>
-                                                {/* Domain Header: Text Only */}
-                                                <tr className="bg-slate-50 border-y border-slate-200">
-                                                    <td colSpan={7} className="px-2 py-1 text-[9px] font-black text-slate-700 uppercase tracking-widest">
-                                                        {domain}
-                                                    </td>
-                                                </tr>
-                                                {/* Permission Rows */}
-                                                {items.map(perm => (
-                                                    <tr key={perm.perm_key} className="hover:bg-blue-50/50 transition-colors group">
-                                                        <td className="px-2 py-1.5 border-r border-slate-50">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] font-bold text-slate-700 font-mono leading-none mb-0.5">{perm.perm_key}</span>
-                                                                <span className="text-[9px] text-slate-400 font-medium truncate max-w-[200px]">{perm.description}</span>
-                                                            </div>
-                                                        </td>
-                                                        {['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'STAFF'].map(role => {
-                                                            const access = perm.role_permissions.find(rp => rp.role_code === role)?.can_access;
-                                                            return (
-                                                                <td
-                                                                    key={role}
-                                                                    className="px-0 py-0 text-center border-l border-slate-50 cursor-pointer hover:bg-black/5"
-                                                                    onClick={() => togglePerm(role, perm.perm_key, access)}
-                                                                >
-                                                                    <div className="h-full w-full flex items-center justify-center py-2">
-                                                                        {access ? (
-                                                                            <span className="text-blue-600 text-xs font-black">●</span>
-                                                                        ) : (
-                                                                            <span className="text-slate-200 text-[8px]">•</span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                ))}
-                                            </React.Fragment>
-                                        ));
-                                })()}
-                            </tbody>
-                        </table>
-                    </div>
+        const loadCareerConfig = async () => {
+            console.log("Fetching Career Config...");
+            try {
+                const res = await careerAPI.getConfigs();
+                if (res.success) {
+                    setCareerConfig(res.data);
+                } else {
+                    console.error("Failed to load config:", res);
+                }
+            } catch (err) {
+                console.error("Error loading career config:", err);
+            }
+        };
+
+        const loadPendingRequests = async () => {
+            const res = await careerAPI.getPendingRequests();
+            if (res.success) setPendingRequests(res.data || []);
+        };
+
+        const handleApproval = async (reqId, decision) => {
+            setProcessingReq(reqId);
+            const res = await careerAPI.approveRequest(reqId, user?.id || 'ADMIN', decision);
+            if (res.success) {
+                setPendingRequests(prev => prev.filter(r => r.id !== reqId));
+                alert(`Successfully ${decision} request!`);
+            } else {
+                alert('Action failed: ' + res.message);
+            }
+            setProcessingReq(null);
+        };
+
+        // --- Config Management Handlers ---
+        const openEditModal = (key, config) => {
+            if (config) {
+                // Edit Mode
+                setEditConfigForm({
+                    position_key: key,
+                    label: config.label,
+                    min_hours: config.min_hours,
+                    required_role: config.required_roles[0] || 'STAFF',
+                    isEdit: true
+                });
+            } else {
+                // Add Mode
+                setEditConfigForm({
+                    position_key: '', label: '', min_hours: 100, required_role: 'STAFF', isEdit: false
+                });
+            }
+            setShowConfigModal(true);
+        };
+
+        const handleSaveConfig = async () => {
+            setIsSavingConfig(true);
+            const res = await careerAPI.saveConfig({
+                position_key: editConfigForm.position_key,
+                label: editConfigForm.label,
+                min_hours: parseInt(editConfigForm.min_hours),
+                required_role: editConfigForm.required_role
+            });
+
+            if (res.success) {
+                await loadCareerConfig(); // Reload UI
+                setShowConfigModal(false);
+                alert('Config saved successfully!');
+            } else {
+                alert('Error saving config: ' + res.message);
+            }
+            setIsSavingConfig(false);
+        };
+
+        const handleDeleteConfig = async (key) => {
+            if (!window.confirm(`Are you sure you want to delete ${key}?`)) return;
+
+            const res = await careerAPI.deleteConfig(key);
+            if (res.success) {
+                await loadCareerConfig();
+            } else {
+                alert('Error deleting config: ' + res.message);
+            }
+        };
+
+        return (
+            <div className="space-y-4 animate-fade-in relative">
+                {/* Simple Tab Switcher */}
+                <div className="flex border-b border-slate-200 mb-4">
+                    {[
+                        { id: 'PERMS', label: 'Phân quyền (RBAC)' },
+                        { id: 'CAREER', label: 'Lộ trình phát triển (Career Path)' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setSubTab(tab.id)}
+                            className={`px-4 py-2 text-[10px] font-bold uppercase tracking-tight border-b-2 transition-colors ${subTab === tab.id ? 'border-black text-black' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
-            )}
-        </div>
-    );
+
+                {subTab === 'PERMS' && (
+                    <div className="bg-white border border-slate-200 shadow-none overflow-hidden rounded-md">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                {/* Sticky Header */}
+                                <thead className="bg-[#f8f9fa] border-b border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="px-2 py-2 text-[9px] font-bold text-slate-500 uppercase min-w-[180px]">Feature / Permission</th>
+                                        {['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'STAFF'].map(role => (
+                                            <th key={role} className="w-[50px] px-1 py-2 text-center text-[9px] font-bold text-slate-500 uppercase border-l border-slate-100">{role}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {(() => {
+                                        if (!data?.permissionMatrix) return null;
+                                        const groups = {};
+                                        // Group permissions by domain default 'CORE'
+                                        data.permissionMatrix.forEach(p => {
+                                            const d = p.domain || 'CORE';
+                                            if (!groups[d]) groups[d] = [];
+                                            groups[d].push(p);
+                                        });
+
+                                        const order = ['ADMIN', 'INTELLIGENCE', 'TALENT', 'FINANCIAL', 'CORE'];
+
+                                        return Object.entries(groups)
+                                            .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
+                                            .map(([domain, items]) => (
+                                                <React.Fragment key={domain}>
+                                                    {/* Domain Header: Text Only */}
+                                                    <tr className="bg-slate-50 border-y border-slate-200">
+                                                        <td colSpan={7} className="px-2 py-1 text-[9px] font-black text-slate-700 uppercase tracking-widest">
+                                                            {domain}
+                                                        </td>
+                                                    </tr>
+                                                    {/* Permission Rows */}
+                                                    {items.map(perm => (
+                                                        <tr key={perm.perm_key} className="hover:bg-blue-50/50 transition-colors group">
+                                                            <td className="px-2 py-1.5 border-r border-slate-50">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] font-bold text-slate-700 font-mono leading-none mb-0.5">{perm.perm_key}</span>
+                                                                    <span className="text-[9px] text-slate-400 font-medium truncate max-w-[200px]">{perm.description}</span>
+                                                                </div>
+                                                            </td>
+                                                            {['ADMIN', 'IT', 'OPS', 'SM', 'LEADER', 'STAFF'].map(role => {
+                                                                const access = perm.role_permissions.find(rp => rp.role_code === role)?.can_access;
+                                                                return (
+                                                                    <td
+                                                                        key={role}
+                                                                        className="px-0 py-0 text-center border-l border-slate-50 cursor-pointer hover:bg-black/5"
+                                                                        onClick={() => togglePerm(role, perm.perm_key, access)}
+                                                                    >
+                                                                        <div className="h-full w-full flex items-center justify-center py-2">
+                                                                            {access ? (
+                                                                                <span className="text-blue-600 text-xs font-black">●</span>
+                                                                            ) : (
+                                                                                <span className="text-slate-200 text-[8px]">•</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    ))}
+                                                </React.Fragment>
+                                            ));
+                                    })()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {subTab === 'CAREER' && (
+                    <div className="space-y-6">
+                        {/* 1. PENDING APPROVALS WIDGET */}
+                        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                <h3 className="text-[10px] font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                    Pending Trainee Approvals ({pendingRequests.length})
+                                </h3>
+                                <button onClick={loadPendingRequests} className="text-[10px] text-blue-600 font-bold hover:underline">Refresh</button>
+                            </div>
+
+                            {pendingRequests.length === 0 ? (
+                                <div className="p-8 text-center text-slate-400 text-sm font-medium italic">
+                                    No pending requests at the moment.
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-100">
+                                    {pendingRequests.map(req => (
+                                        <div key={req.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-sm font-bold text-slate-800">{req.staffName || 'Unknown Staff'}</span>
+                                                    <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">
+                                                        {req.storeId}
+                                                    </span>
+                                                </div>
+                                                <div className="text-[10px] text-slate-500">
+                                                    Requesting: <strong className="text-indigo-600">{req.position}</strong> • {new Date(req.timestamp).toLocaleString()}
+                                                </div>
+                                                <div className="text-[9px] font-mono text-slate-400 mt-1">
+                                                    Current Hours: {req.currentHours}h
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleApproval(req.id, 'REJECTED')}
+                                                    disabled={processingReq === req.id}
+                                                    className="px-3 py-1.5 text-[9px] font-bold text-rose-600 border border-rose-200 rounded hover:bg-rose-50 transition-colors"
+                                                >
+                                                    REJECT
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApproval(req.id, 'APPROVED')}
+                                                    disabled={processingReq === req.id}
+                                                    className="px-3 py-1.5 text-[9px] font-bold text-white bg-emerald-600 border border-emerald-600 rounded hover:bg-emerald-700 transition-colors shadow-sm"
+                                                >
+                                                    {processingReq === req.id ? '...' : 'APPROVE'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2. CAREER CONFIG */}
+                        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                                <span className="text-2xl">🎓</span>
+                                <div>
+                                    <h3 className="text-[11px] font-black text-blue-700 uppercase tracking-wide">Career Path Engine Config</h3>
+                                    <p className="text-[10px] text-blue-600/70 max-w-2xl">
+                                        Hệ thống Dynamic Config. Điều chỉnh Giờ Ấp & Tiêu chí thăng cấp bất cứ lúc nào.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => openEditModal(null, null)}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-transform active:scale-95"
+                            >
+                                + ADD NEW POSITION
+                            </button>
+                        </div>
+
+                        {careerConfig ? (
+                            <div className="grid grid-cols-4 gap-2">
+                                {Object.entries(careerConfig).map(([key, cfg]) => (
+                                    <div key={key} className="bg-white border border-slate-200 rounded p-2 flex flex-col hover:border-blue-400 transition-all relative overflow-hidden group h-full">
+                                        <div className="flex justify-between items-start mb-1 z-10">
+                                            <div className="flex-1 min-w-0 mr-1">
+                                                <div className="text-[7px] font-bold text-slate-400 uppercase tracking-widest truncate">{key.replace('_TRAINEE', '')}</div>
+                                                <h3 className="text-[10px] font-black text-slate-800 uppercase leading-3 line-clamp-2" title={cfg.label}>{cfg.label}</h3>
+                                            </div>
+                                            <div className="flex -mr-1 -mt-1">
+                                                <button onClick={() => openEditModal(key, cfg)} className="text-slate-300 hover:text-blue-600 p-1"><span className="text-[10px]">✎</span></button>
+                                                <button onClick={() => handleDeleteConfig(key)} className="text-slate-300 hover:text-rose-500 p-1"><span className="text-[10px]">✕</span></button>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto space-y-1 z-10">
+                                            <div className="bg-slate-50 px-1.5 py-1 rounded border border-slate-100 flex justify-between items-center">
+                                                <span className="text-[7px] font-bold text-slate-500 uppercase">Giờ Ấp</span>
+                                                <span className="text-[9px] font-black text-black font-mono">{cfg.min_hours.toLocaleString()}h</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 overflow-hidden">
+                                                <span className="text-[7px] font-bold text-slate-400 uppercase shrink-0">Từ:</span>
+                                                <div className="flex gap-0.5 overflow-hidden">
+                                                    {cfg.required_roles.map(r => (
+                                                        <span key={r} className="text-[7px] font-bold bg-white border border-slate-200 px-1 py-px rounded text-slate-600 truncate">{r}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Loading Configuration...</div>
+                        )}
+                    </div>
+                )}
+
+                {/* --- CONFIG MODAL --- */}
+                {showConfigModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 fade-in">
+                        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                    {editConfigForm.isEdit ? `Edit: ${editConfigForm.position_key}` : 'Create New Career Path'}
+                                </h3>
+                                <button onClick={() => setShowConfigModal(false)} className="text-slate-400 hover:text-black">✕</button>
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                {!editConfigForm.isEdit && (
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Position Key (Unique)</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 border border-slate-200 rounded text-sm font-mono placeholder:text-slate-300 focus:outline-none focus:border-blue-500 uppercase"
+                                            placeholder="e.g. MARKETING_TRAINEE"
+                                            value={editConfigForm.position_key}
+                                            onChange={e => setEditConfigForm({ ...editConfigForm, position_key: e.target.value.toUpperCase().replace(/\s+/g, '_') })}
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Display Label</label>
+                                    <input
+                                        type="text"
+                                        className="w-full p-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-500"
+                                        placeholder="e.g. Thực tập Marketing"
+                                        value={editConfigForm.label}
+                                        onChange={e => setEditConfigForm({ ...editConfigForm, label: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Min Hours</label>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2 border border-slate-200 rounded text-sm font-mono focus:outline-none focus:border-blue-500"
+                                            value={editConfigForm.min_hours}
+                                            onChange={e => setEditConfigForm({ ...editConfigForm, min_hours: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Required From Role</label>
+                                        <select
+                                            className="w-full p-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-500"
+                                            value={editConfigForm.required_role}
+                                            onChange={e => setEditConfigForm({ ...editConfigForm, required_role: e.target.value })}
+                                        >
+                                            <option value="STAFF">STAFF</option>
+                                            <option value="CASHIER">CASHIER</option>
+                                            <option value="LEADER">LEADER</option>
+                                            <option value="SM">SM</option>
+                                            <option value="AM">AM</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                                <button
+                                    onClick={() => setShowConfigModal(false)}
+                                    className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveConfig}
+                                    disabled={isSavingConfig}
+                                    className="bg-black text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                                >
+                                    {isSavingConfig ? 'Saving...' : 'SAVE CHANGES'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // --- 3. PLATFORM PILLAR (Minimalist) ---
     const PlatformView = () => (
