@@ -9,7 +9,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '📝',
             desc: 'Nhật ký ca & Báo cáo quản lý.',
             color: 'blue',
-            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'SHIFT_LOG',
             flag: 'MODULE_SHIFTLOG'
         },
@@ -19,7 +19,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '👑',
             desc: 'Chốt ngày & Doanh thu.',
             color: 'purple',
-            submitRoles: ['SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'SM_REPORT',
             flag: 'MODULE_SM_REPORT'
         },
@@ -29,7 +29,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '🛡️',
             desc: 'Vệ sinh & ATTP & Sẵn sàng.',
             color: 'orange',
-            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'QAQC_HUB',
             flag: 'MODULE_5S'
         },
@@ -39,7 +39,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '💰',
             desc: 'Đối soát quỹ tiền mặt.',
             color: 'rose',
-            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'REPORT_CASHIER',
             flag: 'MODULE_CASHIER'
         },
@@ -49,7 +49,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '📦',
             desc: 'Báo cáo kho cuối ngày.',
             color: 'emerald',
-            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'REPORT_INVENTORY',
             flag: 'MODULE_INVENTORY'
         },
@@ -59,7 +59,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '🗑️',
             desc: 'Báo cáo hàng hủy/hỏng.',
             color: 'slate',
-            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'REPORT_WASTE',
             flag: 'MODULE_WASTE'
         },
@@ -69,7 +69,7 @@ const PageDailyReporting = ({ user, onBack, onNavigate, sysConfig }) => {
             icon: '🌅',
             desc: 'Chuẩn bị đầu ca.',
             color: 'cyan',
-            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD'],
+            submitRoles: ['STAFF', 'LEADER', 'SM', 'OPS', 'ADMIN', 'BOD', 'TESTER'],
             target: 'REPORT_M5M',
             flag: 'MODULE_M5M'
         }

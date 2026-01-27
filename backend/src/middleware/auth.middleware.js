@@ -109,3 +109,68 @@ export function requireRole(allowedRoles) {
     });
   };
 }
+
+/**
+ * Sandbox Read-Only Protection
+ * Block config table modifications in sandbox mode
+ * V3.52 Security Enhancement
+ * 
+ * CRITICAL: This middleware wraps authenticateToken to ensure req.isSandboxMode is set
+ */
+export function enforceSandboxReadOnly(req, res, next) {
+  // Exclude authentication routes to prevent infinite loop
+  const authRoutes = ['/api/auth', '/api/password-reset'];
+  if (authRoutes.some(route => req.path.startsWith(route))) {
+    return next();
+  }
+
+  // Step 1: Ensure user is authenticated first
+  // Call authenticateToken to set req.user and req.isSandboxMode
+  authenticateToken(req, res, () => {
+    // Step 2: Only apply to sandbox users (primarily TESTER role)
+    if (!req.isSandboxMode) {
+      return next();
+    }
+
+    // Define protected configuration routes
+    const configRoutes = [
+      // Admin Entity Management
+      '/api/admin/stores',           // Store Management
+      '/api/admin/staff',            // Staff Management
+
+      // Admin People Management
+      '/api/admin/career-configs',   // Career Path Configuration
+      '/api/admin/roles',            // Role Management
+
+      // Admin Platform Configuration
+      '/api/admin/features',         // Feature Flags
+      '/api/admin/permissions',      // Role Permissions
+      '/api/admin/config',           // Generic config endpoint
+
+      // Master Data Management (V3.52)
+      '/api/master-data',            // Area, Position, Brand lists
+
+      // System Communication (V3.52)
+      '/api/announcements'           // System-wide announcements
+    ];
+
+    // Check if current route matches config routes
+    const isConfigRoute = configRoutes.some(route => req.path.startsWith(route));
+
+    // Check if method is a write operation
+    const writeMethod = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
+
+    // Block write operations on config routes
+    if (isConfigRoute && writeMethod) {
+      return res.status(403).json({
+        success: false,
+        error_code: 'SANDBOX_CONFIG_READ_ONLY',
+        message: '🧪 Sandbox Mode: Configuration tables are READ-ONLY. You can view configs but cannot modify them. This protects production data.',
+        hint: 'Use a production account to test admin workflows, or contact your administrator.'
+      });
+    }
+
+    // Allow all other operations (including GET on config routes)
+    next();
+  });
+}

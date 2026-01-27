@@ -12,6 +12,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression'; // [PERFORMANCE] Compress responses (70% bandwidth reduction)
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler.js';
+import { enforceSandboxReadOnly } from './middleware/auth.middleware.js'; // [V3.52] Sandbox protection
 import cookieParser from 'cookie-parser';
 
 // Routes
@@ -155,6 +156,11 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.send('<h1>🚀 TM Operation App Backend is Running!</h1><p>Please use the Frontend to access the application.</p>');
 });
+
+// [V3.52 SECURITY] Apply Sandbox Read-Only Protection GLOBALLY
+// ⚠️ CRITICAL: This MUST be applied BEFORE all API routes
+// Block TESTER from modifying production config tables while allowing data workflows
+app.use(enforceSandboxReadOnly);
 
 // API Routes
 app.use('/api/auth', authRoutes);
