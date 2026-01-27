@@ -178,8 +178,18 @@ const PageStaffManagement = ({ user, onBack }) => {
             store_code: editModal.store_code || (statistics?.byStore ? Object.keys(statistics.byStore)[0] : 'TMG'),
             active: editModal.active !== undefined ? editModal.active : true,
             is_trainee: editModal.is_trainee || false,
-            trainee_verified: editModal.trainee_verified || false
+            trainee_verified: editModal.trainee_verified || false,
+            responsibility: editModal.responsibility || [] // [NEW] Area Responsibility
         });
+
+        const toggleStore = (store) => {
+            const current = formData.responsibility || [];
+            if (current.includes(store)) {
+                setFormData({ ...formData, responsibility: current.filter(s => s !== store) });
+            } else {
+                setFormData({ ...formData, responsibility: [...current, store] });
+            }
+        };
 
         return (
             <div style={{
@@ -270,6 +280,44 @@ const PageStaffManagement = ({ user, onBack }) => {
                                 <option key={store} value={store}>{store}</option>
                             ))}
                         </select>
+
+                        {/* [NEW] Area Responsibility Selector */}
+                        <div style={{ marginTop: '4px' }}>
+                            <label style={{ fontSize: '10px', fontBlack: '900', color: '#64748B', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                🌏 Phân quyền Area (Quản lý nhiều Store)
+                            </label>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(3, 1fr)',
+                                gap: '4px',
+                                padding: '8px',
+                                background: '#F8FAFC',
+                                borderRadius: '8px',
+                                border: '1px solid #E2E8F0',
+                                maxHeight: '100px',
+                                overflowY: 'auto'
+                            }}>
+                                {statistics?.byStore && Object.keys(statistics.byStore).map(store => (
+                                    <label key={store} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        fontSize: '9px',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer',
+                                        color: (formData.responsibility || []).includes(store) ? '#2563EB' : '#64748B'
+                                    }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={(formData.responsibility || []).includes(store)}
+                                            onChange={() => toggleStore(store)}
+                                            style={{ width: '12px', height: '12px' }}
+                                        />
+                                        {store}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
 
                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
                             <input
