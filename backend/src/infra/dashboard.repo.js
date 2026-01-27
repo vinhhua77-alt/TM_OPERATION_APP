@@ -12,9 +12,10 @@ export class DashboardRepo {
     static async getEmployeeDailyDashboard(staffId, date) {
         try {
             // 1. Try to get from Aggregated metrics first (FAST)
+            // [PERFORMANCE] Select only needed columns
             const { data: agg, error: aggError } = await supabase
                 .from('agg_daily_staff_metrics')
-                .select('*')
+                .select('work_hours, mood_score, checklist_score, extended_metrics')
                 .eq('staff_id', staffId)
                 .eq('report_date', date)
                 .single();
@@ -64,17 +65,19 @@ export class DashboardRepo {
 
             console.log(`[DailyDashboard] Querying shifts for ${staffId} from ${startOfDay} to ${endOfDay}`);
 
+            // [PERFORMANCE] Select only needed columns for shift logs
             const { data: shifts, error: shiftError } = await supabase
                 .from('raw_shiftlog')
-                .select('*')
+                .select('id, staff_id, duration, rating, checks, created_at, layout, sub_pos, incident_type, improvement_note')
                 .eq('staff_id', staffId) // FIX: Use UUID directly
                 .gte('created_at', startOfDay)
                 .lte('created_at', endOfDay);
 
             // Fetch Leader Shifts for Today as well
+            // [PERFORMANCE] Select only needed columns for leader reports
             const { data: leaderShifts } = await supabase
                 .from('leader_reports')
-                .select('*')
+                .select('id, leader_id, shift_start, shift_end, mood, checklist, created_at, area_code, store_code, observed_issue_code, has_customer_issue, has_out_of_stock, improvement_initiative')
                 .eq('leader_id', staffId)
                 .gte('created_at', startOfDay)
                 .lte('created_at', endOfDay);
@@ -234,9 +237,10 @@ export class DashboardRepo {
             // Performance: Very fast for single user (max ~60 rows/month)
 
             // A. Staff Logs
+            // [PERFORMANCE] Select only needed columns for dashboard stats
             const { data: staffLogs, error: staffError } = await supabase
                 .from('raw_shiftlog')
-                .select('*')
+                .select('id, staff_id, duration, rating, checks, created_at, layout, sub_pos, incident_type, improvement_note, store_id')
                 .eq('staff_id', staffId)
                 .gte('created_at', queryStart)
                 .lte('created_at', queryEnd)
@@ -245,9 +249,10 @@ export class DashboardRepo {
             if (staffError) throw staffError;
 
             // B. Leader Logs
+            // [PERFORMANCE] Select only needed columns for leader dashboard
             const { data: leaderReports, error: leaderError } = await supabase
                 .from('leader_reports')
-                .select('*')
+                .select('id, leader_id, shift_start, shift_end, mood, checklist, created_at, area_code, store_code, observed_issue_code, has_customer_issue, has_out_of_stock, improvement_initiative')
                 .eq('leader_id', staffId)
                 .gte('created_at', queryStart)
                 .lte('created_at', queryEnd)

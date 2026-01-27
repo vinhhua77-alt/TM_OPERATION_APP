@@ -83,11 +83,12 @@ router.get('/data', async (req, res) => {
             { data: staff, error: errStaff }
         ] = await Promise.all([
             supabase.from('store_list').select('id, store_code, store_name, active').eq('active', true),
-            supabase.from('shift_master').select('*').eq('active', true),
-            supabase.from('layout_master').select('*').order('sort_order', { ascending: true }),
-            supabase.from('sub_position_master').select('*'),
-            supabase.from('checklist_master').select('*').order('sort_order', { ascending: true }),
-            supabase.from('incident_master').select('*'),
+            // [PERFORMANCE] Only select needed columns instead of SELECT *
+            supabase.from('shift_master').select('shift_name, start_hour, end_hour, active').eq('active', true),
+            supabase.from('layout_master').select('layout_code, sort_order, active').order('sort_order', { ascending: true }),
+            supabase.from('sub_position_master').select('layout, sub_position, active'),
+            supabase.from('checklist_master').select('id, checklist_id, checklist_text, layout, sort_order, active').order('sort_order', { ascending: true }),
+            supabase.from('incident_master').select('incident_name, layout, active'),
             supabase.from('staff_master').select('id, staff_name, store_code, role, active').eq('active', true)
         ]);
 

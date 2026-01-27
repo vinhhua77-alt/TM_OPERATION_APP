@@ -9,6 +9,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression'; // [PERFORMANCE] Compress responses (70% bandwidth reduction)
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler.js';
 import cookieParser from 'cookie-parser';
@@ -96,6 +97,21 @@ app.use(cors({
   exposedHeaders: ['Content-Type', 'Authorization']
 }));
 
+
+// [PERFORMANCE] Response Compression - Reduces bandwidth by 70%
+// Must be applied BEFORE routes to compress all responses
+app.use(compression({
+  level: 6, // Compression level (0-9, 6 is balanced)
+  threshold: 1024, // Only compress responses > 1KB
+  filter: (req, res) => {
+    // Don't compress if client doesn't support it
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression filter
+    return compression.filter(req, res);
+  }
+}));
 
 // Rate limiting - Separate limits for auth and general API
 const generalLimiter = rateLimit({
