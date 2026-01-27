@@ -20,6 +20,14 @@ export const staffAPI = {
         },
 
         /**
+         * Create new staff member
+         */
+        async createStaff(staffData) {
+                const response = await apiClient.post('/staff', staffData);
+                return response;
+        },
+
+        /**
          * Get staff statistics
          */
         async getStatistics() {

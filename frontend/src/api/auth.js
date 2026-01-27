@@ -19,6 +19,10 @@ export const authAPI = {
 
   logout: async () => {
     return apiClient.post('/auth/logout');
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    return apiClient.post('/auth/change-password', { oldPassword, newPassword });
   }
 };
 

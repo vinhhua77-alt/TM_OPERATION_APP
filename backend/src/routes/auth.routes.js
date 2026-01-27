@@ -94,4 +94,27 @@ router.post('/logout', (req, res) => {
   res.json({ success: true, message: 'Đăng xuất thành công' });
 });
 
+/**
+ * POST /api/auth/change-password
+ * Người dùng tự đổi mật khẩu (Yêu cầu login)
+ */
+router.post('/change-password', authenticateToken, async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const staffId = req.user.staff_id;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu cũ và mật khẩu mới là bắt buộc'
+      });
+    }
+
+    const result = await AuthService.changePassword(staffId, oldPassword, newPassword);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

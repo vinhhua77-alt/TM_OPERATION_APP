@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { authAPI, passwordResetAPI } from '../api/auth';
 import Notification from '../components/Notification';
 
+// FEATURE TOGGLES
+const ENABLE_FORGOT_PASSWORD = false; // Chỉnh thành false nếu muốn ẩn tính năng quên mật khẩu
+
 const PageLogin = ({ onLogin, onGoToRegister }) => {
   const [staffId, setStaffId] = useState('');
   const [password, setPassword] = useState('');
@@ -9,6 +12,9 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const quotes = [
     "Cách tốt nhất để dự đoán tương lai của bạn là tạo ra nó.",
@@ -53,80 +59,150 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
     }
   };
 
+  const handleRequestReset = async () => {
+    if (!resetEmail) {
+      setMsg({ text: 'VUI LÒNG NHẬP EMAIL ĐỂ TIẾP TỤC!', type: 'error' });
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const res = await passwordResetAPI.requestReset(resetEmail);
+      if (res.success) {
+        setMsg({ text: 'YÊU CẦU ĐÃ GỬI! VUI LÒNG KIỂM TRA EMAIL CỦA BẠN.', type: 'success' });
+        setShowForgotModal(false);
+        setResetEmail('');
+      } else {
+        setMsg({ text: res.message, type: 'error' });
+      }
+    } catch (error) {
+      setMsg({ text: error.message || 'Lỗi gửi yêu cầu', type: 'error' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'center', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
-      <div style={{ background: 'white', padding: '2rem', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+      {loading && (
+        <div className="fixed inset-0 bg-white/50 z-50 flex items-center justify-center backdrop-blur-sm">
+          {/* Simple inline spinner fallback if BrandLoading not imported here yet, keeping logical flow simple */}
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+        </div>
+      )}
+
+      <div className="bg-white p-8 rounded-2xl shadow-xl shadow-blue-100/50 w-full max-w-[400px] border border-white relative overflow-hidden">
         <Notification message={msg.text} type={msg.type} onClose={() => setMsg({ text: '', type: '' })} />
 
-        <div className="header text-center mb-6">
-          <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="logo-img" alt="logo" style={{ maxHeight: '80px', marginBottom: '1rem' }} />
-          <h2 className="brand-title" style={{ color: '#004AAD', fontSize: '1.5rem', fontWeight: 'bold' }}>THÁI MẬU GROUP</h2>
-          <div style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p className="sub-title-dev fade-in" key={quoteIndex} style={{ fontStyle: 'italic', color: '#666', fontSize: '0.9rem', padding: '0 10px' }}>
+        {/* Header Branding */}
+        <div className="text-center mb-8 relative z-10">
+          <div className="relative inline-block">
+            <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full"></div>
+            <img src="https://theme.hstatic.net/200000475475/1000828169/14/logo.png?v=91" className="relative w-24 h-auto mx-auto mb-4 drop-shadow-sm hover:scale-105 transition-transform duration-300" alt="logo" />
+          </div>
+          <h2 className="text-2xl font-black text-blue-900 tracking-tight">THÁI MẬU GROUP</h2>
+
+          <div className="h-12 flex items-center justify-center mt-2">
+            <p className="text-xs text-slate-500 italic px-2 animate-fade-in key={quoteIndex}">
               "{quotes[quoteIndex]}"
             </p>
           </div>
         </div>
 
-        <div className="form-group mb-4">
+        {/* Form Inputs */}
+        <div className="space-y-4">
           <input
-            className="input-login text-center uppercase w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            style={{ width: '100%', boxSizing: 'border-box' }}
+            className="w-full p-4 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all uppercase"
             placeholder="MÃ NHÂN VIÊN"
             value={staffId}
             onChange={(e) => setStaffId(e.target.value.toUpperCase())}
             onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
           />
+
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="w-full p-4 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
+              placeholder="MẬT KHẨU"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider"
+            >
+              {showPassword ? 'Ẩn' : 'Hiện'}
+            </button>
+          </div>
+
+          {ENABLE_FORGOT_PASSWORD && (
+            <div className="flex justify-end pr-1">
+              <button
+                onClick={() => setShowForgotModal(true)}
+                className="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-wider transition-colors"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="form-group mb-4" style={{ position: 'relative' }}>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="input-login text-center w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            style={{ width: '100%', boxSizing: 'border-box' }}
-            placeholder="MẬT KHẨU"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#004AAD', fontWeight: 'bold' }}
-          >
-            {showPassword ? 'ẨN' : 'HIỆN'}
-          </button>
-        </div>
-
+        {/* Action Button */}
         <button
-          className="btn-login"
+          className="w-full mt-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold shadow-lg shadow-blue-600/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed uppercase tracking-wide text-sm"
           onClick={handleLogin}
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: loading ? '#ccc' : '#004AAD',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            marginTop: '1rem',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
         >
           {loading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP NGAY'}
         </button>
 
+        {/* Secondary Action */}
         <div className="text-center mt-6">
           <button
             onClick={onGoToRegister}
-            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#004AAD', fontSize: '13px', textDecoration: 'underline' }}
+            className="text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-wider"
           >
             Đăng ký nhân viên mới
           </button>
         </div>
       </div>
-      <p style={{ marginTop: '2rem', color: '#666', fontSize: '0.8rem' }}>© 2026 Powered by Vinh Gà</p>
+
+      <p className="mt-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">© 2026 Powered by Vinh Gà</p>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[360px] p-6 animate-scale-in">
+            <h3 className="text-lg font-black text-blue-900 mb-2 uppercase tracking-tight">Quên mật khẩu?</h3>
+            <p className="text-[11px] text-slate-500 mb-6 font-medium">Nhập email đã đăng ký của bạn. Chúng tôi sẽ gửi một liên kết để bạn đặt lại mật khẩu mới.</p>
+
+            <input
+              type="email"
+              placeholder="EMAIL ĐÃ ĐĂNG KÝ"
+              className="w-full p-4 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-sm mb-6"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                className="py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+                onClick={() => setShowForgotModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                className="py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50"
+                onClick={handleRequestReset}
+                disabled={resetLoading}
+              >
+                {resetLoading ? 'ĐANG GỬI...' : 'GỬI YÊU CẦU'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

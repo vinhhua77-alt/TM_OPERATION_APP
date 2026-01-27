@@ -74,11 +74,25 @@ const PageStaffManagement = ({ user, onBack }) => {
 
     const handleUpdateStaff = async (updates) => {
         try {
-            const res = await staffAPI.updateStaff(editModal.staff_id, updates);
-            if (res.success) {
-                showMessage('Cập nhật thành công', 'success');
-                setEditModal(null);
-                loadStaffData();
+            // Check if this is CREATE or UPDATE mode
+            const isCreateMode = !editModal.staff_id;
+
+            if (isCreateMode) {
+                // CREATE: Call createStaff API
+                const res = await staffAPI.createStaff(updates);
+                if (res.success) {
+                    showMessage('Tạo nhân viên thành công!', 'success');
+                    setEditModal(null);
+                    loadStaffData();
+                }
+            } else {
+                // UPDATE: Call updateStaff API
+                const res = await staffAPI.updateStaff(editModal.staff_id, updates);
+                if (res.success) {
+                    showMessage('Cập nhật thành công', 'success');
+                    setEditModal(null);
+                    loadStaffData();
+                }
             }
         } catch (error) {
             showMessage('Lỗi: ' + error.message, 'error');
@@ -153,12 +167,16 @@ const PageStaffManagement = ({ user, onBack }) => {
     };
 
     const EditModal = () => {
+        const isCreateMode = !editModal.staff_id;
+
         const [formData, setFormData] = useState({
-            staff_name: editModal.staff_name,
-            gmail: editModal.gmail,
-            role: editModal.role,
-            store_code: editModal.store_code,
-            active: editModal.active,
+            staff_id: editModal.staff_id || '', // [NEW] Added staff_id
+            staff_name: editModal.staff_name || '',
+            gmail: editModal.gmail || '',
+            password: '', // Always empty for security
+            role: editModal.role || 'STAFF',
+            store_code: editModal.store_code || (statistics?.byStore ? Object.keys(statistics.byStore)[0] : 'TMG'),
+            active: editModal.active !== undefined ? editModal.active : true,
             is_trainee: editModal.is_trainee || false,
             trainee_verified: editModal.trainee_verified || false
         });
@@ -184,10 +202,25 @@ const PageStaffManagement = ({ user, onBack }) => {
                     maxWidth: '400px'
                 }}>
                     <h3 style={{ fontSize: '12px', fontWeight: '800', marginBottom: '12px' }}>
-                        Chỉnh sửa: {editModal.staff_id}
+                        {isCreateMode ? '➕ Tạo nhân viên mới' : `Chỉnh sửa: ${editModal.staff_id}`}
                     </h3>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {/* [NEW] Staff ID Field */}
+                        <input
+                            className="input-login"
+                            placeholder="Mã nhân viên (VD: TM0088)"
+                            value={formData.staff_id}
+                            onChange={e => setFormData({ ...formData, staff_id: e.target.value.toUpperCase() })}
+                            disabled={!isCreateMode} // Disable when editing
+                            style={{
+                                padding: '8px',
+                                fontSize: '11px',
+                                background: !isCreateMode ? '#F1F5F9' : 'white',
+                                fontWeight: 'bold'
+                            }}
+                        />
+
                         <input
                             className="input-login"
                             placeholder="Tên nhân viên"

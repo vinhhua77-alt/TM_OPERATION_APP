@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI } from '../api/dashboard';
+import { authAPI } from '../api/auth';
 import StatCard from '../components/StatCard';
 import RecentShifts from '../components/RecentShifts';
 import MoodChart from '../components/MoodChart';
@@ -24,6 +25,12 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dailyData, setDailyData] = useState(null);
   const [dailyLoading, setDailyLoading] = useState(false);
+
+  // Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState({ text: '', type: '' });
 
   // Helper: Get safe user properties
   const getSafeUser = (u) => ({
@@ -150,6 +157,40 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
     finally { setGridLoading(false); }
   };
 
+  const handleChangePassword = async () => {
+    if (!passwordForm.oldPassword || !passwordForm.newPassword) {
+      setPasswordMsg({ text: 'Vui lòng nhập đầy đủ thông tin', type: 'error' });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMsg({ text: 'Mật khẩu mới không khớp', type: 'error' });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordMsg({ text: 'Mật khẩu mới phải từ 6 ký tự', type: 'error' });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await authAPI.changePassword(passwordForm.oldPassword, passwordForm.newPassword);
+      if (res.success) {
+        setPasswordMsg({ text: 'Đổi mật khẩu thành công!', type: 'success' });
+        setTimeout(() => {
+          setShowPasswordModal(false);
+          setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+          setPasswordMsg({ text: '', type: '' });
+        }, 2000);
+      } else {
+        setPasswordMsg({ text: res.message, type: 'error' });
+      }
+    } catch (error) {
+      setPasswordMsg({ text: error.message || 'Lỗi hệ thống', type: 'error' });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
 
   if (loading && !data) {
     return (
@@ -179,6 +220,10 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
             {/* ANALYTICS SHORTCUT (TEMP FOR TESTING) */}
             <div onClick={() => onNavigate('ANALYTICS_LEADER')} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 cursor-pointer transition-colors active:scale-95 shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            </div>
+
+            <div onClick={() => setShowPasswordModal(true)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 cursor-pointer transition-colors border border-slate-100 shadow-sm active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             </div>
 
             <div onClick={onLogout} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-red-500 cursor-pointer transition-colors border border-slate-100 shadow-sm active:scale-95">
@@ -330,6 +375,66 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
       >
         📝
       </button>
+
+      {/* CHANGE PASSWORD MODAL */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-[400px] rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Đổi mật khẩu</h2>
+              <button onClick={() => setShowPasswordModal(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {passwordMsg.text && (
+                <div className={`p-3 rounded-xl text-[10px] font-bold uppercase text-center ${passwordMsg.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                  {passwordMsg.text}
+                </div>
+              )}
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Mật khẩu cũ</label>
+                <input
+                  type="password"
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all text-sm font-bold"
+                  value={passwordForm.oldPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all text-sm font-bold"
+                  value={passwordForm.newPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all text-sm font-bold"
+                  value={passwordForm.confirmPassword}
+                  onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                />
+              </div>
+
+              <button
+                onClick={handleChangePassword}
+                disabled={passwordLoading}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50 mt-4"
+              >
+                {passwordLoading ? 'ĐANG XỬ LÝ...' : 'CẬP NHẬT NGAY'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

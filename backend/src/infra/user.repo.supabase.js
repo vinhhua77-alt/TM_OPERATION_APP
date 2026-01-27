@@ -179,6 +179,70 @@ export class UserRepo {
     }
 
     /**
+     * Create staff with auto-generated staff_id (Admin creates user)
+     */
+    static async createStaff(staffData) {
+        try {
+            let nextId = staffData.staff_id;
+
+            // 1. Generate next staff_id ONLY IF NOT PROVIDED
+            if (!nextId) {
+                const { data: maxStaff, error: maxError } = await supabase
+                    .from('staff_master')
+                    .select('staff_id')
+                    .order('staff_id', { ascending: false })
+                    .limit(1);
+
+                if (maxError) {
+                    console.error('Error fetching max staff_id:', maxError);
+                    // Fallback to TM0001 if table is empty or error
+                    nextId = 'TM0001';
+                } else if (maxStaff && maxStaff.length > 0) {
+                    const lastId = maxStaff[0].staff_id;
+                    const match = lastId.match(/TM(\d+)/);
+                    if (match) {
+                        const num = parseInt(match[1]) + 1;
+                        nextId = `TM${num.toString().padStart(4, '0')}`;
+                    } else {
+                        nextId = 'TM0001';
+                    }
+                } else {
+                    nextId = 'TM0001';
+                }
+            } else {
+                nextId = nextId.toUpperCase(); // Normalize manual ID
+            }
+
+            // 2. Insert new staff
+            const { data, error } = await supabase
+                .from('staff_master')
+                .insert([{
+                    staff_id: nextId,
+                    staff_name: staffData.staff_name,
+                    gmail: staffData.gmail,
+                    password_hash: staffData.password_hash,
+                    role: staffData.role,
+                    store_code: staffData.store_code,
+                    status: staffData.status || 'ACTIVE',
+                    active: staffData.active !== undefined ? staffData.active : true,
+                    tenant_id: staffData.tenant_id || 'TM',
+                    is_trainee: staffData.is_trainee || false,
+                    trainee_verified: staffData.trainee_verified || false,
+                    responsibility: staffData.responsibility || []
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            return data;
+        } catch (error) {
+            console.error('UserRepo.createStaff error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Lấy danh sách nhân viên (có limit)
      */
     static async getList(tenantId = null, limit = 10, offset = 0) {

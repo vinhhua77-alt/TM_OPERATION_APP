@@ -39,6 +39,90 @@ export class StaffService {
     }
 
     /**
+     * Create new staff member (Admin only)
+     */
+    static async createStaff(currentUser, staffData) {
+        // Permission check: Only ADMIN, IT, OPS can create staff
+        const authorizedRoles = ['ADMIN', 'IT', 'OPS'];
+        if (!authorizedRoles.includes(currentUser.role)) {
+            throw new Error('Unauthorized: Only ADMIN/OPS can create staff');
+        }
+
+        // Validation
+        const { staff_id, staff_name, gmail, password, role, store_code, active, is_trainee } = staffData;
+
+        if (!staff_name || !gmail || !password || !role || !store_code) {
+            throw new Error('Missing required fields: staff_name, gmail, password, role, store_code');
+        }
+
+        // Validate role
+        const validRoles = ['ADMIN', 'IT', 'BOD', 'OPS', 'AM', 'SM', 'LEADER', 'STAFF'];
+        if (!validRoles.includes(role)) {
+            throw new Error(`Invalid role: ${role}`);
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+            throw new Error('Password must be at least 6 characters');
+        }
+
+        try {
+            // Check if email already exists
+            const existingUser = await UserRepo.getByEmail(gmail);
+            if (existingUser) {
+                throw new Error('Email already exists');
+            }
+
+            // [NEW] Check if manual staff_id already exists if provided
+            if (staff_id) {
+                const existingStaff = await UserRepo.getByStaffId(staff_id);
+                if (existingStaff) {
+                    throw new Error(`Mã nhân viên ${staff_id} đã tồn tại`);
+                }
+            }
+
+            // Hash password
+            const salt = await bcrypt.genSalt(10);
+            const password_hash = await bcrypt.hash(password, salt);
+
+            // Create staff via UserRepo
+            const result = await UserRepo.createStaff({
+                staff_id, // Pass manual ID if exists
+                staff_name,
+                gmail,
+                password_hash,
+                role,
+                store_code,
+                active: active !== undefined ? active : true,
+                status: active !== undefined && active ? 'ACTIVE' : 'PENDING',
+                is_trainee: is_trainee || false,
+                trainee_verified: false,
+                tenant_id: currentUser.tenant_id || 'TM'
+            });
+
+            // Audit log
+            const { AuditRepo } = await import('../../infra/audit.repo.js');
+            await AuditRepo.log({
+                userId: currentUser.id,
+                action: 'CREATE_STAFF',
+                resourceType: 'staff_master',
+                resourceId: result.staff_id,
+                details: {
+                    staff_name,
+                    role,
+                    store_code,
+                    is_trainee
+                }
+            });
+
+            return result;
+        } catch (error) {
+            console.error('StaffService.createStaff error:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get staff statistics (admin only)
      */
     static async getStatistics(currentUser) {

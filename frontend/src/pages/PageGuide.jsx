@@ -4,63 +4,63 @@ const PageGuide = ({ onBack }) => {
     // Guide Content
     const guides = [
         {
-            title: "ĐĂNG NHẬP",
+            title: "KHỞI ĐỘNG & LOGIN",
             icon: "🔑",
             color: "blue",
             steps: [
-                "Dùng mã TMxxx",
-                "Password mặc định",
-                "Đổi Pass ngay lần đầu"
+                "Đăng nhập bằng Mã NV",
+                "Đổi mật khẩu lần đầu",
+                "Chọn Cửa hàng làm việc"
             ]
         },
         {
-            title: "CHECKLIST & SHIFT",
-            icon: "📝",
+            title: "NHẬT KÝ CA (SHIFT)",
+            icon: "🕒",
             color: "purple",
             steps: [
-                "Vào ca / Ra ca đúng giờ",
-                "Ghi lý do nếu lệch ca",
-                "Checklist vận hành đầy đủ"
+                "Check-in đúng giờ",
+                "Xác nhận nếu Lệch Ca",
+                "Gửi Feedback cuối ca"
             ]
         },
         {
             title: "LỘ TRÌNH THĂNG TIẾN",
             icon: "🐣",
-            color: "pink",
+            color: "emerald", // Changed to emerald for growth feel
             steps: [
-                "Tích lũy 'Giờ Ấp' mỗi ca",
-                "Đủ giờ -> Bật 'Chế độ Tập sự'",
-                "Chờ Leader/SM duyệt"
+                "Tích lũy 'Giờ Ấp' tự động",
+                "Đủ giờ -> Bật 'Trainee Mode'",
+                "Chờ SM Duyệt -> Lên Role"
             ]
         },
         {
-            title: "CẢM XÚC & GAMING",
-            icon: "💎",
+            title: "CHECKLIST VẬN HÀNH",
+            icon: "✅",
             color: "orange",
             steps: [
-                "Rate Mood cuối ca",
-                "Nhận XP khi completed",
-                "Đua Top Leaderboard"
+                "Chọn Khu vực (5S)",
+                "Đánh giá OK/NOK",
+                "Chụp ảnh nếu có vấn đề"
             ]
         },
         {
-            title: "SỰ CỐ VẬN HÀNH",
-            icon: "⚠️",
+            title: "BÁO CÁO SỰ CỐ",
+            icon: "🚨",
             color: "red",
             steps: [
-                "Báo cáo ngay lập tức",
-                "Chụp ảnh (nếu cần)",
-                "Leader sẽ xử lý"
+                "Chọn loại sự cố",
+                "Mô tả & Chụp ảnh",
+                "Gửi ngay cho Leader"
             ]
         },
         {
-            title: "SÁNG KIẾN",
-            icon: "💡",
+            title: "XEM BÁO CÁO (LEADER)",
+            icon: "📊",
             color: "cyan",
             steps: [
-                "Góp ý cải tiến quy trình",
-                "Nhận XP thưởng nóng",
-                "Được BOD ghi nhận"
+                "Review số liệu cuối ca",
+                "Đánh giá nhân sự",
+                "Chốt ca & Gửi báo cáo"
             ]
         }
     ];

@@ -218,4 +218,49 @@ export class AuthService {
       };
     }
   }
+
+  /**
+   * Đổi mật khẩu cho user hiện tại
+   */
+  static async changePassword(staffId, oldPassword, newPassword) {
+    try {
+      // 1. Lấy thông tin user
+      const user = await UserRepo.getByStaffId(staffId);
+      if (!user || !user.password_hash) {
+        return { success: false, message: 'Tài khoản không hợp lệ' };
+      }
+
+      // 2. Kiểm tra mật khẩu cũ
+      const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
+      if (!isMatch) {
+        return { success: false, message: 'Mật khẩu cũ không đúng' };
+      }
+
+      // 3. Kiểm tra độ dài mật khẩu mới
+      if (newPassword.length < 6) {
+        return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự' };
+      }
+
+      // 4. Hash mật khẩu mới
+      const salt = await bcrypt.genSalt(10);
+      const newHash = await bcrypt.hash(newPassword, salt);
+
+      // 5. Cập nhật vào Database
+      await UserRepo.updatePassword(staffId, newHash);
+
+      // 6. Ghi log Audit
+      await AuditRepo.log({
+        userId: user.id,
+        action: 'CHANGE_PASSWORD_SELF',
+        resourceType: 'staff_master',
+        resourceId: staffId,
+        details: { staffId }
+      });
+
+      return { success: true, message: 'Đổi mật khẩu thành công' };
+    } catch (error) {
+      console.error('AuthService.changePassword error:', error);
+      return { success: false, message: 'Lỗi hệ thống khi đổi mật khẩu' };
+    }
+  }
 }

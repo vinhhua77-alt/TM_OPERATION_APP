@@ -32,6 +32,44 @@ router.get('/', authenticateToken, async (req, res, next) => {
 });
 
 /**
+ * POST /api/staff
+ * Create new staff member (Admin only)
+ * Body: { staff_name, gmail, password, role, store_code, active, is_trainee }
+ */
+router.post('/', authenticateToken, async (req, res, next) => {
+  try {
+    const { staff_name, gmail, password, role, store_code, active, is_trainee } = req.body;
+
+    // Validation
+    if (!staff_name || !gmail || !password || !role || !store_code) {
+      return res.status(400).json({
+        success: false,
+        error_code: 'STAFF:MISSING_FIELDS',
+        message: 'Thiếu thông tin bắt buộc: staff_name, gmail, password, role, store_code'
+      });
+    }
+
+    const result = await StaffService.createStaff(req.user, {
+      staff_name,
+      gmail,
+      password,
+      role,
+      store_code,
+      active: active !== undefined ? active : true,
+      is_trainee: is_trainee || false
+    });
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Tạo nhân viên thành công'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/staff/statistics
  * Get staff statistics (counts, breakdown by store)
  */
