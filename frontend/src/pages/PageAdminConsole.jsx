@@ -5,10 +5,21 @@ import { staffAPI } from '../api/staff';
 import { careerAPI } from '../api/career';
 import PageComplianceConfig from './PageComplianceConfig';
 import PageStoreSetup from './PageStoreSetup';
+import SandboxToggle from '../components/sandbox/SandboxToggle';
 
 const PageAdminConsole = ({ user, initialTab = 'HUB', onBack }) => {
     const [view, setView] = useState('HUB'); // HUB | OPERATIONS | PEOPLE | PLATFORM | ENTITY
     const [subTab, setSubTab] = useState(null);
+
+    // [NEW] Respect initialTab from Props
+    useEffect(() => {
+        if (initialTab === 'lab') {
+            setView('PLATFORM');
+            setSubTab('LAB');
+        } else if (initialTab && initialTab !== 'HUB') {
+            setView(initialTab.toUpperCase());
+        }
+    }, [initialTab]);
     const [summary, setSummary] = useState(null);
     const [data, setData] = useState(null);
     const [auditLogs, setAuditLogs] = useState([]);
@@ -717,16 +728,33 @@ const PageAdminConsole = ({ user, initialTab = 'HUB', onBack }) => {
             )}
 
             {subTab === 'LAB' && (
-                <div className="grid grid-cols-2 gap-2">
-                    {(data?.featureFlags || []).filter(f => f.domain === 'LAB').map(lab => (
-                        <div key={lab.flag_key} onClick={() => toggleFlag(lab.flag_key, lab.is_enabled)} className="bg-white border border-slate-200 p-3 rounded-md cursor-pointer hover:border-black transition-colors flex items-center justify-between group">
-                            <div>
-                                <div className="text-[10px] font-bold font-mono text-slate-800">{lab.flag_key.replace('LAB_', '')}</div>
-                                <div className="text-[9px] text-slate-400">{lab.description}</div>
+                <div className="space-y-4">
+                    {/* SANDBOX TESTER - ADMIN/IT/TESTER ONLY */}
+                    {['ADMIN', 'IT', 'TESTER'].includes(user?.role) && (
+                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-xl">🧪</span>
+                                <div>
+                                    <h3 className="text-[11px] font-black text-amber-800 uppercase tracking-wide">Sandbox Tester</h3>
+                                    <p className="text-[9px] text-amber-600/70">Môi trường test an toàn (Virtual Store: TM_TEST)</p>
+                                </div>
                             </div>
-                            <div className={`w-3 h-3 rounded-full border ${lab.is_enabled ? 'bg-black border-black' : 'bg-transparent border-slate-300'}`}></div>
+                            <SandboxToggle user={user} />
                         </div>
-                    ))}
+                    )}
+
+                    {/* LAB FEATURES */}
+                    <div className="grid grid-cols-2 gap-2">
+                        {(data?.featureFlags || []).filter(f => f.domain === 'LAB').map(lab => (
+                            <div key={lab.flag_key} onClick={() => toggleFlag(lab.flag_key, lab.is_enabled)} className="bg-white border border-slate-200 p-3 rounded-md cursor-pointer hover:border-black transition-colors flex items-center justify-between group">
+                                <div>
+                                    <div className="text-[10px] font-bold font-mono text-slate-800">{lab.flag_key.replace('LAB_', '')}</div>
+                                    <div className="text-[9px] text-slate-400">{lab.description}</div>
+                                </div>
+                                <div className={`w-3 h-3 rounded-full border ${lab.is_enabled ? 'bg-black border-black' : 'bg-transparent border-slate-300'}`}></div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

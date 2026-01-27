@@ -42,6 +42,7 @@ While v1 and v2 focused on migrating from Google Sheets to a robust Supabase inf
 | **Management** | Manual oversight | AI-driven suggestions & Exception Overrides |
 | **Staffing** | Fixed assignments | Mobility-ready luân chuyển linh hoạt |
 | **Validation** | Post-ca report | On-job verification logic |
+| **Testing (V3.52)** | Manual on prod | Isolated Sandbox Lab with 24h lifecycle |
 
 ---
 

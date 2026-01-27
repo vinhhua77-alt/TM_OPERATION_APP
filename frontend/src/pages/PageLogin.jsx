@@ -48,6 +48,18 @@ const PageLogin = ({ onLogin, onGoToRegister }) => {
       const res = await authAPI.login(staffId.trim().toUpperCase(), password);
       // NOTE: res.token is now available from backend
       if (res.success) {
+        // [SANDBOX AUTO-ENABLE FOR TESTER]
+        if (res.user?.role === 'TESTER') {
+          localStorage.setItem('sandbox_mode', 'true');
+          // Add a temporary welcome alert or let the next page handle it
+          setTimeout(() => {
+            alert('🧪 CHẾ ĐỘ SANDBOX ĐÃ TỰ ĐỘNG BẬT!\nBạn đang trong môi trường thử nghiệm TM_TEST.\nDữ liệu test được bảo mật và tự xóa sau 24h. Chúc bạn test vui vẻ!');
+          }, 500);
+        } else {
+          // If not a tester, ensure sandbox is off unless they manually enabled it before
+          // localStorage.removeItem('sandbox_mode'); // Optional: force off for others
+        }
+
         onLogin(res.user, res.token);
       } else {
         setMsg({ text: res.message, type: 'error' });

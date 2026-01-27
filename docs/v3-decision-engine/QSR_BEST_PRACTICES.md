@@ -1,6 +1,19 @@
-# QSR INTERNATIONAL BEST PRACTICES – THE GOLDEN SIGNALS (v3.0)
+# QSR INTERNATIONAL BEST PRACTICES – THE GOLDEN SIGNALS
 
-**Mục tiêu**: Áp dụng các tiêu chuẩn vận hành của các chuỗi QSR hàng đầu thế giới (McDonald's, Starbucks, KFC) vào Thái Mậu Group theo tiêu chí: **Đơn giản – Dữ liệu quý – Không làm phức tạp App.**
+**Version:** V3.52 (Lab Alpha Edition)  
+**Last Updated:** 27/01/2026  
+**Mục tiêu:** Áp dụng các tiêu chuẩn vận hành của các chuỗi QSR hàng đầu thế giới (McDonald's, Starbucks, KFC) vào Thái Mậu Group theo tiêu chí: **Đơn giản – Dữ liệu quý – Không làm phức tạp App.**
+
+> [!NOTE]
+> **Implementation Status**
+> 
+> Tất cả best practices dưới đây đã được codified thành business rules trong [RULE_CATALOG_V3.md](./RULE_CATALOG_V3.md):
+> - **SPLH** → R69 (GROUP J: QSR Performance Standards)
+> - **Burnout Predictor** → R61-R66 (GROUP I: Talent Management)
+> - **Aces in Their Places** → R70 (GROUP J: Peak Hour Staffing)
+> - **Waste Codes** → R33-R40 (GROUP E: Waste Management)
+> - **Cross-Training** → R62, R64 (GROUP I: Skill Gap Management)
+> - **Temperature Monitoring** → R46 (GROUP F: Cold-chain Alert)
 
 ---
 

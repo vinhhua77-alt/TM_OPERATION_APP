@@ -1,15 +1,16 @@
 import { useState } from 'react';
+import { usePermission } from '../hooks/usePermission';
 
 const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, notify }) => {
+    const permission = usePermission(user);
     const [logoutConfirm, setLogoutConfirm] = useState(false);
 
     // Default open states for sections
     const [expandedSections, setExpandedSections] = useState({
-        vận_hành: true,
-        dashboard: true,
-        quản_trị: true,
-        cấu_hình: true,
-        lab: false // Default collapsed
+        core: true,
+        management: true,
+        system: true,
+        lab: false
     });
 
     const toggleSection = (key) => {
@@ -98,64 +99,74 @@ const TopMenu = ({ user, sysConfig, onNavigate, onLogout, showMenu, onClose, not
                     onClick={() => { closeMenu(); onNavigate('HOME'); }}
                 />
 
-                {sysConfig.featureFlags.includes('MODULE_DECISION_CONSOLE') && (
-                    <MenuItem
-                        icon="🚀"
-                        label="Quản trị sự nghiệp và thăng tiến"
-                        onClick={() => { closeMenu(); onNavigate('DECISION_CONSOLE'); }}
-                        special
-                    />
-                )}
-
                 <div className="my-1.5 border-t border-slate-50 mx-3 opacity-40"></div>
 
-                {/* --- 2. VẬN HÀNH --- */}
-                <SectionHeader label="Vận hành 🛡️" isOpen={expandedSections.vận_hành} onClick={() => toggleSection('vận_hành')} />
-                {expandedSections.vận_hành && (
+                {/* --- 2. CORE OPERATIONS --- */}
+                <SectionHeader label="Vận hành 🛡️" isOpen={expandedSections.core} onClick={() => toggleSection('core')} />
+                {expandedSections.core && (
                     <div className="animate-in slide-in-from-left-2 duration-200">
-                        {sysConfig.featureFlags.includes('MODULE_QAQC_HUB') && (
-                            <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('COMPLIANCE_5S_HUB'); }} />
+                        {permission.can('VIEW_QAQC_HUB') && sysConfig.featureFlags.includes('MODULE_QAQC_HUB') && (
+                            <MenuItem icon="🛡️" label="Vận Hành Tuân Thủ" onClick={() => { closeMenu(); onNavigate('QAQC_HUB'); }} />
                         )}
-                        <MenuItem icon="📝" label="Báo Cáo Hàng Ngày" onClick={() => { closeMenu(); onNavigate('DAILY_HUB'); }} />
-                        {sysConfig.featureFlags.includes('MODULE_OPERATION_METRICS') && (
-                            <MenuItem icon="📉" label="HỆ THỐNG QA/QC" onClick={() => { closeMenu(); onNavigate('OPERATION_METRICS'); }} />
+                        {permission.can('VIEW_DAILY_HUB') && (
+                            <MenuItem icon="📝" label="Báo Cáo Hàng Ngày" onClick={() => { closeMenu(); onNavigate('DAILY_HUB'); }} />
                         )}
                     </div>
                 )}
 
-                {/* --- 3. DASHBOARD --- */}
-                {['ADMIN', 'IT', 'OPS', 'SM'].includes(user?.role) && (
+                {/* --- 3. MANAGEMENT --- */}
+                {(permission.can('MANAGE_STAFF') || permission.can('VIEW_ANALYTICS') || permission.can('MANAGE_ANNOUNCEMENT')) && (
                     <>
-                        <SectionHeader label="Dashboard 📊" isOpen={expandedSections.dashboard} onClick={() => toggleSection('dashboard')} />
-                        {expandedSections.dashboard && (
+                        <SectionHeader label="QUẢN LÝ 📊" isOpen={expandedSections.management} onClick={() => toggleSection('management')} />
+                        {expandedSections.management && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
-                                <MenuItem icon="📊" label="Dashboard Trung Tâm" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
-                                <MenuItem icon="📈" label="Báo Cáo dữ liệu" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
+                                {permission.can('VIEW_ANALYTICS') && (
+                                    <MenuItem icon="📊" label="Dashboard Trung Tâm" onClick={() => { closeMenu(); onNavigate('ANALYTICS'); }} />
+                                )}
+                                {permission.can('MANAGE_STAFF') && (
+                                    <MenuItem icon="👥" label="Quản Lý Nhân Sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
+                                )}
+                                {permission.can('MANAGE_STORE') && (
+                                    <MenuItem icon="🏪" label="Quản Lý Cửa Hàng" onClick={() => { closeMenu(); onNavigate('STORE_SETUP'); }} />
+                                )}
+                                {permission.can('MANAGE_ANNOUNCEMENT') && (
+                                    <MenuItem icon="📢" label="Quản Lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
+                                )}
                             </div>
                         )}
                     </>
                 )}
 
-                {/* --- 4. QUẢN TRỊ HỆ THỐNG --- */}
-                {['ADMIN', 'IT', 'OPS', 'SM'].includes(user?.role) && (
+                {/* --- 4. SYSTEM (ADMIN & IT ONLY) --- */}
+                {permission.isDivine && (
                     <>
-                        <SectionHeader label="QUẢN TRỊ HỆ THỐNG" isOpen={expandedSections.quản_trị} onClick={() => toggleSection('quản_trị')} />
-                        {expandedSections.quản_trị && (
-                            <div className="animate-in slide-in-from-left-2 duration-200">
-                                <MenuItem icon="👥" label="Quản Lý Nhân Sự" onClick={() => { closeMenu(); onNavigate('STAFF_MANAGEMENT'); }} />
-                                <MenuItem icon="📢" label="Quản Lý Thông Báo" onClick={() => { closeMenu(); onNavigate('ANNOUNCEMENT_MANAGEMENT'); }} />
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* --- 5. CẤU HÌNH HỆ THỐNG --- */}
-                {['ADMIN', 'IT'].includes(user?.role) && (
-                    <>
-                        <SectionHeader label="Cấu hình hệ thống" isOpen={expandedSections.cấu_hình} onClick={() => toggleSection('cấu_hình')} />
-                        {expandedSections.cấu_hình && (
+                        <SectionHeader label="HỆ THỐNG ⚙️" isOpen={expandedSections.system} onClick={() => toggleSection('system')} />
+                        {expandedSections.system && (
                             <div className="animate-in slide-in-from-left-2 duration-200">
                                 <MenuItem icon="⚙️" label="Admin Console" onClick={() => { closeMenu(); onNavigate('ADMIN_CONSOLE'); }} />
+                                <MenuItem icon="🧪" label="Lab Management" onClick={() => { closeMenu(); onNavigate('LAB_FEATURES'); }} />
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* --- 5. LAB (V3 BETA) --- */}
+                {(sysConfig.featureFlags.includes('MODULE_DECISION_CONSOLE') || sysConfig.featureFlags.includes('MODULE_OPERATION_METRICS')) && (
+                    <>
+                        <SectionHeader label="LAB - V3 BETA 🚀" isOpen={expandedSections.lab} onClick={() => toggleSection('lab')} />
+                        {expandedSections.lab && (
+                            <div className="animate-in slide-in-from-left-2 duration-200">
+                                {sysConfig.featureFlags.includes('MODULE_DECISION_CONSOLE') && permission.can('VIEW_DECISION_CONSOLE') && (
+                                    <MenuItem
+                                        icon="🚀"
+                                        label="Quản trị sự nghiệp"
+                                        onClick={() => { closeMenu(); onNavigate('DECISION_CONSOLE'); }}
+                                        special
+                                    />
+                                )}
+                                {sysConfig.featureFlags.includes('MODULE_OPERATION_METRICS') && permission.can('VIEW_OPS_METRICS') && (
+                                    <MenuItem icon="📉" label="HỆ THỐNG QA/QC" onClick={() => { closeMenu(); onNavigate('OPERATION_METRICS'); }} />
+                                )}
                             </div>
                         )}
                     </>

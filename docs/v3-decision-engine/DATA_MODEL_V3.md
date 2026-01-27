@@ -37,9 +37,15 @@ v3.0 adheres to the **"Evidence-Based Logic"**. We do not store "Ratings"; we st
 
 ### 3.2. `raw_shiftlog` Integration
 - Now links to `raw_task_logs` to provide behavioral proof for the Trust and Competency engines.
+- Added `is_sandbox` flag to isolate test data from production analytics.
 
 ### 3.3. Training Versioning
 - `training_courses` includes versioning to handle SOP updates without losing historical certification integrity.
+
+### 3.4. Sandbox Testing Infrastructure (V3.52)
+- `sandbox_sessions`: Tracks 24h time-boxed testing sessions for TESTER role.
+- `is_sandbox` flag on fact tables (`raw_shiftlog`, `leader_reports`, `raw_operational_events`) for data isolation.
+- Virtual store codes (`*_TEST`) provide multi-tenant isolation in testing environment.
 
 ---
 

@@ -29,6 +29,7 @@ class AnalyticsService {
                 .select('*')
                 .gte('created_at', startOfDay.toISOString())
                 .lte('created_at', endOfDay.toISOString())
+                .eq('is_sandbox', false) // Exclude sandbox data
                 .eq('is_valid', true);
 
             if (shiftError) throw shiftError;

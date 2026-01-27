@@ -55,7 +55,7 @@ const RoleImpersonator = ({ currentRole, onRoleChange, onUserChange, onReset }) 
     const displayStaff = getDisplayList();
 
     return (
-        <div className="fixed bottom-20 right-4 z-[9999] flex flex-col items-end gap-2">
+        <div className="fixed bottom-40 right-4 z-[9999] flex flex-col items-end gap-2">
             {isOpen && (
                 <div className="bg-white/95 backdrop-blur-xl border border-black/10 shadow-2xl rounded-[32px] p-2 flex flex-col gap-1 mb-2 animate-in slide-in-from-bottom-5 duration-300 w-64 overflow-hidden">
                     <div className="flex bg-slate-100 rounded-2xl p-1 mb-2">

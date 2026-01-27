@@ -1,4 +1,4 @@
-# TM OPERATION APP – STRATEGIC ANALYSIS (v3.0)
+# TM OPERATION APP – STRATEGIC ANALYSIS V3.52
 
 **Hội tụ tư duy: Business Analyst (BA) × Fullstack Architect × F&B Industry Expert**
 

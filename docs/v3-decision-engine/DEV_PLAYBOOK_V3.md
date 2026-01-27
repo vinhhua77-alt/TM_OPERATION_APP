@@ -1,8 +1,8 @@
-# TM OPERATION APP – DEV PLAYBOOK v3.0
+# TM OPERATION APP – DEV PLAYBOOK V3.52
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
-**Status**: Planning
+**Version:** V3.52 (Lab Alpha Edition)  
+**Last Updated:** 27/01/2026  
+**Status:** Active (Testing & Development Guidelines)
 
 ---
 

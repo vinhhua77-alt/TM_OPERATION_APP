@@ -3,6 +3,7 @@ import AnnouncementBadge from './AnnouncementBadge';
 
 const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
     const primaryColor = '#004AAD';
+    const isSandbox = localStorage.getItem('sandbox_mode') === 'true';
 
     // Determine page title based on current page
     const getPageTitle = () => {
@@ -33,8 +34,12 @@ const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
             left: 0,
             right: 0,
             height: '56px',
-            background: 'linear-gradient(135deg, #004AAD 0%, #0066CC 100%)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            background: isSandbox
+                ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' // Amber/Orange for Sandbox
+                : 'linear-gradient(135deg, #004AAD 0%, #0066CC 100%)',
+            boxShadow: isSandbox
+                ? '0 2px 12px rgba(217, 119, 6, 0.4)'
+                : '0 2px 8px rgba(0,0,0,0.15)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
@@ -93,15 +98,38 @@ const AppBar = ({ user, currentPage, onNavigate, onMenuToggle }) => {
                                 style={{ height: '20px', filter: 'brightness(0) invert(1)' }}
                             />
                             <span style={{ fontSize: '12px', letterSpacing: '0.05em' }}>THÁI MẬU GROUP</span>
+                            {isSandbox && (
+                                <span style={{
+                                    background: 'white',
+                                    color: '#d97706',
+                                    fontSize: '8px',
+                                    padding: '1px 6px',
+                                    borderRadius: '10px',
+                                    fontWeight: '900',
+                                    marginLeft: '4px'
+                                }}>SANDBOX</span>
+                            )}
                         </div>
                         {user && (
                             <div style={{ fontSize: '9px', fontWeight: '400', opacity: 0.8, marginTop: '-2px' }}>
-                                Chúc {user.full_name?.split(' ').pop()} một ngày tốt lành! ⚡
+                                {isSandbox ? '🧪 Chế độ thử nghiệm an toàn' : `Chúc ${user.full_name?.split(' ').pop()} một ngày tốt lành! ⚡`}
                             </div>
                         )}
                     </div>
                 ) : (
-                    getPageTitle()
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        {getPageTitle()}
+                        {isSandbox && (
+                            <span style={{
+                                background: 'white',
+                                color: '#d97706',
+                                fontSize: '8px',
+                                padding: '1px 6px',
+                                borderRadius: '10px',
+                                fontWeight: '900'
+                            }}>SANDBOX</span>
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -132,6 +132,7 @@ export class ShiftService {
         .select('*')
         .eq('staff_id', staffId)
         .eq('is_valid', true)
+        .eq('is_sandbox', false) // Exclude sandbox data by default
         .order('created_at', { ascending: false });
 
       if (filters.startDate) {

@@ -34,6 +34,13 @@ v3.0 introduces a **layered scoring architecture** that sits on top of the v2 CR
 │   - Raw Events (raw_shiftlog, raw_attendance)               │
 │   - Master Data (staff_master, store_list)                  │
 └─────────────────────────────────────────────────────────────┘
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│             SANDBOX TESTING LAB (V3.52 - Isolation)          │
+│   - Virtual Store Code Enforcement (*_TEST)                 │
+│   - 24h Auto-Cleanup (Data Lifecycle)                       │
+│   - Zero Trust Backend (Middleware Override)                │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -55,6 +62,12 @@ v3.0 introduces a **layered scoring architecture** that sits on top of the v2 CR
 - **Input**: Trust Scores, Competency Matrix, Time-in-level.
 - **Logic**: Gate-based transition. No skip levels.
 - **Persistence**: `staff_master.base_level` + `career_promotion_logs`.
+
+### 2.4. Sandbox Testing Engine (V3.52)
+- **Input**: User role, store context.
+- **Logic**: Auto-enforce sandbox mode for TESTER role. Dynamic virtual store assignment.
+- **Persistence**: `sandbox_sessions` (24h TTL), `is_sandbox` flag on fact tables.
+- **Cleanup**: Automated via pg_cron (`fn_cleanup_sandbox_data()`).
 
 ---
 

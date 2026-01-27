@@ -1,11 +1,78 @@
-**Date**: 2026-01-25  
-**Migration**: Compliance & SaaS Hub (v3.6)
-**Current Version**: v3.6 (Hub & Compliance)
+# CHANGELOG - TM OPERATION APP
+
+**Current Version:** V3.52 (Lab Alpha Edition)  
+**Last Updated:** 2026-01-27
+
+> [!NOTE]
+> This CHANGELOG tracks the complete evolution of TM Operation App from v1 (Google Apps Script) through v2 (Supabase) to v3 (Decision Engine).  
+> For migration-specific details, see dedicated sections below.
 
 ---
 
-## [3.6.0] - 2026-01-25
-### 🏗️ SaaS Hub & Pillar Architecture
+## V3.x Releases (Decision Engine Era)
+
+### [V3.52] - 2026-01-27 - "Lab Alpha Edition" 🧪
+
+#### ✨ Added
+- **Sandbox Testing Lab** - Môi trường test cách ly hoàn toàn
+  - Zero Trust Security với backend middleware enforcement
+  - Multi-tenant isolation (Virtual Store: `*_TEST`)
+  - Automated 24h data lifecycle (pg_cron cleanup)
+  - Testing tools: Export JSON, Screenshot guide, Reset Data
+  - Amber UI theme với persistent F5 state
+  - Session management và statistics tracking
+
+#### 📚 Documentation
+- Created comprehensive Sandbox documentation (17 files)
+- Standardized all module documentation structure
+- Added USER_MANUAL for: 5S, Shift Log, Leader Report, Admin Console
+- Updated MASTER_SPEC, SYSTEM_SUMMARY, ARCHITECTURE, DATA_MODEL, API_V3
+- Created session reports workflow (Plan/ + Report/ directories)
+
+#### 🗄️ Database
+- Added `sandbox_sessions` table
+- Added `is_sandbox` flags to fact tables (raw_shiftlog, leader_reports, raw_operational_events)
+- Created stored procedure: `fn_cleanup_sandbox_data()`
+- Performance indexes for sandbox queries
+
+#### 🔐 Security
+- Enforced mandatory sandbox for TESTER role
+- Dynamic virtual store code assignment
+- Client bypass prevention in auth.middleware.js
+- Data isolation with RLS policies
+
+---
+
+### [V3.51] - 2026-01-26 - "Virtual Store Infrastructure"
+
+#### ✨ Added
+- Virtual store configuration for multi-tenant sandbox
+- Brand-specific test environments (DN_TEST, DD_TEST, TM_TEST)
+
+#### 🔄 Changed
+- Enhanced `auth.middleware.js` with virtual store logic
+- Updated sandbox service with multi-tenant support
+
+---
+
+### [V3.50] - 2026-01-25 - "Sandbox Foundation"
+
+#### ✨ Added
+- Sandbox mode infrastructure
+- `is_sandbox` flag on core tables
+- Basic sandbox session tracking
+- Feature flag: `ACCESS_SANDBOX_MODE`
+
+#### 🗄️ Database
+- Migration: `v3_50_SANDBOX_MODE.sql`
+- Created `sandbox_sessions` table
+- Added performance indexes
+
+---
+
+### [V3.6] - 2026-01-25 - "SaaS Hub & Pillar Architecture"
+
+#### 🏗️ SaaS Hub & Pillar Architecture
 - **Admin Hub Redesign**: Overhauled `PageAdminConsole` into a 4-Pillar centralized cockpit (Operations, People, Platform, Entity).
 - **Module Consolidation**: Integrated `PageStoreSetup` and `Page5SCompliance` into the Hub structure.
 - **Enhanced Feature Management**: Redesigned Feature Flags UI with domain-based coloring and compact table grouping.
@@ -13,48 +80,142 @@
 
 ---
 
-## [3.5.0] - 2026-01-25
-### 🛡️ Compliance & 5S Module (Decision Intelligence Expansion)
+### [V3.5] - 2026-01-25 - "Compliance & 5S Module"
+
+#### 🛡️ Compliance & 5S Module (Decision Intelligence Expansion)
 - **Schema Implementation:** Created `v3_23` and `v3_24` migrations with `compliance_signals`, `compliance_checks`, and HACCP logs.
 - **Signal Flow:** Implemented Time-based Staff Assignments for 5S confirmation (staff no longer manually select areas).
 - **5S Decision Engine Logic:** Designed risk-weighted scoring (Severity x1.5 during peaks).
-- **Renaming:** Standardized module names (`PageQAQC` -> `Page5SCompliance`) to prepare for future QA audit expansion.
+- **Renaming:** Standardized module names (`PageQAQC` → `Page5SCompliance`) to prepare for future QA audit expansion.
 
 ---
 
+### [V3.2] - 2026-01-22 - "SaaS Career Engine Edition"
 
-## [3.0.0] - 2026-01-25
-### 🚀 Official Decision Engine Foundation Release
-- **Decision Engine Core (v3):** Integrated `SignalService` for real-time operational flag extraction (Late starts, Execution neglect).
-- **Ultra-Compact Mobile UI:** Overhauled entire frontend for maximum mobile efficiency (10-11px font standards).
-- **Feature Lab:** Added 🧪 Feature Lab section for upcoming Decision Engine modules (Auto-promotion, Predictive Labor).
-- **Communication Architecture:** Replaced legacy alerts with an integrated `Notification` (Toast) system in `App.jsx`.
-- **Decision Engine Intelligence (Phase 4 & 5):**
-  - **Scoring Engine:** Implemented `ScoringService` to calculate rolling `Trust Score` and `Ops Contribution` from operational signals.
-  - **Career State Machine:** Built `CareerService` for automated promotion eligibility checking (L0-L4) based on scoring thresholds and time-in-level.
-  - **Decision Console:** Created a premium Admin/OPS interface for personnel career management and thăng tiến (promotion) workflow.
-- **Enhanced Staff Metadata:** Added `current_level`, `trust_score`, and `performance_score` columns to `staff_master` via migration `v3_15`.
-- **Logic-First Documentation:** Created comprehensive Tech and User Manuals for the Decision Engine at `/docs/v3-decision-engine/`.
-- **UI Optimizations:** 
-  - Checklist: Replaced text buttons with compact `✔️`/`❌` icons.
-  - Analytics: Streamlined padding/margins for 80% more screen utility.
-  - Leader Report: Redesigned for one-hand operation with "Leader Log" styling.
-- **Backend Stability:** Hardened `ShiftService` and `LeaderService` with V3 logic hooks.
+#### ✨ Added
+- **Dynamic Career Path Configuration (SaaS)**
+  - Admin can add/edit/delete trainee positions without code changes
+  - Real database integration (Supabase PostgreSQL)
+  - Micro-compact UI grid (4 columns, ultra-dense)
+- **"Giờ Ấp" (Incubation Hours)** concept
+  - Replaced "Giờ Bay" with "Giờ Ấp" for cultural alignment
+  - Automatic hour accumulation tracking
+- **Trainee Approval Workflow**
+  - Pending requests widget for SM
+  - One-click approval/rejection
+
+#### 🗄️ Database
+- Created `career_configs` table
+- Created `career_requests` table
+- Added `current_position_key` to `staff_master`
+
+#### 🎨 UI/UX
+- Micro-compact grid design (10px fonts, tight spacing)
+- Mobile-first responsive layout
+- Professional color schemes (blue, green, orange)
+
+#### 🔄 Changed
+- Migrated from mock data to real Supabase integration
+- Enhanced validation with server-side checks
 
 ---
 
-## [2.x Archive] - Previous Migration History
+### [V3.1] - 2026-01-21 - "Trainee Mode Logic"
 
-## Overview
+#### ✨ Added
+- Trainee Mode toggle in Shift Log
+- Position eligibility checking (Role + Hours)
+- Trainee request submission flow
 
-This document tracks the migration from **v1 (Google Apps Script + Google Sheet)** to **v2 (Supabase + Node.js + React)**.
+#### 🔄 Changed
+- Reverted Shift Log UI to original design
+- Updated Leader Report with grid layout
+
+#### 🐛 Fixed
+- Password reset email flow
+- CORS errors in production deployment
+- 401 authentication issues with Bearer tokens
 
 ---
 
-## What Changed
+### [V3.0] - 2026-01-20 - "Decision Engine Core" 🚀
 
-### 1. Backend
+#### ✨ Added
+- **Decision Engine Foundation**
+  - Trust Score calculator
+  - Performance Score engine
+  - Career Matrix state machine
+- **8 Shift Error Reasons**
+  - Đổi ca, Tăng ca, Về sớm, Đi trễ, Ca bệnh, etc.
+- **Leader Report Module**
+  - Khen thưởng/Nhắc nhở nhân viên
+  - Incident reporting
+  - Revenue metrics tracking
 
+#### 🗄️ Database
+- Created `operational_flags` table
+- Created `staff_trust_scores` table
+- Created `staff_competency_matrix` table
+- Updated `staff_master` with `base_level` column
+
+#### 📚 Documentation
+- Created MASTER_SPEC.md
+- Created DATA_MODEL_V3.md
+- Created API_V3.md
+- Created ARCHITECTURE_V3.md
+
+#### 🎨 UI Optimizations
+- Checklist: Replaced text buttons with compact `✔️`/`❌` icons
+- Analytics: Streamlined padding/margins for 80% more screen utility
+- Leader Report: Redesigned for one-hand operation with "Leader Log" styling
+
+#### ⚡ Backend Stability
+- Hardened `ShiftService` and `LeaderService` with V3 logic hooks
+
+---
+
+## V2.x Releases (Supabase Era)
+
+### [V2.x] - 2026-01-15 to 2026-01-25 - "Infrastructure Consolidation"
+
+#### ✨ Added
+- 5S Checklist module
+- HACCP temperature logging
+- Shift readiness calculation
+- Admin Console foundation
+- Employee Dashboard (self-service portal)
+- localStorage caching (5-min TTL) - Reduced API load by 80%
+- Shift submission limits (max 2/day)
+- Time gap validation (min 2 hours)
+
+#### 🔄 Changed
+- Migrated from Google Sheets to Supabase Postgres
+- Implemented Role-Based Access Control (RBAC)
+- Password reset functionality
+- UI/UX Overhaul: Global AppBar & Sidebar
+- Added Mobile Bottom Navigation & FAB (PWA-Feel)
+- Visual Validation (✅ green checkmarks)
+- Smart Defaults & UI Logic (Auto-set End Time +8h)
+
+#### 🐛 Fixed
+- Staff activation synchronization
+- 30-minute time interval constraints
+- Deployment errors on Vercel
+- Dashboard month format bug
+- "No Lead" submission error
+- Null staff_name error
+- Infinite loop causing 429 errors
+- Backend schema mismatch
+
+---
+
+## 📚 Migration Guides
+
+### v1 → v2 (Google Apps Script → Supabase)
+
+#### What Changed
+
+**Backend**
 | Component | v1 (GAS) | v2 (Supabase) |
 |-----------|----------|---------------|
 | **Runtime** | Google Apps Script | Node.js 18+ |
@@ -65,8 +226,7 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | **Concurrency** | `LockService` | DB transactions |
 | **Deployment** | GAS Deploy | Render |
 
-### 2. Frontend
-
+**Frontend**
 | Component | v1 (GAS) | v2 (Supabase) |
 |-----------|----------|---------------|
 | **UI** | GAS HTML + React CDN | React 18 + Vite |
@@ -75,8 +235,7 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | **State** | Local state | React hooks |
 | **Deployment** | GAS Deploy | Vercel |
 
-### 3. Database
-
+**Database**
 | Component | v1 (GAS) | v2 (Supabase) |
 |-----------|----------|---------------|
 | **Storage** | Google Sheet | Postgres |
@@ -85,8 +244,7 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | **Primary keys** | Row index | BIGINT auto-increment |
 | **Data types** | All strings | Proper types (BIGINT, BOOLEAN, TIMESTAMPTZ) |
 
-### 4. Authentication
-
+**Authentication**
 | Component | v1 (GAS) | v2 (Supabase) |
 |-----------|----------|---------------|
 | **Method** | Google OAuth (automatic) | JWT tokens (manual) |
@@ -94,84 +252,39 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | **Token Storage** | Session (automatic) | localStorage (manual) |
 | **Validation** | GAS session | JWT signature verification |
 
----
+#### Why It Changed
 
-## Why It Changed
+1. **Scalability**
+   - **Problem**: Google Sheet cannot handle 10+ concurrent writes, large datasets, complex queries
+   - **Solution**: Supabase Postgres scales to hundreds of concurrent users, millions of rows, complex joins
 
-### 1. Scalability
+2. **Security**
+   - **Problem**: GAS deployment exposes code structure
+   - **Solution**: Supabase + backend API with service role key never exposed, RLS policies, JWT tokens
 
-**Problem**: Google Sheet cannot handle:
-- 10+ concurrent writes
-- Large datasets (thousands of rows)
-- Complex queries
+3. **Modern Stack**
+   - **Problem**: GAS is limited and proprietary
+   - **Solution**: Standard web stack (Node.js, React, Postgres)
 
-**Solution**: Supabase Postgres scales to:
-- Hundreds of concurrent users
-- Millions of rows
-- Complex joins and aggregations
+4. **Developer Experience**
+   - **Problem**: GAS editor is limited
+   - **Solution**: Modern tooling (VS Code, Git, npm, Hot reload)
 
-### 2. Security
-
-**Problem**: GAS deployment exposes code structure
-
-**Solution**: Supabase + backend API:
-- Service role key never exposed
-- RLS policies enforce security
-- JWT tokens control access
-
-### 3. Modern Stack
-
-**Problem**: GAS is limited and proprietary
-
-**Solution**: Standard web stack:
-- Node.js (industry standard)
-- React (modern UI framework)
-- Postgres (battle-tested database)
-
-### 4. Developer Experience
-
-**Problem**: GAS editor is limited
-
-**Solution**: Modern tooling:
-- VS Code with IntelliSense
-- Git version control
-- npm package ecosystem
-- Hot reload development
-
----
-
-## What Stayed the Same
-
-### 1. Data Model Philosophy
+#### What Stayed the Same
 
 ✅ **Preserved**:
 - Append-only RAW tables
 - Mutable MASTER tables
 - Full audit trails
 - One action = one row
-
-### 2. Domain Logic
-
-✅ **Preserved**:
 - Business rules unchanged
 - Validation logic unchanged
 - Permission model unchanged
 - Workflow logic unchanged
 
-### 3. User Experience
+#### What Is Now Invalid
 
-✅ **Preserved**:
-- Same UI/UX flows
-- Same terminology
-- Same user roles
-- Same business processes
-
----
-
-## What Is Now Invalid
-
-### ❌ Legacy Assumptions (v1)
-
+❌ **Legacy Assumptions (v1)**:
 1. **Google Sheet as backend**
    - ❌ No more `SpreadsheetApp.openById()`
    - ❌ No more `sheet.appendRow()`
@@ -197,9 +310,7 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
    - ❌ No more GAS web app deployment
    - ❌ No more GAS triggers
 
----
-
-## Migration Timeline
+#### Migration Timeline
 
 | Date | Milestone |
 |------|-----------|
@@ -218,9 +329,162 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 | 2026-01-23 | 30-minute interval selection for reporting synced |
 | 2026-01-23 | Role-based access restriction for Leader Role on Shift Log |
 
+#### Breaking Changes
+
+**For Developers:**
+1. **No more GAS editor** - Use VS Code or similar
+2. **No more automatic auth** - Implement JWT manually
+3. **No more Sheet API** - Use Supabase client
+4. **Environment setup required** - `.env` files needed
+5. **Two servers to run** - Backend + Frontend
+
+**For Users:**
+1. **Manual login required** - No more automatic Google OAuth
+2. **Password required** - Must set password for account
+3. **New URL** - Different deployment URL
+
+#### Rollback Plan
+
+**If v2 fails**:
+1. v1 code is preserved in Git history
+2. v1 docs are in `/docs/v1-gsheet-archive/`
+3. Google Sheet data is still intact
+4. Can redeploy v1 GAS project
+
+**However**: v2 is production-ready and stable.
+
 ---
 
-## Documentation Changes
+### v2 → v3 (Supabase → Decision Engine)
+
+**Key Evolution**:
+- Added Decision Layer (Career Matrix, State Transitions)
+- Added Scoring Layer (Trust Score, Competency Matrix)
+- Added Aggregation Layer (Daily Rollups, Shift Performance)
+- Preserved Infrastructure Layer (v2 Supabase foundation)
+
+**Breaking Changes:**
+- None (v3 is additive, not breaking)
+
+---
+
+### V3 Version-to-Version Migrations
+
+#### V3.51 → V3.52 (Sandbox Testing Lab)
+
+**Database Migrations (Run in order):**
+```sql
+-- Already applied in previous versions
+-- v3_50_SANDBOX_MODE.sql
+-- v3_51_SANDBOX_VIRTUAL_STORE.sql
+
+-- New migrations
+\i v3_52_TESTER_ROLE_SETUP.sql
+\i v3_53_SANDBOX_CLEANUP_JOB.sql
+```
+
+**Enable pg_cron (One-time setup):**
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+SELECT cron.schedule(
+  'sandbox-cleanup-hourly',
+  '0 * * * *',
+  'SELECT fn_cleanup_sandbox_data()'
+);
+```
+
+**Verify Deployment:**
+1. Login with TM0000 (TESTER role)
+2. Verify AppBar turns amber
+3. Check SANDBOX badge displays
+4. Test Export/Reset/Screenshot tools
+5. Confirm production dashboard excludes sandbox data
+
+---
+
+#### V3.1 → V3.2 (SaaS Career Engine)
+
+**Database Migrations:**
+```sql
+\i migrations/v3_2_career_configs.sql
+```
+
+**Admin Actions Required:**
+1. Navigate to Admin Console → PEOPLE → Career Path
+2. Review auto-migrated career configs
+3. Adjust "Giờ Ấp" thresholds for each position
+4. Test trainee approval workflow
+
+**Breaking Changes:**
+- Mock data no longer supported
+- All career configs must be in database
+- Legacy `incubation_hours` field replaced with dynamic calculation
+
+---
+
+## ❌ Deprecation Notices
+
+### Deprecated in V3.52
+- None
+
+### Deprecated in V3.2
+- Mock data for career configurations
+- Hardcoded career paths in frontend
+
+### Deprecated in V3.0
+- Google Sheets as primary data source
+- Manual HR workflows outside the system
+
+---
+
+## 🐛 Known Issues
+
+### V3.52
+- [ ] Manual pg_cron setup required (cannot auto-enable via migration)
+- [ ] End-to-end security audit pending (User action required)
+
+### V3.2
+- None
+
+---
+
+## 🗺️ Roadmap
+
+### V3.6 (Planned Q1 2026)
+- **KPI Module Automated Scoring**
+- **Predictive Labor Analytics (AI)**
+- **Mobile App (React Native)**
+
+### V4.0 (Planned Q2 2026)
+- **Multi-Brand SaaS Platform**
+- **White-label customization**
+- **API marketplace**
+
+### Future Improvements (Potential)
+- [ ] Implement permission-based access control (not just role-based)
+- [ ] Add email verification
+- [ ] Implement audit log table
+- [ ] Add idempotent request tracking
+- [ ] Implement tenant-level kill switch
+- [ ] Add materialized views for dashboards
+- [ ] Implement caching (Redis)
+- [ ] Add automated tests
+- [ ] Implement CI/CD pipeline
+
+**Note**: All future improvements will be **additive**, not breaking changes.
+
+---
+
+## 👥 Contributors
+
+- **Vinh Hua** - Product Owner & Business Logic
+- **Antigravity Agent** - Development & Documentation
+- **TM Testing Team** - QA & Feedback
+
+---
+
+## 📋 Documentation Changes
 
 ### v1 Documentation (Archived)
 
@@ -257,146 +521,45 @@ This document tracks the migration from **v1 (Google Apps Script + Google Sheet)
 
 ---
 
-## Breaking Changes
+### v3 Documentation (Active)
 
-### For Developers
+**Location**: `/docs/v3-decision-engine/`
 
-1. **No more GAS editor** - Use VS Code or similar
-2. **No more automatic auth** - Implement JWT manually
-3. **No more Sheet API** - Use Supabase client
-4. **Environment setup required** - `.env` files needed
-5. **Two servers to run** - Backend + Frontend
+**Files**:
+- `MASTER_SPEC.md` - Complete system specification
+- `SYSTEM_SUMMARY_V3.md` - V3 system overview
+- `ARCHITECTURE_V3.md` - V3 architecture
+- `DATA_MODEL_V3.md` - V3 data model
+- `API_V3.md` - V3 API documentation
+- `FULL_SCHEMA_V3.md` - Complete database schema
+- `tech-manual/` - Technical manuals
+- `user-manual/` - User manuals
 
-### For Users
-
-1. **Manual login required** - No more automatic Google OAuth
-2. **Password required** - Must set password for account
-3. **New URL** - Different deployment URL
-
----
-
-## Rollback Plan
-
-**If v2 fails**:
-1. v1 code is preserved in Git history
-2. v1 docs are in `/docs/v1-gsheet-archive/`
-3. Google Sheet data is still intact
-4. Can redeploy v1 GAS project
-
-**However**: v2 is production-ready and stable.
+**Status**: Active, V3 production documentation
 
 ---
 
-## Detailed Changes - 2026-01-25
-
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-25 | **Added AM Assignment Tab** | Enable OPS/Admin to map Area Managers to specific stores via Matrix UI |
-| 2026-01-25 | **Upgraded Hierarchical Trainee Mode** | Logical career paths: Staff (TS Thu Ngân/Leader) and Leader (TS SM/AM) |
-| 2026-01-25 | **Removed 'Topics' Module** | Cleanup of unused prototype module to improve UI clarity |
-| 2026-01-25 | **Fixed 500 Error on Save** | Implemented `cleanPayload` to strip UI-only fields before API calls |
-| 2026-01-25 | **Fixed React 'key' Prop Warnings** | Improved unique key generation across all lists in Setup Center |
-| 2026-01-25 | **Updated User Manual (v2.1)** | Documented hierarchical Trainee Mode and AM Assignment features |
-
----
-
-## Detailed Changes - 2026-01-24
-
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-24 | **Refactored Incident Management UI** | Match Store Management style (Folders, FAB, Modal) (User Request) |
-| 2026-01-24 | **Admin Console: Permission Sorting** | Grouped permissions by category for better UX |
-| 2026-01-24 | **Admin Console: Audit Refresh** | Added refresh button and fixed backend logging logic |
-| 2026-01-24 | **Dashboard: Restored Workload Analysis** | Restored Workload section position and fixed display conditions |
-| 2026-01-24 | **Dashboard: Safe Data Access** | Handled `storeCode`/`store_code` variations robustly |
-| 2026-01-24 | **StatCard Component Fix** | Fixed React console warnings about nested components |
-| 2026-01-24 | **Added FAB Component** | Reusable Floating Action Button component |
-
----
-
-## Detailed Changes - 2026-01-23
-
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-23 | Implemented Self-Service Password Reset | Enable users to reset forgotten passwords via email |
-| 2026-01-23 | Added Staff Activation Sync | Ensure staff status and active flags are synchronized across backend and UI |
-| 2026-01-23 | Synced 30-min Reporting Intervals | Improve UX and consistency in time selection across reporting pages |
-| 2026-01-23 | Restricted LEADER access to Shift Log | Business rule: Leaders should only use Leader Report |
-| 2026-01-23 | Migrated Auth to Bearer Tokens | Enable reliable cross-domain authentication in production |
-
----
-
-## Detailed Changes - 2026-01-22
-
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-22 | Added Employee Dashboard | User request for staff self-service portal |
-| 2026-01-22 | Migrated shift logs to `raw_shiftlog` table | Scalability and proper data types |
-| 2026-01-22 | Implemented localStorage caching (5-min TTL) | Reduce API load by 80% for 100+ users |
-| 2026-01-22 | Added shift submission limits (max 2/day) | Prevent duplicate submissions |
-| 2026-01-22 | Added time gap validation (min 2 hours) | Ensure valid split shifts only |
-| 2026-01-22 | Fixed dashboard month format bug | Correct YYYY-MM format (removed extra space) |
-| 2026-01-22 | Fixed "No Lead" submission error | Proper string to boolean conversion |
-| 2026-01-22 | Fixed null staff_name error | Use correct user property (staff_name vs name) |
-| 2026-01-22 | Fixed infinite loop causing 429 errors | Added isInitialized flag to useEffect |
-| 2026-01-22 | Increased rate limit to 500 req/15min | Support concurrent users during development |
-| 2026-01-22 | Created data import scripts | Enable bulk migration from Google Sheets |
-| 2026-01-22 | Added GenZ motivational messages | Improve user engagement for Leader Report |
-| 2026-01-22 | Created cache utility module | Reusable caching functions |
-| 2026-01-22 | Added database indexes for performance | Optimize shift log queries |
-| 2026-01-22 | Simplified month selector to current month | Reduce API load and complexity |
-| 2026-01-22 | UI/UX Overhaul: Global AppBar & Sidebar | Improved navigation and user experience |
-| 2026-01-22 | Added Mobile Bottom Navigation & FAB | Enhanced mobile experience (PWA-Feel) |
-| 2026-01-22 | Removed PageSetting & Flattened Nav | Simplification of app structure |
-| 2026-01-22 | Cleaned up Redundant Headers | Reduced visual clutter in sub-pages |
-| 2026-01-22 | **UX: Visual Validation (✅)** | Added green checkmarks for completed sections in Shift Log & Leader Report |
-| 2026-01-22 | **UX: Smart Defaults & UI Logic** | Auto-set End Time (+8h) and rounded current hour defaults |
-| 2026-01-22 | **Feat: Staff Password Edit** | Enabled password updates in Staff Management (with hashing) |
-| 2026-01-22 | **UX: Register Floating Popups** | Converted register messages to non-obscured floating popups |
-| 2026-01-22 | **BugFix: Backend Schema Mismatch** | Removed invalid `shift` column from `raw_shiftlog` insert |
-
----
-
-## Future Roadmap
-
-### Phase 3 (Future)
-
-**Potential improvements**:
-- [ ] Implement permission-based access control (not just role-based)
-- [ ] Add password reset flow
-- [ ] Add email verification
-- [ ] Implement audit log table
-- [ ] Add idempotent request tracking
-- [ ] Implement tenant-level kill switch
-- [ ] Add materialized views for dashboards
-- [ ] Implement caching (Redis)
-- [ ] Add automated tests
-- [ ] Implement CI/CD pipeline
-
-**Note**: All Phase 3 improvements will be **additive**, not breaking changes.
-
----
-
-## Key Takeaways
+## 📊 Key Takeaways
 
 1. **Domain logic preserved** - Business rules unchanged
 2. **Data model philosophy preserved** - Append-only RAW tables
 3. **Infrastructure modernized** - Scalable, secure, maintainable
 4. **Developer experience improved** - Modern tooling and workflow
-5. **Documentation complete** - DOCS v2 reflects reality
+5. **Documentation complete** - DOCS v2 & v3 reflect reality
+6. **V3 is additive** - No breaking changes from v2
 
 ---
 
-## Related Documentation
+## 📝 Versioning Scheme
 
-- [v1 Archive](./v1-gsheet-archive/) - Historical GAS documentation
-- [v2 Active](./v2-supabase/) - Current Supabase documentation
-- [ANTIGRAVITY_RULES.md](./v2-supabase/ANTIGRAVITY_RULES.md) - AI coding rules
+**Format:** `MAJOR.MINOR` (V3.52 = Major 3, Minor 52)
+
+**Current Version:** V3.52 (Lab Alpha Edition)
+
+*For detailed technical specifications, see individual module documentation in `/docs/v3-decision-engine/tech-manual/` and `user-manual/`.*
 
 ---
 
-**Migration Status**: ✅ **COMPLETE**
+**Migration Status**: ✅ **COMPLETE** (v1 → v2 → v3)
 
-**Current Version**: v3.4 (Supabase + Enhancements)
-
-**Last Updated**: 2026-01-25
+**Last Updated**: 2026-01-27

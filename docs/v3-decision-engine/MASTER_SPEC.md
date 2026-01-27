@@ -29,6 +29,7 @@
 - **Skill Matrix & Competency Engine**: L0 -> L4 competency mapping dựa trên data thật.
 - **Performance & Trust Score Engine**: Trust Score (Reliability) + Performance Score.
 - **Career Path & Promotion Engine**: Đề xuất thăng tiến tự động dựa trên readiness.
+- **Sandbox Testing Lab (V3.52)**: Môi trường test cách ly cho TESTER role với data lifecycle 24h.
 
 ---
 

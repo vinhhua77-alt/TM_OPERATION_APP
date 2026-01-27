@@ -1,11 +1,13 @@
 import express from 'express';
 import analyticsService from '../domain/analytics/analytics.service.js';
-import { requireRole } from '../middleware/auth.middleware.js';
+import { authenticateToken } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/permission.middleware.js';
+import { enforceStoreScoping } from '../middleware/scoping.middleware.js';
 
 const router = express.Router();
 
 // Trigger thủ công (Chỉ Ops/Admin)
-router.post('/trigger-aggregation', requireRole(['ADMIN', 'OPS']), async (req, res) => {
+router.post('/trigger-aggregation', authenticateToken, requirePermission('ADMIN_CONSOLE', 'MANAGE_SYSTEM_CONFIG'), async (req, res) => {
     try {
         const { date } = req.body; // YYYY-MM-DD
         const result = await analyticsService.aggregateDailyMetrics(date);
@@ -16,7 +18,7 @@ router.post('/trigger-aggregation', requireRole(['ADMIN', 'OPS']), async (req, r
 });
 
 // GET Store Metrics (Daily/Weekly/Monthly)
-router.get('/store-metrics', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), async (req, res) => {
+router.get('/store-metrics', authenticateToken, requirePermission('ADMIN', 'VIEW_ANALYTICS'), enforceStoreScoping, async (req, res) => {
     try {
         const { storeId, startDate, endDate } = req.query;
         if (!storeId || !startDate || !endDate) return res.status(400).json({ success: false, message: 'Missing params' });
@@ -29,7 +31,7 @@ router.get('/store-metrics', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), asyn
 });
 
 // GET Top Staff
-router.get('/top-staff', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), async (req, res) => {
+router.get('/top-staff', authenticateToken, requirePermission('ADMIN', 'VIEW_ANALYTICS'), enforceStoreScoping, async (req, res) => {
     try {
         const { storeId, startDate, endDate, limit } = req.query;
         if (!storeId || !startDate || !endDate) return res.status(400).json({ success: false, message: 'Missing params' });
@@ -42,7 +44,7 @@ router.get('/top-staff', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), async (r
 });
 
 // GET Recent Incidents
-router.get('/recent-incidents', requireRole(['LEADER', 'SM', 'OPS', 'ADMIN']), async (req, res) => {
+router.get('/recent-incidents', authenticateToken, requirePermission('ADMIN', 'VIEW_ANALYTICS'), enforceStoreScoping, async (req, res) => {
     try {
         const { storeId, limit } = req.query;
         if (!storeId) return res.status(400).json({ success: false, message: 'Missing params' });

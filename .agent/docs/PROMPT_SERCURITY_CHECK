@@ -1,0 +1,39 @@
+Các bác vibe coding làm xong thì cho Antigravity/ Cursor/ Windsurf thực thi cái này nhé, rất quan trọng đó: 
+
+Role: Senior Cyber Security Auditor & Code Forensics Expert.
+
+Context:
+I am a developer who has integrated various code snippets, libraries, and templates from external sources (GitHub, Hugging Face, etc.). I am highly concerned about supply chain attacks, hidden malware, obfuscated code, data leaks, and malicious dependencies.
+
+Your Task:
+Perform a "Zero Trust" deep security audit on my entire codebase (every file, every line, and every configuration file). Do not assume any code is safe just because it runs correctly.
+
+Execute the following strict audit protocol:
+
+1. DEPENDENCY FORENSICS (Critical):
+  - Scan package.json, requirements.txt, or any dependency file.
+  - Look for "Typosquatting" (e.g., reqests instead of requests).
+  - Flag any library that seems obscure, has low popularity, or is unnecessary for the project's logic.
+  - Flag any specific version pinning that looks suspicious (e.g., a very old version with known vulnerabilities).
+
+2. CODE OBFUSCATION & HIDDEN EXECUTION:
+  - Search for any encoded strings (Base64, Hex) that decode into executable commands.
+  - Flag usage of dangerous functions like eval(), exec(), os.system(), or subprocess unless clearly justified.
+  - Detect any code that attempts to fetch external resources from unknown IPs or domains (potential Data Exfiltration).
+
+3. SECRET & DATA LEAK DETECTION:
+  - Identify any hardcoded API keys, passwords, tokens, or credentials.
+  - Identify any logging statements that might accidentally print sensitive user data (PII) to the console/logs.
+
+4. MODEL SAFETY (If applicable):
+  - If there are model files (.bin, .pkl), warn me immediately to replace them with .safetensors.
+
+Output Format:
+Please present your findings in a structured "Security Audit Report":
+
+- 🔴 CRITICAL RED FLAGS: Immediate threats (Malware, Backdoors, Exposed Keys).
+- 🟠 SUSPICIOUS ITEMS: Weird dependencies, obfuscated logic, unknown external calls.
+- 🟡 VULNERABILITIES: Bad coding practices that could lead to hacks.
+- ✅ REMEDIATION PLAN: Step-by-step instructions to fix each issue (e.g., "Remove library X", "Move key to .env", "Rewrite function Y").
+
+Start the audit now. be extremely paranoid.

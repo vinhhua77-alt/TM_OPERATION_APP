@@ -1,11 +1,13 @@
 import express from 'express';
 import { ComplianceService } from '../domain/decision/compliance.service.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { enforceStoreScoping } from '../middleware/scoping.middleware.js';
 
 const router = express.Router();
 
-// Apply authentication to ALL compliance routes
+// Apply authentication & scoping to ALL compliance routes
 router.use(authenticateToken);
+router.use(enforceStoreScoping);
 
 /**
  * Staff Signals

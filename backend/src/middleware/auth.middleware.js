@@ -52,6 +52,39 @@ export async function authenticateToken(req, res, next) {
     req.userId = user.id;
     req.tenantId = user.tenant_id || user.store_code; // Fallback for legacy
 
+    // Detect sandbox mode from header
+    let isSandbox = req.headers['x-sandbox-mode'] === 'true';
+
+    // [SANDBOX AUTO-ENFORCE FOR TESTER]
+    // If user is a TESTER, they are ALWAYS in sandbox mode
+    if (user.role === 'TESTER') {
+      isSandbox = true;
+    }
+
+    req.isSandboxMode = isSandbox;
+
+    // [SANDBOX GOD MODE]
+    // If inside sandbox, attach flag to user object for AccessControlService
+    if (isSandbox) {
+      req.user.is_sandbox_mode = true;
+      req.user.orig_store_code = user.store_code; // Keep for reference
+
+      // [SECURITY] Dynamic Virtual Store Code (Multi-tenant ready)
+      // Logic: Take the prefix before '-' (e.g., DN-CLON -> DN) + '_TEST'
+      // Fallback to 'TM_TEST' if no prefix found
+      let virtualStore = 'TM_TEST';
+      if (user.store_code && user.store_code.includes('-')) {
+        const prefix = user.store_code.split('-')[0];
+        virtualStore = `${prefix}_TEST`;
+      } else if (user.store_code) {
+        // For codes like 'TMG' or 'ALL'
+        const prefix = user.store_code.substring(0, 2);
+        virtualStore = `${prefix}_TEST`;
+      }
+
+      req.user.store_code = virtualStore;
+    }
+
     next();
   } catch (error) {
     return res.status(403).json({

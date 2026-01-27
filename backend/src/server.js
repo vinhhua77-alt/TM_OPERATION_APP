@@ -33,6 +33,7 @@ import revenueRoutes from './routes/revenue.routes.js'; // [NEW]
 import metricsRoutes from './routes/metrics.routes.js'; // [NEW]
 import decisionRoutes from './routes/decision.routes.js'; // [NEW]
 import complianceRoutes from './routes/compliance.routes.js'; // [NEW]
+import sandboxRoutes from './routes/sandbox.routes.js'; // [NEW] Sandbox Mode
 
 import cron from 'node-cron'; // [NEW]
 import analyticsService from './domain/analytics/analytics.service.js'; // [NEW]
@@ -93,7 +94,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Sandbox-Mode'],
   exposedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -174,6 +175,7 @@ app.use('/api/metrics', metricsRoutes);
 app.use('/api/decision', decisionRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/career', careerRoutes); // [NEW]
+app.use('/api/sandbox', sandboxRoutes); // [NEW] Sandbox Mode
 
 // Error handling
 app.use(errorHandler);

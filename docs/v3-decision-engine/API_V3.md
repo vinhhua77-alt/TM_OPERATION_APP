@@ -105,7 +105,66 @@ Dữ liệu từ API Metrics sẽ trả về các mã code sau để Frontend hi
    });
    ```
 
-## 7. CẤU TRÚC MÃ NGUỒN (SOURCE MAPPING)
+
+## 7. SANDBOX TESTING LAB (🧪 V3.52)
+Môi trường test cách ly cho role TESTER với data lifecycle 24h.
+
+### 7.1. Bắt đầu phiên Sandbox
+- **Endpoint**: `POST /api/sandbox/start`
+- **Auth**: TESTER, ADMIN, IT, OPS, SM (có permission ACCESS_SANDBOX_MODE)
+- **Response**: 
+  ```json
+  {
+    "success": true,
+    "data": {
+      "session_id": "uuid",
+      "expires_at": "2026-01-28T14:00:00Z"
+    }
+  }
+  ```
+
+### 7.2. Lấy thống kê Sandbox
+- **Endpoint**: `GET /api/sandbox/stats`
+- **Auth**: Authenticated users with sandbox permission
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "active_session": true,
+      "session_id": "uuid",
+      "expires_at": "2026-01-28T14:00:00Z",
+      "records": {
+        "shift_logs": 15,
+        "leader_reports": 3,
+        "operational_events": 8
+      }
+    }
+  }
+  ```
+
+### 7.3. Kết thúc phiên Sandbox
+- **Endpoint**: `POST /api/sandbox/end/:sessionId`
+- **Auth**: Session owner or ADMIN
+
+### 7.4. Export dữ liệu Sandbox (JSON)
+- **Endpoint**: `GET /api/sandbox/export`
+- **Auth**: Session owner
+- **Response**: JSON object containing all sandbox data for the user
+
+### 7.5. Xóa dữ liệu Sandbox (Reset)
+- **Endpoint**: `POST /api/sandbox/clear`
+- **Auth**: Session owner
+- **Description**: Manually wipe all sandbox records for current user
+
+### 7.6. Dọn dẹp thủ công (Admin only)
+- **Endpoint**: `POST /api/sandbox/cleanup`
+- **Auth**: ADMIN, IT only
+- **Description**: Triggers manual cleanup of expired sandbox data (normally automated via cron)
+
+---
+
+## 8. CẤU TRÚC MÃ NGUỒN (SOURCE MAPPING)
 - **Route Definitions**: `backend/src/routes/*.routes.js`
 - **Business Logic**: `backend/src/domain/decision/*.service.js` & `backend/src/domain/revenue/*.service.js`
 - **Database Access**: `backend/src/infra/*.repo.js`

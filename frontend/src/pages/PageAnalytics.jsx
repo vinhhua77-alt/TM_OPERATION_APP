@@ -137,6 +137,14 @@ const PageAnalytics = ({ user, viewMode = 'leader', onBack }) => {
 
         if (periodMode === 'day') {
             // keep as is
+        } else if (periodMode === 'week') {
+            const day = start.getDay();
+            const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Monday
+            start.setDate(diff);
+            start.setHours(0, 0, 0, 0);
+
+            end.setDate(start.getDate() + 6);
+            end.setHours(23, 59, 59, 999);
         } else if (periodMode === 'month') {
             start.setDate(1);
             end.setMonth(end.getMonth() + 1);
@@ -170,9 +178,18 @@ const PageAnalytics = ({ user, viewMode = 'leader', onBack }) => {
     };
 
     // ... (Navigation Helpers kept same) ...
+    const getWeekNumber = (d) => {
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    };
+
     const handleNavigateDate = (dir) => {
         const newDate = new Date(anchorDate);
         if (periodMode === 'day') newDate.setDate(newDate.getDate() + dir);
+        if (periodMode === 'week') newDate.setDate(newDate.getDate() + (dir * 7));
         if (periodMode === 'month') newDate.setMonth(newDate.getMonth() + dir);
         if (periodMode === 'year') newDate.setFullYear(newDate.getFullYear() + dir);
         setAnchorDate(newDate);
@@ -180,6 +197,12 @@ const PageAnalytics = ({ user, viewMode = 'leader', onBack }) => {
 
     const getPeriodLabel = () => {
         if (periodMode === 'day') return `${anchorDate.getDate()}/${anchorDate.getMonth() + 1}/${anchorDate.getFullYear()}`;
+        if (periodMode === 'week') {
+            const { startDate, endDate } = getRangeFromMode();
+            const startArr = startDate.split('-');
+            const endArr = endDate.split('-');
+            return `Tuần ${getWeekNumber(anchorDate)} (${startArr[2]}/${startArr[1]} - ${endArr[2]}/${endArr[1]})`;
+        }
         if (periodMode === 'month') return `Tháng ${anchorDate.getMonth() + 1}/${anchorDate.getFullYear()}`;
         return `Năm ${anchorDate.getFullYear()}`;
     };
@@ -409,13 +432,13 @@ const PageAnalytics = ({ user, viewMode = 'leader', onBack }) => {
                 <div className="flex gap-2">
                     {/* Period Selector */}
                     <div className="bg-slate-100 p-1 rounded-lg flex text-[10px] font-bold">
-                        {['day', 'month', 'year'].map(m => (
+                        {['day', 'week', 'month', 'year'].map(m => (
                             <button
                                 key={m}
                                 onClick={() => setPeriodMode(m)}
-                                className={`px-3 py-1.5 rounded-md uppercase transition-all ${periodMode === m ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}
+                                className={`px-2.5 py-1.5 rounded-md uppercase transition-all ${periodMode === m ? 'bg-white shadow text-blue-600' : 'text-slate-400'}`}
                             >
-                                {m === 'day' ? 'Ngày' : m === 'month' ? 'Tháng' : 'Năm'}
+                                {m === 'day' ? 'Ngày' : m === 'week' ? 'Tuần' : m === 'month' ? 'Tháng' : 'Năm'}
                             </button>
                         ))}
                     </div>

@@ -1,8 +1,9 @@
-# OPS INTELLIGENCE – RULE CATALOG v3.0
+# OPS INTELLIGENCE – RULE CATALOG V3.52
 
-**Version**: 3.0 (Rule-based)  
-**Status**: Ready for Implementation  
-**Logic**: IF → THEN → OUTPUT
+**Version:** 3.52 (Lab Alpha Edition)  
+**Last Updated:** 27/01/2026  
+**Status:** Active (In Use by Decision Engine)  
+**Logic:** IF → THEN → OUTPUT
 
 ---
 
@@ -105,4 +106,50 @@
 
 ---
 
-**This catalog is the definitive logic for the OPS Intelligence Engine v3.0.**
+## GROUP I – TALENT MANAGEMENT & RETENTION (R61–R68)
+- **R61 – Burnout Risk**: IF overtime > 60h/month + shifts > 26/month → `burnout_risk_flag = high`.
+- **R62 – Skill Gap Critical**: IF position_required_skills - staff_actual_skills > 50% → `skill_gap_flag = critical`.
+- **R63 – High Performer Attrition**: IF trust_score > 90 + no promotion > 180 days → `attrition_risk_flag = high`.
+- **R64 – Talent Mobility Block**: IF skill_certified + no cross_store_opportunity > 90 days → `mobility_alert = true`.
+- **R65 – Training ROI Low**: IF training_completed + performance_unchanged > 30 days → `training_effectiveness_flag = low`.
+- **R66 – Mood Degradation**: IF negative_mood_trend > 5 shifts → `engagement_risk_flag = medium`.
+- **R67 – Career Stagnation**: IF same_level > 365 days + qualified_for_promotion → `career_stagnation_alert = true`.
+- **R68 – Keyman Dependency**: IF store_performance tied_to_single_staff → `succession_planning_required = urgent`.
+
+---
+
+## GROUP J – QSR PERFORMANCE STANDARDS (R69–R76)
+- **R69 – SPLH Below Target**: IF sales_per_labor_hour < tenant_threshold → `labor_efficiency_flag = low`.
+- **R70 – Peak Hour Misalignment**: IF peak_hour_staff_count < aces_in_places_minimum → `staffing_strategy_flag = risk`.
+- **R71 – Service Speed Degradation**: IF average_service_time > brand_standard + 20% → `speed_of_service_alert = true`.
+- **R72 – Customer Satisfaction Drop**: IF guest_satisfaction_score ↓ 3 consecutive days → `customer_experience_flag = declining`.
+- **R73 – Menu Mix Inefficiency**: IF high_margin_items_sold < expected_mix → `upsell_training_required = true`.
+- **R74 – Drive-Thru Performance**: IF drive_thru_time > industry_benchmark → `bottleneck_analysis_required = true`.
+- **R75 – Labor Cost Overrun**: IF labor_cost_percentage > budget + 5% → `cost_control_flag = critical`.
+- **R76 – Productivity Decline**: IF transactions_per_hour ↓ vs baseline → `productivity_analysis_required = true`.
+
+---
+
+## GROUP K – SAAS MULTI-TENANT INTELLIGENCE (R77–R84)
+- **R77 – Cross-Tenant Outlier**: IF store_performance < tenant_avg - 2σ → `tenant_outlier_flag = underperforming`.
+- **R78 – Brand Benchmark Gap**: IF tenant_A_metric vs tenant_B_metric > 30% divergence → `best_practice_sharing_opportunity = true`.
+- **R79 – Tenant Health Score**: IF ≥ 3 critical_flags active > 7 days → `tenant_health_flag = red`.
+- **R80 – Feature Adoption Low**: IF feature_enabled + usage < 20% stores → `onboarding_issue_flag = true`.
+- **R81 – Configuration Drift**: IF store_config ≠ tenant_standard > 14 days → `compliance_review_required = true`.
+- **R82 – Cross-Brand Learning**: IF tenant_A_solved_problem + tenant_B_has_problem → `knowledge_transfer_opportunity = true`.
+- **R83 – Tenant Churn Risk**: IF admin_login_frequency ↓ + support_tickets ↑ → `churn_risk_flag = high`.
+- **R84 – White-Label Consistency**: IF brand_guideline_violations > 5 across stores → `brand_compliance_alert = true`.
+
+---
+
+## GROUP L – PREDICTIVE INTELLIGENCE (R85–R90)
+- **R85 – Revenue Forecast Miss**: IF actual_revenue vs forecast > ±15% → `forecast_model_review_required = true`.
+- **R86 – Demand Spike Unpreparedness**: IF traffic_surge > 40% + staff_insufficient → `demand_planning_flag = weak`.
+- **R87 – Seasonal Pattern Deviation**: IF current_week_metrics ≠ historical_seasonal_pattern → `anomaly_investigation_required = true`.
+- **R88 – Proactive Maintenance**: IF equipment_performance_degrading + failure_probability > 70% → `preventive_maintenance_alert = urgent`.
+- **R89 – Market Share Decline**: IF competitor_activity ↑ + our_traffic ↓ → `competitive_analysis_required = true`.
+- **R90 – Customer Behavior Shift**: IF repeat_visit_rate ↓ 3 consecutive weeks → `customer_retention_strategy_review = true`.
+
+---
+
+**This catalog is the definitive logic for the OPS Intelligence Engine V3.52.**

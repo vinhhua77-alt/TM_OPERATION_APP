@@ -58,12 +58,17 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
 
       end.setDate(start.getDate() + 6);
       end.setHours(23, 59, 59, 999);
-    } else {
-      // Month
+      end.setHours(23, 59, 59, 999);
+    } else if (viewMode === 'month') {
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
       end.setMonth(end.getMonth() + 1);
       end.setDate(0);
+      end.setHours(23, 59, 59, 999);
+    } else {
+      start.setMonth(0, 1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(11, 31);
       end.setHours(23, 59, 59, 999);
     }
     return { start, end };
@@ -75,8 +80,10 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
       newDate.setDate(newDate.getDate() + direction);
     } else if (viewMode === 'week') {
       newDate.setDate(newDate.getDate() + (direction * 7));
-    } else {
+    } else if (viewMode === 'month') {
       newDate.setMonth(newDate.getMonth() + direction);
+    } else {
+      newDate.setFullYear(newDate.getFullYear() + direction);
     }
     setAnchorDate(newDate);
   };
@@ -97,7 +104,10 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
     if (viewMode === 'week') {
       return `Tuần ${getWeekNumber(start)} (${start.getDate()}/${start.getMonth() + 1} - ${end.getDate()}/${end.getMonth() + 1})`;
     }
-    return `Tháng ${start.getMonth() + 1}/${start.getFullYear()}`;
+    if (viewMode === 'month') {
+      return `Tháng ${start.getMonth() + 1}/${start.getFullYear()}`;
+    }
+    return `Năm ${start.getFullYear()}`;
   };
 
   // [PERFORMANCE] Consolidated initialization - Single useEffect for all data loading
@@ -253,6 +263,12 @@ const PageDashboard = ({ user, onNavigate, onLogout }) => {
               className={`px-2 py-1.5 rounded-md text-[9px] font-bold transition-all ${viewMode === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
             >
               Tháng
+            </button>
+            <button
+              onClick={() => setViewMode('year')}
+              className={`px-2 py-1.5 rounded-md text-[9px] font-bold transition-all ${viewMode === 'year' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}
+            >
+              Năm
             </button>
           </div>
 

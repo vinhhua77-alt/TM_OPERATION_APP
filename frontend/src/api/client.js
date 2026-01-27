@@ -56,6 +56,13 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Add sandbox mode header
+  const sandboxMode = localStorage.getItem('sandbox_mode');
+  if (sandboxMode === 'true') {
+    config.headers['X-Sandbox-Mode'] = 'true';
+  }
+
   return config;
 });
 

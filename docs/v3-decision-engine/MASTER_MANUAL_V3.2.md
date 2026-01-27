@@ -106,5 +106,17 @@ Admin có thể tự thiết kế lộ trình mà không cần IT support.
 3.  **Chỉnh Sửa:** Thay đổi số giờ yêu cầu bất kỳ lúc nào để phù hợp tình hình thực tế.
 4.  **Xóa:** Loại bỏ các lộ trình cũ.
 
+## 4.3. Sandbox Testing Lab (Dành cho TESTER - V3.52)
+Môi trường thử nghiệm "An Toàn":
+1. **Đăng nhập với tài khoản Tester** (VD: `TM0000`, password: `123456`).
+2. Giao diện sẽ tự động chuyển sang **màu Cam (Amber)** với biểu tượng **SANDBOX** ở góc trên.
+3. **Tất cả dữ liệu tạo ra** (Shift log, Leader Report, 5S Checklist) sẽ đều nằm trong "Phòng Lab Ảo" - không ảnh hưởng đến dữ liệu thật.
+4. **Công cụ kiểm thử:**
+   - **📥 Export JSON:** Tải toàn bộ dữ liệu mẫu vừa tạo.
+   - **📸 Screenshot:** Hướng dẫn chụp màn hình để báo lỗi.
+   - **🗑️ Reset Data:** Xóa sạch toàn bộ dữ liệu test để bắt đầu lại từ đầu.
+5. **Lưu ý:** Dữ liệu Sandbox sẽ tự động xóa sau 24 giờ.
+
 ---
+
 *Tài liệu nội bộ - Vui lòng không chia sẻ ra bên ngoài.*

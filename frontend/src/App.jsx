@@ -30,10 +30,12 @@ import PageDecisionConsole from './pages/PageDecisionConsole'; // [NEW]
 import Notification from './components/Notification';
 import RoleImpersonator from './components/RoleImpersonator'; // [NEW]
 import Page5SCompliance from './pages/Page5SCompliance'; // [RENAMED]
+import { usePermission } from './hooks/usePermission';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('LOGIN');
   const [user, setUser] = useState(null);
+  const permission = usePermission(user);
   const [realUser, setRealUser] = useState(null); // [NEW] Store original admin info
   const [loading, setLoading] = useState(true);
   const [resetTokenInfo, setResetTokenInfo] = useState(null);
@@ -64,6 +66,19 @@ function App() {
         if (res.success) {
           setUser(res.user);
           setRealUser(res.user); // [NEW]
+
+          // [SANDBOX AUTO-ENFORCE FOR TESTER]
+          if (res.user?.role === 'TESTER') {
+            const isFirstTime = localStorage.getItem('sandbox_mode') !== 'true';
+            localStorage.setItem('sandbox_mode', 'true');
+
+            if (isFirstTime) {
+              setTimeout(() => {
+                notify('🧪 CHẾ ĐỘ SANDBOX ĐÃ TỰ ĐỘNG BẬT! Chúc bạn test vui vẻ!', 'success');
+              }, 1000);
+            }
+          }
+
           restoreLastPage();
           loadSystemConfig();
         } else {
@@ -161,8 +176,10 @@ function App() {
       case 'DASHBOARD':
         return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
       case 'STAFF_MANAGEMENT':
+        if (!permission.can('MANAGE_STAFF')) return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
         return <PageStaffManagement user={user} onBack={() => handleNavigate('HOME')} />;
       case 'STORE_SETUP':
+        if (!permission.can('MANAGE_STORE')) return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
         return <PageStoreSetup user={user} onBack={() => handleNavigate('HOME')} />;
       case 'STORE_MANAGEMENT':
       case 'STORE_STORES':
@@ -186,10 +203,10 @@ function App() {
       case 'ABOUT':
         return <PageAbout onBack={() => handleNavigate('HOME')} />;
       case 'ADMIN_CONSOLE':
-        if (user?.role !== 'ADMIN' && user?.role !== 'IT') return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
+        if (!permission.can('VIEW_ADMIN_CONSOLE')) return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
         return <PageAdminConsole user={user} onBack={() => handleNavigate('HOME')} />;
       case 'LAB_FEATURES':
-        if (user?.role !== 'ADMIN' && user?.role !== 'IT') return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
+        if (!permission.can('VIEW_ADMIN_CONSOLE')) return <DashboardPage user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
         return <PageAdminConsole user={user} initialTab="lab" onBack={() => handleNavigate('HOME')} />;
       case 'ANALYTICS':
         return <PageAnalytics user={user} onBack={() => handleNavigate('HOME')} />;

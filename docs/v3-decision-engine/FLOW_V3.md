@@ -1,12 +1,18 @@
-# TM OPERATION APP – FLOWS v3.0
+# TM OPERATION APP – FLOWS V3.52
 
-**Version**: 3.0  
-**Last Updated**: 2026-01-22  
-**Status**: Planning
+**Version:** V3.52 (Lab Alpha Edition)  
+**Last Updated:** 27/01/2026  
+**Status:** Mixed (Some flows implemented, others pending)
+
+> [!NOTE]
+> **Implementation Status**
+> 
+> - ✅ Flow 11, 12: Implemented in V3.4 (Career & Training modules)
+> - ❌ Flow 13, 14: Pending (Future analytics/ops modules)
 
 ---
 
-## 1. FLOW 11: CAREER PROMOTION (THE DECISION STACK)
+## 1. FLOW 11: CAREER PROMOTION (THE DECISION STACK) ✅ IMPLEMENTED (V3.4)
 
 ### 1.1. Business Flow
 Staff completes requirements (Time + Trust + Skill) → System detects readiness → Level state transitions (L1 -> L2).
@@ -27,7 +33,7 @@ Staff completes requirements (Time + Trust + Skill) → System detects readiness
 
 ---
 
-## 2. FLOW 12: SKILL CERTIFICATION (TRAINING VALIDATION)
+## 2. FLOW 12: SKILL CERTIFICATION (TRAINING VALIDATION) ✅ IMPLEMENTED (V3.4)
 
 ### 2.1. Business Flow
 Staff completes micro-learning quiz → Leader validates on-job → Certification Issued.
@@ -42,7 +48,7 @@ Staff completes micro-learning quiz → Leader validates on-job → Certificatio
 
 ---
 
-## 3. FLOW 13: DAILY RISK ROLLUP (OPS CONTEXT)
+## 3. FLOW 13: DAILY RISK ROLLUP (OPS CONTEXT) ❌ PENDING
 
 ### 3.1. Business Flow
 CEO/Ops view daily store health based on real events.
@@ -59,7 +65,7 @@ CEO/Ops view daily store health based on real events.
 
 ---
 
-## 4. FLOW 14: OPERATIONAL OVERRIDE (EXCEPTION HANDLING)
+## 4. FLOW 14: OPERATIONAL OVERRIDE (EXCEPTION HANDLING) ❌ PENDING
 
 ### 4.1. Business Flow
 Unforeseen event (e.g., power outage) occurs → SM logs exception → System ignores data impact for the period.

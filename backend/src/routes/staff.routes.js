@@ -5,16 +5,20 @@
 
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { requirePermission } from '../middleware/permission.middleware.js';
+import { enforceStoreScoping } from '../middleware/scoping.middleware.js';
 import { StaffService } from '../domain/staff/staff.service.js';
 
 const router = express.Router();
+router.use(authenticateToken);
+router.use(enforceStoreScoping);
 
 /**
  * GET /api/staff
  * Get all staff with optional filters
  * Query params: store_code, status, role
  */
-router.get('/', authenticateToken, async (req, res, next) => {
+router.get('/', requirePermission('ADMIN_CONSOLE', 'MANAGE_STAFF'), async (req, res, next) => {
   try {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const { store_code, status, role } = req.query;
@@ -36,7 +40,7 @@ router.get('/', authenticateToken, async (req, res, next) => {
  * Create new staff member (Admin only)
  * Body: { staff_name, gmail, password, role, store_code, active, is_trainee }
  */
-router.post('/', authenticateToken, async (req, res, next) => {
+router.post('/', requirePermission('ADMIN_CONSOLE', 'MANAGE_STAFF'), async (req, res, next) => {
   try {
     const { staff_name, gmail, password, role, store_code, active, is_trainee } = req.body;
 
@@ -73,7 +77,7 @@ router.post('/', authenticateToken, async (req, res, next) => {
  * GET /api/staff/statistics
  * Get staff statistics (counts, breakdown by store)
  */
-router.get('/statistics', authenticateToken, async (req, res, next) => {
+router.get('/statistics', requirePermission('ADMIN_CONSOLE', 'MANAGE_STAFF'), async (req, res, next) => {
   try {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const stats = await StaffService.getStatistics(req.user);
@@ -92,7 +96,7 @@ router.get('/statistics', authenticateToken, async (req, res, next) => {
  * Bulk activate pending staff
  * Body: { staff_ids: ["TM0001", "TM0002"] }
  */
-router.post('/bulk-activate', authenticateToken, async (req, res, next) => {
+router.post('/bulk-activate', requirePermission('ADMIN_CONSOLE', 'MANAGE_STAFF'), async (req, res, next) => {
   try {
     const { staff_ids } = req.body;
 
@@ -121,7 +125,7 @@ router.post('/bulk-activate', authenticateToken, async (req, res, next) => {
  * Update staff information
  * Body: { staff_name, gmail, role, store_code, active }
  */
-router.put('/:staff_id', authenticateToken, async (req, res, next) => {
+router.put('/:staff_id', requirePermission('ADMIN_CONSOLE', 'MANAGE_STAFF'), async (req, res, next) => {
   try {
     const { staff_id } = req.params;
     const updates = req.body;
@@ -142,7 +146,7 @@ router.put('/:staff_id', authenticateToken, async (req, res, next) => {
  * POST /api/staff/maintenance/sync-status
  * Fix desynchronized staff status (active=true but status=PENDING)
  */
-router.post('/maintenance/sync-status', authenticateToken, async (req, res, next) => {
+router.post('/maintenance/sync-status', async (req, res, next) => {
   try {
     const result = await StaffService.syncStaffStatus(req.user);
     res.json({
@@ -158,7 +162,7 @@ router.post('/maintenance/sync-status', authenticateToken, async (req, res, next
  * GET /api/staff/top-active
  * Get top 10 active staff by shift count
  */
-router.get('/top-active', authenticateToken, async (req, res, next) => {
+router.get('/top-active', async (req, res, next) => {
   try {
     const result = await StaffService.getTopActiveStaff(req.user);
     res.json({
